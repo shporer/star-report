@@ -95,6 +95,14 @@ def test_no_coverage_is_empty():
     assert TessSectors().parse(raw, ctx) == {}
 
 
+def test_tess_point_not_on_silicon_marker_is_empty():
+    """tess-point answers sector -1 (camera -1, ccd -1) for a star on no sector."""
+    ctx = make_ctx(now=NOW)
+    raw = {"on_silicon": [{"sector": -1, "camera": -1, "ccd": -1}], "released": [],
+           "released_error": None}
+    assert TessSectors().parse(raw, ctx) == {}
+
+
 def test_released_error_surfaces():
     ctx = make_ctx(now=NOW)
     raw = {"on_silicon": [{"sector": 56, "camera": 1, "ccd": 2}], "released": None,

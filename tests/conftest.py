@@ -40,9 +40,10 @@ def ref_star(slug: str) -> dict:
 
 def ref_identity(slug: str) -> StarIdentity:
     star = ref_star(slug)
+    name = star["simbad_main_id"] or f"TIC {star['tic']}"  # a star SIMBAD does not know
     return StarIdentity(
-        input=star["simbad_main_id"],
-        main_name=star["simbad_main_id"],
+        input=name,
+        main_name=name,
         simbad_id=star["simbad_main_id"],
         tic_id=star["tic"],
         gaia_dr3_id=star["gaia_dr3"],

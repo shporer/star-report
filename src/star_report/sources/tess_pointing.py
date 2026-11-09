@@ -131,7 +131,7 @@ class TessSectors(Source):
         entries = raw.get("on_silicon")
         for e in entries if isinstance(entries, list) else []:
             sector = _int(e.get("sector")) if isinstance(e, dict) else None
-            if sector is not None:
+            if sector is not None and sector > 0:  # tess-point's "no sector" marker is -1
                 on_silicon.setdefault(sector, {"sector": sector, "camera": _int(e.get("camera")),
                                                "ccd": _int(e.get("ccd"))})
         released_raw = raw.get("released")

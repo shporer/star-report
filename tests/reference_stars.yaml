@@ -30,3 +30,51 @@
   other_ids: {HIP: HIP 87937, GJ: GJ 699, 2MASS: 2MASS J17574849+0441405}
   position: {ra: 269.4485025, dec: 4.7394201, epoch: 2016.0, pmra: -801.551, pmdec: 10362.394, parallax: 546.9759, rv: -110.47}
   spellings: [Barnard's Star, Barnard’s Star, GJ 699, HIP 87937, TIC 325554331, Gaia DR3 4472832130942575872, "17 57 48.50 +04 41 36.1"]   # last one = J2000 coordinates
+# ---- three extra stars (spec §12), each with the query that selected it (2026-11-09) ----
+# Faint TIC-only star. Selection: astroquery Catalogs.query_region("120.0 -60.0", radius=3 arcmin,
+# catalog="TIC"); keep objType == "STAR" and 14 < Tmag < 16; take the first row whose
+# simbad.lookup("TIC <ID>") is empty and with no SIMBAD object within 5 arcsec, checked on the
+# Harvard mirror with: SELECT main_id FROM basic WHERE CONTAINS(POINT('ICRS', ra, dec),
+# CIRCLE('ICRS', <ra>, <dec>, 5/3600.)) = 1. First candidate (Tmag 15.19) passed. No SIMBAD entry,
+# so simbad_main_id is null and the report's `simbad` source is skipped.
+- slug: TIC_410450857
+  simbad_main_id: null
+  tic: 410450857
+  gaia_dr3: "5291061475706634880"
+  gaia_dr2: "5291061475706634880"
+  other_ids: {2MASS: 2MASS J08000545-6000016}
+  position: {ra: 120.0227632, dec: -60.0004692, epoch: 2016.0, pmra: 0.892, pmdec: 4.909, parallax: 0.4526, rv: null}
+  spellings: [TIC 410450857, TIC410450857, Gaia DR3 5291061475706634880]
+# Gaia SB1. Selection: Gaia TAP, SELECT TOP 20 n.source_id, g.phot_g_mean_mag FROM
+# gaiadr3.nss_two_body_orbit AS n JOIN gaiadr3.gaia_source AS g ON g.source_id = n.source_id
+# WHERE n.nss_solution_type = 'SB1' AND g.phot_g_mean_mag BETWEEN 8 AND 9 ORDER BY n.source_id;
+# first row with a SIMBAD entry and a TIC ID: 21296238855672832 (G 8.38). SIMBAD pads HD numbers
+# to six characters, hence the double space in the main ID.
+- slug: HD_18284
+  simbad_main_id: "HD  18284"
+  tic: 387542760
+  gaia_dr3: "21296238855672832"
+  gaia_dr2: "21296238855672832"
+  other_ids: {HD: HD 18284, HIP: HIP 13706, TYC: TYC 644-294-1, 2MASS: 2MASS J02562962+1007332}
+  position: {ra: 44.1235021, dec: 10.1258949, epoch: 2016.0, pmra: 17.722, pmdec: -3.735, parallax: 4.2843, rv: 18.113}
+  spellings: [HD 18284, HD18284, HIP 13706, TIC 387542760, Gaia DR3 21296238855672832]
+# Star no TESS sector covers. Selection: tess_stars2px_function_entry (tess-point 0.9.5, sectors
+# through 134) on the barycentric true ecliptic at latitude 0 in 5 deg steps, then 1 deg steps, then
+# latitude +2 and -2 in 1 deg steps (the brief's recipe): every point was covered. (tess-point
+# answers sector -1 for "no sector"; covered means some sector > 0.) Fallback, a 2 deg whole-sky
+# grid (ecliptic lon 0-358, lat -90..90, 16380 points): 70 uncovered points, all in thin gaps at
+# ecliptic latitude about +14, +18 and -18. SIMBAD cones of 1.5 deg around each (Harvard mirror:
+# SELECT b.main_id, b.ra, b.dec, f.V FROM basic AS b JOIN allfluxes AS f ON f.oidref = b.oid
+# WHERE CONTAINS(POINT('ICRS', b.ra, b.dec), CIRCLE('ICRS', <ra>, <dec>, 1.5)) = 1 AND f.V < 9),
+# kept the stars with no tess-point sector (131), then TESScut's sector list
+# (mast.stsci.edu/tesscut/api/v0.1/sector?ra=..&dec=..&radius=0) had to be empty as well. The
+# brighter ones nearest the ecliptic (HD 125489, HD 125453, HD 114) have a TESScut sector;
+# taken: HD 125231 (V 8.41, ecliptic latitude 14).
+- slug: HD_125231
+  simbad_main_id: HD 125231
+  tic: 446422734
+  gaia_dr3: "3666128287946154880"
+  gaia_dr2: "3666128287946154880"
+  other_ids: {HD: HD 125231, HIP: HIP 69884, TYC: TYC 317-1121-1, 2MASS: 2MASS J14180653+0108457}
+  position: {ra: 214.5273333, dec: 1.1463049, epoch: 2016.0, pmra: 42.925, pmdec: 57.084, parallax: 14.3806, rv: -25.775}
+  spellings: [HD 125231, HD125231, HIP 69884, TIC 446422734, Gaia DR3 3666128287946154880]

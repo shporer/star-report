@@ -1,0 +1,119 @@
+{
+ "gaia_by_id:{\"dr3_id\": \"5291061475706634880\"}": {
+  "bp_rp": 0.8280782699584961,
+  "dec": -60.00046915754214,
+  "parallax": 0.4525705673137099,
+  "phot_g_mean_mag": 15.607003211975098,
+  "pmdec": 4.909394732441459,
+  "pmra": 0.8922787126322183,
+  "ra": 120.02276319989431,
+  "radial_velocity": null,
+  "ref_epoch": 2016.0,
+  "source_id": "5291061475706634880"
+ },
+ "gaia_cone:{\"dec\": -60.0004692, \"ra\": 120.0227632, \"radius_arcsec\": 2.0}": [
+  {
+   "bp_rp": 0.8280782699584961,
+   "dec": -60.00046915754214,
+   "dist_arcsec": 0.00015284839961174357,
+   "parallax": 0.4525705673137099,
+   "phot_g_mean_mag": 15.607003211975098,
+   "pmdec": 4.909394732441459,
+   "pmra": 0.8922787126322183,
+   "ra": 120.02276319989431,
+   "radial_velocity": null,
+   "ref_epoch": 2016.0,
+   "source_id": "5291061475706634880"
+  }
+ ],
+ "gaia_dr2_from_dr3:{\"dr3_id\": \"5291061475706634880\"}": [
+  {
+   "angular_distance": 0.04729839041829109,
+   "dr2_source_id": "5291061475706634880",
+   "dr3_source_id": "5291061475706634880",
+   "magnitude_difference": -0.014649391174316406
+  }
+ ],
+ "gaia_dr3_from_dr2:{\"dr2_id\": \"5291061475706634880\"}": [
+  {
+   "angular_distance": 0.04729839041829109,
+   "dr2_source_id": "5291061475706634880",
+   "dr3_source_id": "5291061475706634880",
+   "magnitude_difference": -0.014649391174316406
+  }
+ ],
+ "simbad:{\"name\": \"Gaia DR3 5291061475706634880\"}": [],
+ "simbad:{\"name\": \"TIC 410450857\"}": [],
+ "tic_by_gaia_dr2:{\"dr2_id\": \"5291061475706634880\"}": [
+  {
+   "GAIA": "5291061475706634880",
+   "GAIAmag": 15.6217,
+   "HIP": null,
+   "ID": 410450857,
+   "KIC": null,
+   "MH": null,
+   "TWOMASS": "08000545-6000016",
+   "Teff": 6478.0,
+   "Tmag": 15.1881,
+   "Vmag": 15.776,
+   "contratio": null,
+   "d": 2151.04,
+   "dec": -60.0004912365391,
+   "disposition": null,
+   "duplicate_id": null,
+   "e_MH": null,
+   "e_Teff": 123.0,
+   "e_Tmag": 0.006,
+   "e_Vmag": 0.172,
+   "e_d": 149.005,
+   "e_logg": null,
+   "e_lum": null,
+   "e_mass": null,
+   "e_rad": null,
+   "logg": 4.29618,
+   "lum": 2.903467,
+   "mass": 1.32,
+   "objType": "STAR",
+   "pmDEC": 4.96871,
+   "pmRA": 0.891838,
+   "ra": 120.022755297184,
+   "rad": 1.35279,
+   "version": "20190415"
+  }
+ ],
+ "tic_by_id:{\"tic\": 410450857}": {
+  "GAIA": "5291061475706634880",
+  "GAIAmag": 15.6217,
+  "HIP": null,
+  "ID": 410450857,
+  "KIC": null,
+  "MH": null,
+  "TWOMASS": "08000545-6000016",
+  "Teff": 6478.0,
+  "Tmag": 15.1881,
+  "Vmag": 15.776,
+  "contratio": null,
+  "d": 2151.04,
+  "dec": -60.0004912365391,
+  "disposition": null,
+  "duplicate_id": null,
+  "e_MH": null,
+  "e_Teff": 123.0,
+  "e_Tmag": 0.006,
+  "e_Vmag": 0.172,
+  "e_d": 149.005,
+  "e_logg": null,
+  "e_lum": null,
+  "e_mass": null,
+  "e_rad": null,
+  "logg": 4.29618,
+  "lum": 2.903467,
+  "mass": 1.32,
+  "objType": "STAR",
+  "pmDEC": 4.96871,
+  "pmRA": 0.891838,
+  "ra": 120.022755297184,
+  "rad": 1.35279,
+  "version": "20190415"
+ }
+}
