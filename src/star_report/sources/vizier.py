@@ -30,7 +30,10 @@ class VizierSpec:
     catalog_key: str
     columns: tuple[str, ...]
     mode: Literal["cone", "gaia_id"] = "cone"
-    gaia_columns: tuple[str, ...] = ()   # gaia_id mode: one constraint query per column
+    # gaia_id mode: one constraint query per column. If the star has no usable (digits-only) Gaia
+    # DR3 ID, the source falls back to a cone search, but only when cfg.sources.radius_arcsec has an
+    # entry under this spec's `name`; with no radius configured the query is skipped (empty payload).
+    gaia_columns: tuple[str, ...] = ()
     table: str = ""                      # cone mode: table within the catalog ("" = the catalog itself)
     followup: FollowUp | None = None     # optional second step run on the cone result
     needs: tuple[str, ...] = ()

@@ -7,7 +7,7 @@ from star_report.coords import propagate, separation_arcsec
 from star_report.sources import vizier
 from star_report.sources.base import run_source
 from star_report.sources.registry import build_sources
-from star_report.sources.vizier import SB9, VSX, WDS, WIDE_BINARIES
+from star_report.sources.vizier import SB9, VSX, WDS, WIDE_BINARIES, VizierSource, VizierSpec
 
 GAIA_ID = "4472832130942575872"
 
@@ -174,3 +174,68 @@ def test_empty_tablelist_is_empty(fake, ctx):
 def test_malformed_payloads_do_not_raise(src, raw, ctx):
     out = src.parse(raw, ctx)
     assert isinstance(out, list)
+
+
+# ---- gaia_id mode with cone fallback (the shape Task 20's apogee uses) ----
+
+def _apogee_like(radius=3.0):
+    src = VizierSource(VizierSpec("apogee", "apogee", ("GaiaEDR3", "Teff"),
+                                  mode="gaia_id", gaia_columns=("GaiaEDR3",)), lambda raw, ctx: raw)
+    ctx = _gaia_ctx()
+    if radius is None:
+        ctx.config.sources.radius_arcsec.pop("apogee", None)
+    else:
+        ctx.config.sources.radius_arcsec["apogee"] = radius
+    return src, ctx
+
+
+def test_gaia_id_mode_uses_constraint_when_id_valid(fake):
+    client = fake()
+    src, ctx = _apogee_like()
+    src.fetch(ctx)
+    assert client.calls == [("constraints", {"catalog": "III/286/catalog", "GaiaEDR3": GAIA_ID})]
+    assert src.query(ctx) == {"catalog": "III/286/catalog", "gaia_dr3_id": GAIA_ID}
+
+
+@pytest.mark.parametrize("bad", [None, "", "12; DROP", "-3"])
+def test_gaia_id_mode_falls_back_to_cone(fake, bad):
+    client = fake()
+    src, ctx = _apogee_like()
+    ctx.identity = ctx.identity.model_copy(update={"gaia_dr3_id": bad})
+    src.fetch(ctx)
+    assert [k for k, _ in client.calls] == ["region"]
+    assert client.calls[0][1]["catalog"] == "III/286/catalog"
+    ra, dec = propagate(ctx.identity.position, 2000.0)
+    q = src.query(ctx)
+    assert q == {"catalog": "III/286/catalog", "ra": ra, "dec": dec, "radius_arcsec": 3.0}
+
+
+def test_gaia_id_mode_without_radius_skips_unusable_id(fake):
+    client = fake()
+    src, ctx = _apogee_like(radius=None)
+    ctx.identity = ctx.identity.model_copy(update={"gaia_dr3_id": None})
+    assert src.fetch(ctx) == {}
+    assert client.calls == []
+    assert src.query(ctx) == {"catalog": "III/286/catalog", "gaia_dr3_id": None}
+
+
+# ---- real-data parser fixtures (one-off recordings, not in REPORT_SOURCES) ----
+
+def test_wide_binary_61_cyg_theta_in_degrees():
+    ctx = _gaia_ctx("1872046609345556480")
+    (row,) = WIDE_BINARIES.parse(load_fixture("wide_binaries", "61_Cyg"), ctx)
+    assert row["companion"] == "1872046574983497216"
+    assert row["sep_arcsec"] == pytest.approx(31.6, abs=1.0)
+    assert row["sep_au"] / row["sep_arcsec"] == pytest.approx(3.5, rel=0.2)  # ~3.5 pc
+    assert row["type"] == "MSMS"
+
+
+def test_sb9_algol():
+    from star_report.models import Position
+    ident = ref_identity("HD_209458").model_copy(update={
+        "position": Position(ra=47.0422083, dec=40.9556389, epoch=2000.0, source="simbad")})
+    rows = SB9.parse(load_fixture("sb9", "Algol"), make_ctx(identity=ident))
+    with_orbit = [r for r in rows if r["period_d"] is not None]
+    assert [r["name"] for r in with_orbit] == ["HIP 14576"]
+    assert with_orbit[0]["period_d"] == pytest.approx(2.867, abs=0.001)
+    assert with_orbit[0]["k2_kms"] == pytest.approx(201.0)
