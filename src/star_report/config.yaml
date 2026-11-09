@@ -1,0 +1,71 @@
+# star-report defaults. A ./config.yaml or --config file only needs the keys it changes.
+output:
+  dir: reports
+  open_single: true            # open the HTML report when there is exactly one target
+servers:                       # the first host that accepts a TCP connection on 443 is used (checked once per run)
+  simbad: [simbad.cds.unistra.fr, simbad.harvard.edu]
+  vizier: [vizier.cds.unistra.fr, vizier.cfa.harvard.edu]
+cache:
+  dir: ~/.cache/star-report
+  empty_expiry_days: 1         # an empty result is rechecked after 1 day, whatever its group
+  expiry_days:                 # null = never expires; replaced only by --refresh
+    gaia: 90
+    tic: 90
+    vizier: 90
+    simbad: 30
+    exoplanet_archive: 1
+    exofop: 1
+    mast: 7
+    eso: 7
+    koa: 7
+    ads: 7
+    cmd_background: null
+    llm: null
+sources:
+  max_workers: 8
+  timeout_s: 30
+  enabled: {simbad: true, gaia_core: true, gaia_neighbors: true, tic: true,
+            exoplanet_archive: true, exofop: true, gaia_nss: true, gaia_vari: true,
+            wide_binaries: true, wds: true, sb9: true, vsx: true, mast: true,
+            tess_pointing: true, eso: true, koa: true, harps_rvbank: true,
+            apogee: true, lamost: true, ads: true}
+  radius_arcsec: {gaia_neighbors: 215, wds: 10, sb9: 5, vsx: 5, harps_rvbank: 5,
+                  apogee: 3, lamost: 3, mast: 3, eso: 5, koa: 10}
+  vizier_catalogs: {wds: B/wds/wds, sb9: B/sb9, vsx: B/vsx/vsx, wide_binaries: J/MNRAS/506/2269/catalog,
+                    harps_rvbank: J/A+A/636/A74, apogee: III/286/catalog, lamost: V/162}   # Task 20 pins the LAMOST table
+  koa_instruments: [hires, kpf, nirspec, esi, nirc2, nires, mosfire]
+resolve:
+  match_radius_arcsec: 5       # coordinates or SIMBAD position -> nearest Gaia DR3 / TIC
+  coord_search_arcsec: 200     # candidate cone for coordinate input (covers J2000 positions of high-PM stars)
+  pair_radius_arcsec: 2
+  pair_max_delta_g: 3
+parameters:
+  disagreement_sigma: 3
+  disagreement_fraction: 0.10
+  disagreement_absolute: {logg: 0.2, mh: 0.2, V: 0.1, G: 0.05}   # replaces the fraction for log/mag rows
+flags:
+  ruwe_max: 1.4
+  contamination_max: 0.1
+plots:
+  enabled: true
+  max_sectors: 10
+  lightcurve_timeout_s: 120
+  cutout_arcmin: 5
+  sky_survey: CDS/P/DSS2/red   # hips2fits HiPS ID (CDS)
+  sky_fallback_survey: poss2ukstu_red   # STScI DSS cutout service, used when CDS is unreachable
+  neighbor_max_delta_g: 6
+  tess_pixel_arcsec: 21
+  cmd_background_rows: 50000
+  periodogram_min_period_d: 0.1
+  periodogram_max_period_d: 30
+literature:
+  max_records: 200
+  doctypes: [article, eprint]
+  most_cited: 15
+  most_recent: 10
+llm:
+  enabled: true
+  model: claude-opus-5-5
+  effort: high
+  max_tokens: 16000
+  server_fallback: true
