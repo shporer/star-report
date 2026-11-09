@@ -32,7 +32,9 @@ sources:
   radius_arcsec: {gaia_neighbors: 215, wds: 10, sb9: 5, vsx: 5, harps_rvbank: 5,
                   apogee: 3, lamost: 3, mast: 3, eso: 5, koa: 10}
   vizier_catalogs: {wds: B/wds/wds, sb9: B/sb9, vsx: B/vsx/vsx, wide_binaries: J/MNRAS/506/2269/catalog,
-                    harps_rvbank: J/A+A/636/A74, apogee: III/286/catalog, lamost: V/162}   # Task 20 pins the LAMOST table
+                    harps_rvbank: J/A+A/636/A74, apogee: III/286/catalog, lamost: V/162/dr11sl}
+  # lamost = V/162/dr11sl (DR11 low-res stellar parameters). Columns used by parse_lamost: ObsID, Obs.Date,
+  # snru/snrg/snrr/snri/snrz (S/N, the largest picks the best row), Teff, logg, [Fe/H]
   koa_instruments: [hires, kpf, nirspec, esi, nirc2, nires, mosfire]
 resolve:
   match_radius_arcsec: 5       # coordinates or SIMBAD position -> nearest Gaia DR3 / TIC

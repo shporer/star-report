@@ -1,0 +1,129 @@
+{% macro status_note(name) -%}
+{%- set res = report.results.get(name) -%}
+{%- if res is none -%}<p class="muted">{{ name }}: not run</p>
+{%- elif res.status != "ok" -%}<p class="muted status-{{ res.status }}">{{ name }}: {{ STATUS_LABELS[res.status] }}{% if res.status in ("error", "timeout", "skipped") and res.error %}: {{ res.error }}{% endif %}</p>
+{%- endif -%}
+{%- endmacro %}
+{% macro sectors(values) -%}{{ values | join(", ") }}{%- endmacro %}
+{% macro safe_url(url) -%}{% if url is string and (url.startswith("https://") or url.startswith("http://")) %}{{ url }}{% endif %}{%- endmacro %}
+{% set mast_r = report.results.get("mast") %}
+{% set mast = mast_r.data if mast_r is not none and mast_r.status == "ok" and mast_r.data is mapping else none %}
+{% set tp_r = report.results.get("tess_pointing") %}
+{% set tp = tp_r.data if tp_r is not none and tp_r.status == "ok" and tp_r.data is mapping else none %}
+{% set eso_r = report.results.get("eso") %}
+{% set eso = eso_r.data if eso_r is not none and eso_r.status == "ok" and eso_r.data is mapping else none %}
+{% set koa_r = report.results.get("koa") %}
+{% set koa = koa_r.data if koa_r is not none and koa_r.status == "ok" and koa_r.data is mapping else none %}
+{% set harps_r = report.results.get("harps_rvbank") %}
+{% set harps = harps_r.data if harps_r is not none and harps_r.status == "ok" and harps_r.data is mapping else none %}
+{% set apogee_r = report.results.get("apogee") %}
+{% set apogee = apogee_r.data if apogee_r is not none and apogee_r.status == "ok" and apogee_r.data is mapping else none %}
+{% set lamost_r = report.results.get("lamost") %}
+{% set lamost = lamost_r.data if lamost_r is not none and lamost_r.status == "ok" and lamost_r.data is mapping else none %}
+{% set gaia_r = report.results.get("gaia_core") %}
+{% set gaia = gaia_r.data if gaia_r is not none and gaia_r.status == "ok" and gaia_r.data is mapping else none %}
+{% set fop_r = report.results.get("exofop") %}
+{% set fop = fop_r.data if fop_r is not none and fop_r.status == "ok" and fop_r.data is mapping else none %}
+
+<section id="inventory">
+<h2>Data inventory</h2>
+
+<h3>TESS sectors</h3>
+{{ status_note("mast") }}
+{{ status_note("tess_pointing") }}
+{% if mast and mast.tess is mapping %}
+<table>
+<thead><tr><th>Product</th><th>Sectors</th></tr></thead>
+<tbody>
+<tr><td>SPOC 120 s</td><td>{{ sectors(mast.tess.spoc_120s|as_list) or "none" }}</td></tr>
+<tr><td>SPOC 20 s</td><td>{{ sectors(mast.tess.spoc_20s|as_list) or "none" }}</td></tr>
+<tr><td>Full-frame images</td><td>{{ sectors(mast.tess.ffi|as_list) or "none" }}</td></tr>
+</tbody>
+</table>
+{% endif %}
+{% if tp %}
+<ul>
+<li>Observed: {{ sectors(tp.observed|as_list) or "none" }}</li>
+{% if tp.in_progress|as_list %}<li>In progress: {{ sectors(tp.in_progress|as_list) }}</li>{% endif %}
+{% if tp.pending|as_list %}<li>Observed, data pending: {{ sectors(tp.pending|as_list) }}</li>{% endif %}
+{% if tp.upcoming|as_list %}<li>Upcoming: {% for s in tp.upcoming|as_list %}{% if s is mapping %}sector {{ s.sector }}{% if s.start %} ({{ s.start[:10] }}){% endif %}{% else %}{{ s }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</li>{% endif %}
+</ul>
+{% if tp.release_unknown %}<p class="muted">Some sector release dates could not be determined.</p>{% endif %}
+{% endif %}
+
+<h3>Other missions</h3>
+{% if mast %}
+<ul>
+{% if mast.kepler is mapping %}<li>Kepler: {{ mast.kepler.n_long or 0 }} long-cadence, {{ mast.kepler.n_short or 0 }} short-cadence products</li>{% endif %}
+{% if mast.k2 is mapping %}<li>K2: {{ mast.k2.n_long or 0 }} long-cadence, {{ mast.k2.n_short or 0 }} short-cadence products</li>{% endif %}
+</ul>
+{% if mast.hlsp|as_list %}
+<table>
+<thead><tr><th>HLSP pipeline</th><th>Products</th><th>Sectors</th></tr></thead>
+<tbody>
+{% for h in mast.hlsp|as_list if h is mapping %}
+<tr><td>{{ h.provenance }}</td><td class="num">{{ h.n if h.n is number else "" }}</td><td>{{ sectors(h.sectors|as_list) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if mast.other|as_list %}
+<table>
+<thead><tr><th>Collection</th><th>Instrument</th><th>Product</th><th>Observations</th></tr></thead>
+<tbody>
+{% for o in mast.other|as_list if o is mapping %}
+<tr><td>{{ o.collection or "" }}</td><td>{{ o.instrument or "" }}</td><td>{{ o.product or "" }}</td><td class="num">{{ o.n if o.n is number else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% set portal = safe_url(mast.portal_url) | trim %}
+{% if portal %}<p><a href="{{ portal }}">Open in the MAST portal</a></p>{% endif %}
+{% endif %}
+
+<h3>Spectra and radial velocities</h3>
+{{ status_note("eso") }}
+{% if eso and eso.instruments|as_list %}
+<table>
+<thead><tr><th>ESO instrument</th><th>Spectra</th><th>First</th><th>Last</th></tr></thead>
+<tbody>
+{% for i in eso.instruments|as_list if i is mapping %}
+<tr><td>{{ i.instrument }}</td><td class="num">{{ i.n if i.n is number else "" }}</td><td>{{ i.first or "" }}</td><td>{{ i.last or "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{{ status_note("koa") }}
+{% if koa and koa.instruments|as_list %}
+<table>
+<thead><tr><th>Keck instrument</th><th>Frames</th><th>Nights</th><th>First</th><th>Last</th><th>Programs</th></tr></thead>
+<tbody>
+{% for i in koa.instruments|as_list if i is mapping %}
+<tr><td>{{ i.instrument }}</td><td class="num">{{ i.frames if i.frames is number else "" }}</td><td class="num">{{ i.nights if i.nights is number else "" }}</td><td>{{ i.first or "" }}</td><td>{{ i.last or "" }}</td><td>{{ (i.programs|as_list) | join(", ") }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if koa and koa.errors|as_list %}<p class="muted status-error">Keck instruments unavailable: {% for e in koa.errors|as_list if e is mapping %}{{ e.instrument }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+{{ status_note("harps_rvbank") }}
+{% if harps %}
+<p>HARPS RV bank ({{ harps.name or "" }}): {{ harps.n_rv if harps.n_rv is number else "unknown number of" }} RVs{% if harps.span_yr is number %} over {{ "%.1f"|format(harps.span_yr) }} yr (BJD {{ "%.1f"|format(harps.first_bjd) }} to {{ "%.1f"|format(harps.last_bjd) }}){% endif %}.</p>
+{% endif %}
+{{ status_note("apogee") }}
+{% if apogee %}
+<p>APOGEE DR17 ({{ apogee.apogee_id or "" }}): {{ apogee.n_visits if apogee.n_visits is number else "?" }} visits{% if apogee.snr is number %}, S/N {{ "%.0f"|format(apogee.snr) }}{% endif %}{% if apogee.rv is number %}, RV {{ "%.2f"|format(apogee.rv) }} km/s{% endif %}{% if apogee.teff is number %}; Teff {{ "%.0f"|format(apogee.teff) }} K{% endif %}{% if apogee.logg is number %}, log g {{ "%.2f"|format(apogee.logg) }}{% endif %}{% if apogee.mh is number %}, [M/H] {{ "%.2f"|format(apogee.mh) }}{% endif %}.</p>
+{% endif %}
+{{ status_note("lamost") }}
+{% if lamost %}
+<p>LAMOST DR11: {{ lamost.n_spectra }} low-resolution spectra{% if lamost.last_obs %}, last observed {{ lamost.last_obs }}{% endif %}{% if lamost.teff is number %}; best S/N: Teff {{ "%.0f"|format(lamost.teff) }} K{% endif %}{% if lamost.logg is number %}, log g {{ "%.2f"|format(lamost.logg) }}{% endif %}{% if lamost.feh is number %}, [Fe/H] {{ "%.2f"|format(lamost.feh) }}{% endif %}.</p>
+{% endif %}
+{{ status_note("gaia_core") }}
+{% if gaia %}<p>Gaia RVS spectrum: {{ "available" if gaia.has_rvs else "not available" }}.</p>{% endif %}
+
+<h3>ExoFOP follow-up</h3>
+{{ status_note("exofop") }}
+{% if fop %}
+{% set fu = fop.followup if fop.followup is mapping else {} %}
+<p>{{ fu.imaging or 0 }} imaging, {{ fu.spectroscopy or 0 }} spectroscopy and {{ fu.time_series or 0 }} time-series follow-up files{% set furl = safe_url(fop.url) | trim %}{% if furl %}; <a href="{{ furl }}">ExoFOP page</a>{% endif %}.</p>
+{% endif %}
+</section>

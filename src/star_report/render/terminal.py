@@ -40,6 +40,24 @@ def _planets_line(report: Report) -> str:
     return text
 
 
+def _data(report: Report, name: str) -> dict:
+    res = report.results.get(name)
+    return res.data if res is not None and res.status == "ok" and isinstance(res.data, dict) else {}
+
+
+def _data_line(report: Report) -> str:
+    """One line: TESS sectors observed/upcoming and the counts of ESO, KOA and HARPS spectra."""
+    tp = _data(report, "tess_pointing")
+    observed = [s for s in tp.get("observed") or [] if isinstance(s, int)]
+    upcoming = [s for s in tp.get("upcoming") or [] if isinstance(s, dict)]
+    eso = _data(report, "eso").get("total")
+    koa = sum(i.get("frames") or 0 for i in _data(report, "koa").get("instruments") or []
+              if isinstance(i, dict) and isinstance(i.get("frames"), int))
+    harps = _data(report, "harps_rvbank").get("n_rv")
+    return (f"Data: TESS sectors {len(observed)} observed, {len(upcoming)} upcoming; "
+            f"ESO {eso if isinstance(eso, int) else 0}, KOA {koa}, HARPS {harps if isinstance(harps, int) else 0}")
+
+
 def print_summary(report: Report, report_path: Path | None, console: Console) -> None:
     ident = report.identity
     lines = [f"[bold]{escape(display_name(ident.main_name))}[/bold]"]
@@ -81,6 +99,8 @@ def print_summary(report: Report, report_path: Path | None, console: Console) ->
     planets_line = _planets_line(report)
     if planets_line:
         console.print(escape(planets_line))
+
+    console.print(escape(_data_line(report)))
 
     for name, res in report.results.items():
         mark, style = _MARKS[res.status]

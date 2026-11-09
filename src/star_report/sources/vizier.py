@@ -262,3 +262,76 @@ VSX = VizierSource(VizierSpec(
 WIDE_BINARIES = VizierSource(VizierSpec(
     "wide_binaries", "wide_binaries", ("Source1", "Source2", "theta", "sepAU", "R", "BinType"),
     mode="gaia_id", gaia_columns=("Source1", "Source2"), needs=("gaia_dr3_id",)), parse_wide_binaries)
+
+
+# ---- survey spectra and RVs ----
+
+def harps_rvs(ctx: SourceContext, catalog: str, tables: dict) -> dict:
+    """Follow-up for the HARPS RV bank: the BJD of every RV of each matched star (key differs from the cone table)."""
+    names = sorted({n for r in _rows(tables) if (n := _text(r.get("Name")))})
+    if not names:
+        return {}
+    client = vizier_client(ctx.config, ["BJD"], row_limit=-1)
+    rows: list[dict] = []
+    for name in names:
+        result = client.query_constraints(catalog=f"{catalog}/rvbank", Name=name)
+        rows.extend(r for rs in _to_records(result).values() for r in rs)
+    return {f"{catalog}/rvbank": rows}
+
+
+def parse_harps_rvbank(raw: Any, ctx: SourceContext) -> dict:
+    stars = _rows(raw, "list")
+    if not stars:
+        return {}
+    star = min(stars, key=lambda r: (_dist(r, ctx) is None, _dist(r, ctx) or 0.0))
+    name = _text(star.get("Name"))
+    bjds = [b for r in _rows(raw, "rvbank") if _text(r.get("Name")) in (None, name)
+            and (b := _num(r.get("BJD"))) is not None]
+    nrv = _num(star.get("Nrv"))
+    first, last = (min(bjds), max(bjds)) if bjds else (None, None)
+    return {"name": name, "n_rv": len(bjds) or (int(nrv) if nrv is not None else None),
+            "first_bjd": first, "last_bjd": last,
+            "span_yr": (last - first) / 365.25 if bjds else None}
+
+
+def _best_snr(rows: list[dict], *keys: str) -> dict | None:
+    """The row with the highest S/N (the largest of `keys`); rows without any S/N rank last."""
+    def snr(r: dict) -> float:
+        return max((v for k in keys if (v := _num(r.get(k))) is not None), default=float("-inf"))
+    return max(rows, key=snr) if rows else None
+
+
+def parse_apogee(raw: Any, ctx: SourceContext) -> dict:
+    row = _best_snr(_rows(raw), "SNR")
+    if row is None:
+        return {}
+    nvis = _num(row.get("Nvis"))
+    return {"apogee_id": _text(row.get("APOGEE")), "teff": _num(row.get("Teff")),
+            "logg": _num(row.get("logg")), "mh": _num(row.get("[M/H]")),
+            "n_visits": int(nvis) if nvis is not None else None,
+            "snr": _num(row.get("SNR")), "rv": _num(row.get("HRV"))}
+
+
+_LAMOST_SNR = ("snru", "snrg", "snrr", "snri", "snrz")
+
+
+def parse_lamost(raw: Any, ctx: SourceContext) -> dict:
+    rows = _rows(raw)
+    best = _best_snr(rows, *_LAMOST_SNR)
+    if best is None:
+        return {}
+    dates = [d for r in rows if (d := _text(r.get("Obs.Date")))]
+    return {"n_spectra": len(rows), "last_obs": max(dates) if dates else None,
+            "teff": _num(best.get("Teff")), "logg": _num(best.get("logg")),
+            "feh": _num(best.get("[Fe/H]"))}
+
+
+HARPS_RVBANK = VizierSource(VizierSpec(
+    "harps_rvbank", "harps_rvbank", ("Name", "Nrv", "SimbadName"),
+    table="list", followup=harps_rvs), parse_harps_rvbank)
+APOGEE = VizierSource(VizierSpec(
+    "apogee", "apogee", ("APOGEE", "Teff", "logg", "[M/H]", "Nvis", "SNR", "HRV", "GaiaEDR3"),
+    mode="gaia_id", gaia_columns=("GaiaEDR3",), needs=("gaia_dr3_id",)), parse_apogee)
+LAMOST = VizierSource(VizierSpec(
+    "lamost", "lamost", ("ObsID", "Obs.Date", "snru", "snrg", "snrr", "snri", "snrz",
+                         "Teff", "logg", "[Fe/H]")), parse_lamost)

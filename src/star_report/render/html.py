@@ -84,6 +84,7 @@ _env = Environment(loader=PackageLoader("star_report", "render/templates"), auto
 _env.filters["cite"] = link_citations
 _env.globals["fmt_cell"] = _fmt_cell
 _env.globals["STATUS_LABELS"] = STATUS_LABELS
+_env.filters["as_list"] = lambda v: list(v) if isinstance(v, (list, tuple)) else []
 
 
 def _embed_plots(report: Report, base_dir: Path) -> dict[str, str]:
