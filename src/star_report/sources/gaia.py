@@ -158,3 +158,124 @@ class GaiaNeighbors(Source):
                 "delta_g": g - target_g if g is not None and target_g is not None else None,
             })
         return out
+
+
+def _safe_id(gaia_id: Any) -> int | None:
+    try:
+        return _int_id(gaia_id)
+    except (TypeError, ValueError):
+        return None
+
+
+def _num(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value) if value == value else None
+
+
+def _dicts(value: Any) -> list[dict]:
+    return [r for r in value if isinstance(r, dict)] if isinstance(value, list) else []
+
+
+_NSS_COLS = ["source_id", "nss_solution_type", "period", "period_error", "eccentricity",
+             "eccentricity_error", "semi_amplitude_primary", "inclination", "mass_ratio"]
+
+
+class GaiaNss(Source):
+    name = "gaia_nss"
+    group = "gaia"
+    service = "Gaia DR3 (ESA TAP)"
+    catalog_version = "Gaia DR3"
+    needs = ("gaia_dr3_id",)
+
+    def query(self, ctx: SourceContext) -> dict:
+        return {"source_id": ctx.identity.gaia_dr3_id}
+
+    def fetch(self, ctx: SourceContext) -> Any:
+        sid = _safe_id(ctx.identity.gaia_dr3_id)
+        if sid is None:
+            return []
+        adql = (f"SELECT {', '.join(_NSS_COLS)} FROM gaiadr3.nss_two_body_orbit "
+                f"WHERE source_id = {sid}")
+        return tap_rows(TAP_URL, adql, ctx.session)
+
+    def parse(self, raw: Any, ctx: SourceContext) -> list[dict] | None:
+        out = []
+        for r in _dicts(raw):
+            sol = r.get("nss_solution_type")
+            out.append({
+                "type": sol if isinstance(sol, str) else None,
+                "period_d": _num(r.get("period")),
+                "period_err": _num(r.get("period_error")),
+                "ecc": _num(r.get("eccentricity")),
+                "k1_kms": _num(r.get("semi_amplitude_primary")),
+                "inclination": _num(r.get("inclination")),
+                "mass_ratio": _num(r.get("mass_ratio")),
+            })
+        return out or None
+
+
+# in_vari_<flag> -> (table, period column, True when the column is a frequency in 1/d)
+_VARI_PERIODS = {
+    "eclipsing_binary": ("vari_eclipsing_binary", "frequency", True),
+    "long_period_variable": ("vari_long_period_variable", "frequency", True),
+    "short_timescale": ("vari_short_timescale", "frequency", True),
+    "ms_oscillator": ("vari_ms_oscillator", "frequency1", True),
+    "rotation_modulation": ("vari_rotation_modulation", "best_rotation_period", False),
+    "rrlyrae": ("vari_rrlyrae", "pf", False),
+    "cepheid": ("vari_cepheid", "pf", False),
+    "planetary_transit": ("vari_planetary_transit", "transit_period", False),
+    "compact_companion": ("vari_compact_companion", "period", False),
+}
+
+
+class GaiaVari(Source):
+    name = "gaia_vari"
+    group = "gaia"
+    service = "Gaia DR3 (ESA TAP)"
+    catalog_version = "Gaia DR3"
+    needs = ("gaia_dr3_id",)
+
+    def query(self, ctx: SourceContext) -> dict:
+        return {"source_id": ctx.identity.gaia_dr3_id}
+
+    def fetch(self, ctx: SourceContext) -> Any:
+        sid = _safe_id(ctx.identity.gaia_dr3_id)
+        if sid is None:
+            return {"summary": None}
+        rows = tap_rows(TAP_URL, f"SELECT * FROM gaiadr3.vari_summary WHERE source_id = {sid}",
+                        ctx.session)
+        if not rows:
+            return {"summary": None}
+        summary = {k: v for k, v in rows[0].items() if k.startswith("in_vari_")}
+        summary["source_id"] = _id(rows[0].get("source_id"))
+        classifier = tap_rows(
+            TAP_URL,
+            "SELECT classifier_name, best_class_name, best_class_score "
+            f"FROM gaiadr3.vari_classifier_result WHERE source_id = {sid}", ctx.session)
+        periods = {}
+        for flag, (table, col, _) in _VARI_PERIODS.items():
+            if summary.get(f"in_vari_{flag}") is True:
+                periods[flag] = tap_rows(
+                    TAP_URL, f"SELECT {col} FROM gaiadr3.{table} WHERE source_id = {sid}",
+                    ctx.session)
+        return {"summary": summary, "classifier": classifier, "periods": periods}
+
+    def parse(self, raw: Any, ctx: SourceContext) -> dict:
+        if not isinstance(raw, dict) or not isinstance(raw.get("summary"), dict):
+            return {}
+        classes = []
+        for r in _dicts(raw.get("classifier")):
+            name = r.get("best_class_name")
+            if isinstance(name, str):
+                classes.append({"classifier": r.get("classifier_name"), "class": name,
+                                "score": _num(r.get("best_class_score"))})
+        periods = []
+        by_flag = raw.get("periods")
+        for flag, (_, col, is_freq) in _VARI_PERIODS.items():
+            for r in _dicts(by_flag.get(flag)) if isinstance(by_flag, dict) else []:
+                v = _num(r.get(col))
+                if v is None or (is_freq and v <= 0):
+                    continue
+                periods.append({"type": flag, "period_d": 1 / v if is_freq else v})
+        return {"classes": classes, "periods": periods}

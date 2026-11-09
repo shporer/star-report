@@ -1,0 +1,25 @@
+{
+ "classifier": [
+  {
+   "best_class_name": "SOLAR_LIKE",
+   "best_class_score": 0.48129376769065857,
+   "classifier_name": "nTransits:5+"
+  }
+ ],
+ "periods": {},
+ "summary": {
+  "in_vari_agn": false,
+  "in_vari_cepheid": false,
+  "in_vari_classification_result": true,
+  "in_vari_compact_companion": false,
+  "in_vari_eclipsing_binary": false,
+  "in_vari_long_period_variable": false,
+  "in_vari_microlensing": false,
+  "in_vari_ms_oscillator": false,
+  "in_vari_planetary_transit": false,
+  "in_vari_rotation_modulation": false,
+  "in_vari_rrlyrae": false,
+  "in_vari_short_timescale": false,
+  "source_id": "5284517766615850752"
+ }
+}

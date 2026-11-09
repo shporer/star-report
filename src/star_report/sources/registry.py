@@ -6,12 +6,12 @@ from star_report.config import Config
 from star_report.sources.base import Source
 from star_report.sources.exoplanet_archive import ExoplanetArchive
 from star_report.sources.exofop import ExoFop
-from star_report.sources.gaia import GaiaCore, GaiaNeighbors
+from star_report.sources.gaia import GaiaCore, GaiaNeighbors, GaiaNss, GaiaVari
 from star_report.sources.simbad import Simbad
 from star_report.sources.tic import Tic
 
 
 def build_sources(cfg: Config) -> list[Source]:
     sources: list[Source] = [Simbad(), GaiaCore(), GaiaNeighbors(), Tic(), ExoplanetArchive(),
-                       ExoFop()]
+                       ExoFop(), GaiaNss(), GaiaVari()]
     return sources
