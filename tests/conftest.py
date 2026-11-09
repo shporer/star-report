@@ -93,7 +93,7 @@ from star_report.models import LLMBlock, Provenance, Report, SourceResult  # noq
 from star_report.sources.registry import build_sources  # noqa: E402
 
 REPORT_SOURCES = ["simbad", "gaia_core", "gaia_neighbors", "tic", "exoplanet_archive",
-                  "exofop", "gaia_nss", "gaia_vari"]
+                  "exofop", "gaia_nss", "gaia_vari", "wds", "sb9", "vsx", "wide_binaries"]
 _FIXED_TIME = datetime(2026, 11, 9, 12, 0, 0, tzinfo=timezone.utc)
 
 
