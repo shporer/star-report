@@ -1,0 +1,39 @@
+{
+ "k2": [],
+ "kois": [],
+ "planets": [
+  {
+   "disc_year": 2025,
+   "discoverymethod": "Radial Velocity",
+   "pl_bmasse": 0.263,
+   "pl_name": "Barnard d",
+   "pl_orbper": 2.3402,
+   "pl_rade": 0.694
+  },
+  {
+   "disc_year": 2024,
+   "discoverymethod": "Radial Velocity",
+   "pl_bmasse": 0.299,
+   "pl_name": "Barnard b",
+   "pl_orbper": 3.1542,
+   "pl_rade": 0.72
+  },
+  {
+   "disc_year": 2025,
+   "discoverymethod": "Radial Velocity",
+   "pl_bmasse": 0.193,
+   "pl_name": "Barnard e",
+   "pl_orbper": 6.7392,
+   "pl_rade": 0.637
+  },
+  {
+   "disc_year": 2025,
+   "discoverymethod": "Radial Velocity",
+   "pl_bmasse": 0.335,
+   "pl_name": "Barnard c",
+   "pl_orbper": 4.1244,
+   "pl_rade": 0.743
+  }
+ ],
+ "tois": []
+}

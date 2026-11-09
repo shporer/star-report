@@ -1,0 +1,54 @@
+{
+ "k2": [],
+ "kois": [
+  {
+   "kepler_name": "Kepler-10 b",
+   "kepoi_name": "K00072.01",
+   "koi_disposition": "CONFIRMED",
+   "koi_period": 0.837491225,
+   "koi_prad": 1.43
+  },
+  {
+   "kepler_name": "Kepler-10 c",
+   "kepoi_name": "K00072.02",
+   "koi_disposition": "CONFIRMED",
+   "koi_period": 45.29422297,
+   "koi_prad": 2.26
+  }
+ ],
+ "planets": [
+  {
+   "disc_year": 2011,
+   "discoverymethod": "Transit",
+   "pl_bmasse": 11.29,
+   "pl_name": "Kepler-10 c",
+   "pl_orbper": 45.294301,
+   "pl_rade": 2.355
+  },
+  {
+   "disc_year": 2011,
+   "discoverymethod": "Transit",
+   "pl_bmasse": 3.24,
+   "pl_name": "Kepler-10 b",
+   "pl_orbper": 0.8374907,
+   "pl_rade": 1.47
+  },
+  {
+   "disc_year": 2023,
+   "discoverymethod": "Radial Velocity",
+   "pl_bmasse": 12.0,
+   "pl_name": "Kepler-10 d",
+   "pl_orbper": 151.06,
+   "pl_rade": 3.49
+  }
+ ],
+ "tois": [
+  {
+   "pl_orbper": 0.8374997,
+   "pl_rade": 2.0046235,
+   "pl_trandep": 248.9571168,
+   "tfopwg_disp": "KP",
+   "toi": "5988.01"
+  }
+ ]
+}

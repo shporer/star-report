@@ -1,0 +1,68 @@
+{
+ "k2": [],
+ "kois": [],
+ "planets": [
+  {
+   "disc_year": 2020,
+   "discoverymethod": "Transit",
+   "pl_bmasse": 0.849,
+   "pl_name": "TOI-700 b",
+   "pl_orbper": 9.97722,
+   "pl_rade": 0.963
+  },
+  {
+   "disc_year": 2020,
+   "discoverymethod": "Transit",
+   "pl_bmasse": 6.96,
+   "pl_name": "TOI-700 c",
+   "pl_orbper": 16.0511039,
+   "pl_rade": 2.535
+  },
+  {
+   "disc_year": 2020,
+   "discoverymethod": "Transit",
+   "pl_bmasse": 1.58,
+   "pl_name": "TOI-700 d",
+   "pl_orbper": 37.423457,
+   "pl_rade": 1.145
+  },
+  {
+   "disc_year": 2023,
+   "discoverymethod": "Transit",
+   "pl_bmasse": 0.718,
+   "pl_name": "TOI-700 e",
+   "pl_orbper": 27.810124,
+   "pl_rade": 0.919
+  }
+ ],
+ "tois": [
+  {
+   "pl_orbper": 16.051106,
+   "pl_rade": 2.5869212,
+   "pl_trandep": 2768.5212418,
+   "tfopwg_disp": "CP",
+   "toi": "700.01"
+  },
+  {
+   "pl_orbper": 37.4236838,
+   "pl_rade": 1.3296571,
+   "pl_trandep": 737.5519387,
+   "tfopwg_disp": "CP",
+   "toi": "700.02"
+  },
+  {
+   "pl_orbper": 9.977273,
+   "pl_rade": 0.9617288,
+   "pl_trandep": 459.8525479,
+   "tfopwg_disp": "CP",
+   "toi": "700.03"
+  },
+  {
+   "pl_orbper": 27.8096898,
+   "pl_rade": 0.9491858,
+   "pl_trandep": 406.8232517,
+   "tfopwg_disp": "CP",
+   "toi": "700.04"
+  }
+ ]
+}
