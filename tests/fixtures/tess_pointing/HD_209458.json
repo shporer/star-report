@@ -1,0 +1,19 @@
+{
+ "on_silicon": [
+  {
+   "camera": 1,
+   "ccd": 2,
+   "sector": 56
+  },
+  {
+   "camera": 1,
+   "ccd": 1,
+   "sector": 82
+  }
+ ],
+ "released": [
+  56,
+  82
+ ],
+ "released_error": null
+}
