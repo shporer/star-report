@@ -46,13 +46,15 @@ TRANSLATED = '(=abs:"HD 209458" OR simbid:"7" OR nedid:"0") database:astronomy'
 
 class FakeSession:
     def __init__(self, response, objects=None):
-        self.response = response
+        self.response = response  # one response for every search, or {sort: response}
         self.objects = objects if objects is not None else FakeResponse(200, {"query": TRANSLATED})
         self.calls = []
         self.posts = []
 
     def get(self, url, **kwargs):
         self.calls.append((url, kwargs))
+        if isinstance(self.response, dict):
+            return self.response[kwargs["params"]["sort"]]
         return self.response
 
     def post(self, url, **kwargs):
@@ -65,6 +67,28 @@ class FakeSession:
 def _ctx(tmp_path, response=None, token=TOKEN, objects=None):
     ctx = make_ctx(cache_dir=tmp_path / "cache")
     return replace(ctx, ads_token=token, session=FakeSession(response, objects))
+
+
+def _doc(bibcode, pubdate, citations=0):
+    return {"bibcode": bibcode, "title": [f"Paper {bibcode}"], "year": pubdate[:4],
+            "pubdate": pubdate, "author": ["Rao, P."], "citation_count": citations,
+            "abstract": "Synthetic.", "doctype": "article"}
+
+
+NEW = _doc("2026SynJ.700..001R", "2026-10-00")  # newer than anything on the cited page
+CITED, RECENT = "citation_count desc", "date desc"
+
+
+def _page(*docs, found=412):
+    return {"numFound": found, "start": 0, "docs": list(docs)}
+
+
+def _two_pages(recent_response):
+    return {CITED: FakeResponse(payload=_raw()), RECENT: recent_response}
+
+
+def _bibcodes(data):
+    return [p["bibcode"] for p in data["papers"]]
 
 
 def test_query_string():
@@ -96,6 +120,16 @@ def test_select_papers_ties_break_by_bibcode():
     papers = [Paper(bibcode=b, title="t", pubdate="2020-01-00", citation_count=5) for b in "CAB"]
     assert [p.bibcode for p in select_papers(papers, 2, 0)] == ["A", "B"]
     assert [p.bibcode for p in select_papers(papers, 0, 2)] == ["A", "B"]
+
+
+def test_select_papers_recent_from_a_separate_pool_each_bibcode_once():
+    cited = [Paper(bibcode=f"C{i}", title="t", pubdate=f"20{i:02d}-01-00", citation_count=100 - i)
+             for i in range(5)]
+    r1 = Paper(bibcode="R1", title="t", pubdate="2026-01-00")
+    r2 = Paper(bibcode="R2", title="t", pubdate="2025-01-00")
+    # newest three of the pool: R1, R2, C0; C0 is already among the most cited
+    chosen = select_papers([*cited, cited[1]], 2, 3, recent=[r1, cited[0], r1, r2])
+    assert [p.bibcode for p in chosen] == ["C0", "C1", "R1", "R2"]
 
 
 def test_registered_after_lamost():
@@ -132,6 +166,65 @@ def test_fetch_translates_then_searches(tmp_path):
     assert kw["params"]["sort"] == "citation_count desc"
     assert kw["params"]["rows"] == ctx.config.literature.max_records
     assert payload["q"] == kw["params"]["q"] and TOKEN not in json.dumps(payload)
+
+
+def test_fetch_searches_most_cited_then_most_recent(tmp_path):
+    ctx = _ctx(tmp_path, _two_pages(FakeResponse(payload={"responseHeader": {}, "response": _page(NEW)})))
+    payload = Ads().fetch(ctx)
+    (url1, kw1), (url2, kw2) = ctx.session.calls
+    lit = ctx.config.literature
+    assert url1 == url2 == "https://api.adsabs.harvard.edu/v1/search/query"
+    assert (kw1["params"]["sort"], kw1["params"]["rows"]) == (CITED, lit.max_records)
+    assert (kw2["params"]["sort"], kw2["params"]["rows"]) == (RECENT, lit.most_cited + lit.most_recent)
+    assert kw2["params"]["q"] == kw1["params"]["q"] and kw2["params"]["fl"] == kw1["params"]["fl"]
+    assert kw1["headers"] == kw2["headers"] == {"Authorization": f"Bearer {TOKEN}"}
+    assert kw1["timeout"] == kw2["timeout"] == Ads().timeout_s(ctx.config)
+    assert payload == {"q": kw1["params"]["q"], "cited": _raw()["response"], "recent": _page(NEW)}
+    assert TOKEN not in json.dumps(payload)
+
+
+def test_recent_paper_missing_from_the_cited_page_is_selected():
+    legacy = Ads().parse(_raw(), make_ctx())
+    data = Ads().parse({"q": "x", "cited": _raw()["response"], "recent": _page(NEW)}, make_ctx())
+    assert _bibcodes(data)[:15] == _bibcodes(legacy)[:15]  # most cited: from the cited page
+    assert _bibcodes(data)[15:] == [NEW["bibcode"]]  # most recent: from the recent page only
+    assert data["num_found"] == 412
+
+
+def test_overlapping_pages_list_each_paper_once():
+    docs = {d["bibcode"]: d for d in _raw()["response"]["docs"]}
+    top_cited, on_cited_page = "2001SynJ.600..001A", "2020SynJ.629..030O"  # in / not in the top 15
+    raw = {"q": "x", "cited": _raw()["response"],
+           "recent": _page(NEW, docs[top_cited], docs[on_cited_page], NEW)}
+    bibcodes = _bibcodes(Ads().parse(raw, make_ctx()))
+    assert len(bibcodes) == len(set(bibcodes)) == 17
+    assert bibcodes[0] == top_cited and bibcodes[15:] == [NEW["bibcode"], on_cited_page]
+
+
+def test_legacy_payload_takes_recent_from_the_cited_page():
+    data = Ads().parse({"q": "x", "response": _raw()["response"]}, make_ctx())
+    assert data == Ads().parse(_raw(), make_ctx())
+    assert data["num_found"] == 412 and len(data["papers"]) == 25
+    assert _bibcodes(data)[15:] == [
+        "2020SynJ.629..030O", "2019SynJ.628..029N", "2019SynJ.627..028M", "2018SynJ.626..027L",
+        "2017SynJ.625..026K", "2017SynJ.624..025J", "2016SynJ.623..024I", "2015SynJ.621..022G",
+        "2015SynJ.622..023H", "2014SynJ.620..021F"]
+
+
+@pytest.mark.parametrize("raw", [
+    {"q": "x", "cited": None, "recent": None}, {"q": "x", "cited": 5, "recent": "y"},
+    {"q": "x", "cited": {"docs": 3}, "recent": {"docs": [None, 1, "a"]}},
+    {"cited": {"docs": []}, "recent": []}])
+def test_parse_malformed_pages_is_empty(raw):
+    assert Ads().parse(raw, make_ctx()) == {}
+
+
+def test_parse_keeps_the_good_page_when_the_other_is_malformed():
+    data = Ads().parse({"q": "x", "cited": "junk", "recent": _page(NEW)}, make_ctx())
+    assert _bibcodes(data) == [NEW["bibcode"]] and data["num_found"] == 1
+    data = Ads().parse({"q": "x", "cited": _raw()["response"], "recent": {"docs": "junk"}},
+                       make_ctx())
+    assert len(data["papers"]) == 15 and data["num_found"] == 412
 
 
 @pytest.mark.parametrize("objects", [
@@ -191,20 +284,34 @@ def test_rate_limit_is_error(tmp_path, response):
     assert TOKEN not in json.dumps(result.model_dump(mode="json"))
 
 
+@pytest.mark.parametrize("recent", [
+    FakeResponse(429, headers={"X-RateLimit-Reset": "1788998400"}),
+    FakeResponse(200, {"response": _page(found=0)},
+                 {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1788998400"}),
+])
+def test_rate_limit_on_the_recent_search_is_error(tmp_path, recent):
+    result = run_source(Ads(), _ctx(tmp_path, _two_pages(recent)))
+    assert result.status == "error"
+    assert "rate limit" in result.error and "resets at 2026-" in result.error
+    assert TOKEN not in json.dumps(result.model_dump(mode="json"))
+
+
 def test_rate_limit_without_reset_header(tmp_path):
     result = run_source(Ads(), _ctx(tmp_path, FakeResponse(429)))
     assert "rate limit" in result.error and "unknown" in result.error
 
 
 def test_last_allowed_request_still_ok(tmp_path):
-    response = FakeResponse(200, _raw(), {"X-RateLimit-Remaining": "0"})
-    assert run_source(Ads(), _ctx(tmp_path, response)).status == "ok"
+    recent = FakeResponse(200, {"response": _page(NEW)}, {"X-RateLimit-Remaining": "0"})
+    assert run_source(Ads(), _ctx(tmp_path, _two_pages(recent))).status == "ok"
 
 
-def test_token_never_in_result(tmp_path):
-    result = run_source(Ads(), _ctx(tmp_path, FakeResponse(payload=_raw())))
-    assert result.status == "ok"
+def test_token_never_in_result_or_cache(tmp_path):
+    result = run_source(Ads(), _ctx(tmp_path, _two_pages(FakeResponse(payload={"response": _page(NEW)}))))
+    assert result.status == "ok" and NEW["bibcode"] in _bibcodes(result.data)
     assert TOKEN not in json.dumps(result.model_dump(mode="json"))
+    cached = [p.read_text() for p in (tmp_path / "cache").rglob("*.json")]
+    assert cached and not any(TOKEN in text for text in cached)
     err = run_source(Ads(), _ctx(tmp_path / "e", FakeResponse(500)))
     assert err.status == "error"
     assert TOKEN not in json.dumps(err.model_dump(mode="json"))

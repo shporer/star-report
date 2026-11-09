@@ -1,4 +1,8 @@
-"""NASA ADS: papers that mention the target, selected as most cited plus most recent."""
+"""NASA ADS: papers that mention the target, selected as most cited plus most recent.
+
+Two searches per star: one sorted by citation count (up to literature.max_records rows) and one
+by date, so the most recent papers are current even when the star has more records than that.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +18,8 @@ URL = "https://api.adsabs.harvard.edu/v1/search/query"
 OBJECTS_URL = "https://api.adsabs.harvard.edu/v1/objects/query"
 FIELDS = "bibcode,title,year,pubdate,author,citation_count,abstract,doctype"
 MAX_AUTHORS = 3
+CITED_SORT = "citation_count desc"
+RECENT_SORT = "date desc"
 
 
 def _escape(name: str) -> str:
@@ -25,13 +31,26 @@ def query_string(translated: str, doctypes: Sequence[str]) -> str:
     return f'({translated}) doctype:({" OR ".join(doctypes)})'
 
 
-def select_papers(papers: list[Paper], most_cited: int, most_recent: int) -> list[Paper]:
-    """The most cited papers, then the most recent ones not already chosen."""
-    cited = sorted(papers, key=lambda p: (-p.citation_count, p.bibcode))[:most_cited]
+def _unique(papers: list[Paper]) -> list[Paper]:
+    """The first paper of each bibcode, in order."""
+    out: list[Paper] = []
+    seen: set[str] = set()
+    for p in papers:
+        if p.bibcode not in seen:
+            seen.add(p.bibcode)
+            out.append(p)
+    return out
+
+
+def select_papers(papers: list[Paper], most_cited: int, most_recent: int,
+                  recent: list[Paper] | None = None) -> list[Paper]:
+    """The most cited of `papers`, then the most recent of `recent` (default: `papers`) not
+    already chosen. Each bibcode appears once."""
+    cited = sorted(_unique(papers), key=lambda p: (-p.citation_count, p.bibcode))[:most_cited]
     chosen = {p.bibcode for p in cited}
-    by_bibcode = sorted(papers, key=lambda p: p.bibcode)
-    recent = sorted(by_bibcode, key=lambda p: p.pubdate or "", reverse=True)[:most_recent]
-    return cited + [p for p in recent if p.bibcode not in chosen]
+    by_bibcode = sorted(_unique(papers if recent is None else recent), key=lambda p: p.bibcode)
+    newest = sorted(by_bibcode, key=lambda p: p.pubdate or "", reverse=True)[:most_recent]
+    return cited + [p for p in newest if p.bibcode not in chosen]
 
 
 def _reset_text(value: Any) -> str:
@@ -49,6 +68,17 @@ def _int(value: Any) -> int | None:
     if isinstance(value, str) and value.strip().isdigit():
         return int(value)
     return None
+
+
+def _body(raw: Any, key: str) -> dict:
+    """raw[key] when it is a dict (a search response body: numFound, docs), else {}."""
+    body = raw.get(key) if isinstance(raw, dict) else None
+    return body if isinstance(body, dict) else {}
+
+
+def _docs(body: dict) -> list:
+    docs = body.get("docs")
+    return docs if isinstance(docs, list) else []
 
 
 def _paper(doc: Any) -> Paper | None:
@@ -114,33 +144,39 @@ class Ads(Source):
             return fallback
         return translated if isinstance(translated, str) and translated.strip() else fallback
 
+    def _search(self, ctx: SourceContext, headers: dict, q: str, sort: str, rows: int) -> Any:
+        """One search request; returns its response body (numFound, docs)."""
+        response = ctx.session.get(
+            URL, params={"q": q, "fl": FIELDS, "rows": rows, "sort": sort},
+            timeout=self.timeout_s(ctx.config), headers=headers)
+        self._check_rate_limit(response, payload_ok=True)
+        response.raise_for_status()
+        payload = response.json()
+        self._check_rate_limit(response, payload_ok=bool(_docs(_body(payload, "response"))))
+        return payload.get("response") if isinstance(payload, dict) else None
+
     def fetch(self, ctx: SourceContext) -> Any:
         lit = ctx.config.literature
         headers = {"Authorization": f"Bearer {ctx.ads_token}"}
         translated = self._translate(display_name(ctx.identity.main_name), ctx, headers)
         q = query_string(translated, lit.doctypes)
-        response = ctx.session.get(
-            URL, params={"q": q, "fl": FIELDS, "rows": lit.max_records,
-                         "sort": "citation_count desc"},
-            timeout=self.timeout_s(ctx.config), headers=headers)
-        self._check_rate_limit(response, payload_ok=True)
-        response.raise_for_status()
-        payload = response.json()
-        self._check_rate_limit(response, payload_ok=bool(self._docs(payload)))
-        return {"q": q, "response": payload.get("response") if isinstance(payload, dict) else None}
-
-    @staticmethod
-    def _docs(raw: Any) -> list:
-        body = raw.get("response") if isinstance(raw, dict) else None
-        docs = body.get("docs") if isinstance(body, dict) else None
-        return docs if isinstance(docs, list) else []
+        cited = self._search(ctx, headers, q, CITED_SORT, lit.max_records)
+        recent = self._search(ctx, headers, q, RECENT_SORT, lit.most_cited + lit.most_recent)
+        return {"q": q, "cited": cited, "recent": recent}
 
     def parse(self, raw: Any, ctx: SourceContext) -> dict:
-        papers = [p for p in map(_paper, self._docs(raw)) if p is not None]
-        if not papers:
+        # Payloads cached before the date-sorted search are {"q", "response"}: the cited page,
+        # which then also supplies the most recent papers.
+        legacy = isinstance(raw, dict) and "cited" not in raw
+        cited_body = _body(raw, "response" if legacy else "cited")
+        cited = [p for p in map(_paper, _docs(cited_body)) if p is not None]
+        recent = None if legacy else [p for p in map(_paper, _docs(_body(raw, "recent")))
+                                      if p is not None]
+        if not cited and not recent:
             return {}
         lit = ctx.config.literature
-        found = _int(raw["response"].get("numFound"))
-        chosen = select_papers(papers, lit.most_cited, lit.most_recent)
-        return {"num_found": found if found is not None else len(papers),
+        found = _int(cited_body.get("numFound"))
+        chosen = select_papers(cited, lit.most_cited, lit.most_recent, recent)
+        unique = len({p.bibcode for p in cited + (recent or [])})
+        return {"num_found": found if found is not None else unique,
                 "papers": [p.model_dump() for p in chosen]}
