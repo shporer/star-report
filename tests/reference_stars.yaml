@@ -1,0 +1,32 @@
+- slug: HD_209458
+  simbad_main_id: HD 209458
+  tic: 420814525
+  gaia_dr3: "1779546757669063552"
+  gaia_dr2: "1779546757669063552"
+  other_ids: {HD: HD 209458, HIP: HIP 108859, 2MASS: 2MASS J22031077+1853036}
+  position: {ra: 330.7950263, dec: 18.8842394, epoch: 2016.0, pmra: 29.766, pmdec: -17.976, parallax: 20.7694, rv: -14.78}
+  spellings: [HD 209458, HD209458, hd 209458, TIC 420814525, TIC420814525, Gaia DR3 1779546757669063552, HIP 108859]
+- slug: TOI-700
+  simbad_main_id: TOI-700
+  tic: 150428135
+  gaia_dr3: "5284517766615850752"
+  gaia_dr2: "5284517766615492736"            # differs from the DR3 ID
+  other_ids: {TOI: TOI-700}
+  position: {ra: 97.0956822, dec: -65.5785924, epoch: 2016.0, pmra: -102.641, pmdec: 161.748, parallax: 32.1328, rv: -4.71}
+  spellings: [TOI-700, TOI 700, TOI-700.01, TOI-700 d, TIC 150428135, Gaia DR2 5284517766615492736]
+- slug: Kepler-10
+  simbad_main_id: Kepler-10
+  tic: 377780790
+  gaia_dr3: "2132155017099178624"
+  gaia_dr2: "2132155017099178624"
+  other_ids: {KIC: KIC 11904151, KOI: KOI-72, 2MASS: 2MASS J19024305+5014286, TOI: TOI-5988}
+  position: {ra: 285.6792940, dec: 50.2414899, epoch: 2016.0, pmra: -18.483, pmdec: 41.382, parallax: 5.3698, rv: -98.44}
+  spellings: [Kepler-10, Kepler-10 b, KIC 11904151, KOI-72, K00072.01, TIC 377780790]
+- slug: Barnards_star
+  simbad_main_id: NAME Barnard's star
+  tic: 325554331
+  gaia_dr3: "4472832130942575872"
+  gaia_dr2: "4472832130942575872"
+  other_ids: {HIP: HIP 87937, GJ: GJ 699, 2MASS: 2MASS J17574849+0441405}
+  position: {ra: 269.4485025, dec: 4.7394201, epoch: 2016.0, pmra: -801.551, pmdec: 10362.394, parallax: 546.9759, rv: -110.47}
+  spellings: [Barnard's Star, Barnard’s Star, GJ 699, HIP 87937, TIC 325554331, Gaia DR3 4472832130942575872, "17 57 48.50 +04 41 36.1"]   # last one = J2000 coordinates
