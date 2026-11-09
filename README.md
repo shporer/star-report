@@ -1,0 +1,138 @@
+# star-report
+
+Give it a star name, a catalog ID, or coordinates. It resolves the star, gathers catalog, archive,
+light-curve and literature data from public services, and writes a self-contained HTML report, a
+`data.json`, and a short terminal summary. An optional Claude-written overview and literature summary
+sit on top of the data.
+
+## What a report contains
+
+- Identity: the resolved Gaia DR3, TIC and SIMBAD identifiers and the cross-match used.
+- Parameters from several catalogs side by side, with disagreements and quality flags (RUWE,
+  contamination) highlighted.
+- Planets and TOIs: NASA Exoplanet Archive and ExoFOP.
+- Companions: Gaia neighbors, Gaia non-single-star solutions, WDS, SB9, VSX, and the El-Badry wide-binary catalog.
+- Observation inventory: MAST, TESS sector pointing, ESO, Keck KOA, HARPS RV bank, APOGEE, LAMOST.
+- Plots: color-magnitude diagram on a Gaia background, TESS light curve and periodogram, and a sky
+  image with neighbors marked.
+- Literature: ADS records, with the most cited and most recent papers listed.
+- Claude-written overview and literature summary (skipped with `--no-llm`).
+
+## Install
+
+Python 3.11 or newer.
+
+```
+cd star-report
+python3.13 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+```
+
+The `star-report` command is then at `.venv/bin/star-report`.
+
+## Credentials
+
+Both live in the environment only.
+
+- `ADS_DEV_KEY`: needed for the literature section (the same variable arxiv-agent uses).
+- `ANTHROPIC_API_KEY`, or a profile from `ant auth login`: needed for the LLM sections. Without
+  credentials the report still renders and states why those sections are missing.
+
+## Usage
+
+```
+star-report "HD 209458"
+star-report "TIC 150428135" --no-llm
+star-report --from-file targets.txt --no-open
+```
+
+`targets.txt` has one target per line; `#` starts a comment.
+
+| Option | Effect |
+|---|---|
+| `TARGET ...` | star name, ID (`HD 209458`, `TIC 420814525`, `TOI-700`) or coordinates |
+| `--from-file PATH` | read targets from a file |
+| `--out DIR` | output directory (default: `output.dir`, `reports`) |
+| `--no-llm` | skip the LLM-written sections |
+| `--no-plots` | skip plots |
+| `--refresh` | ignore cached data and re-query (also regenerates the LLM text) |
+| `--open` / `--no-open` | open the report in a browser (default: only for a single target) |
+| `--config PATH` | config file to merge over the defaults |
+| `-v`, `--verbose` | log one line per source |
+| `--version` | print the version |
+
+Typical timing: a cached rerun takes about 1 s. A cold run without the LLM takes about 40-80 s,
+depending on service latency.
+
+## Output layout
+
+```
+reports/<slug>/
+  report.html    self-contained, open it directly
+  data.json      everything gathered, machine-readable
+  plots/*.png
+```
+
+Raw query results are cached in `~/.cache/star-report` (`cache.dir`), with a per-service expiry.
+
+## Configuration
+
+Defaults are in `src/star_report/config.yaml`. To change something, create a `./config.yaml` (or pass
+`--config PATH`) containing only the keys you change; it is deep-merged over the defaults. For example:
+
+```yaml
+llm:
+  effort: medium
+sources:
+  enabled: {koa: false}
+```
+
+Everything tunable is there: enabled sources, search radii, VizieR catalog IDs, cache expiry, timeouts,
+resolver tolerances, flag thresholds, plot settings, literature limits and the LLM settings.
+A local `config.yaml` is git-ignored.
+
+## Mirrors and known service issues
+
+- SIMBAD and VizieR: `servers.simbad` and `servers.vizier` list CDS first and the Harvard mirrors
+  second. The first host that accepts a TCP connection is used (checked once per run), so the Harvard
+  mirrors take over automatically when CDS is unreachable.
+- Sky image: CDS hips2fits when alasky is reachable; otherwise, or if hips2fits fails, the STScI DSS
+  cutout service. If both fail, the report shows a Gaia-only neighbor chart.
+- The Harvard VizieR mirror sometimes silently returns empty tables, and for the wide-binary catalog
+  whether a row comes back can depend on the row limit. Empty results are rechecked after
+  `cache.empty_expiry_days` (1 day), whatever their group's expiry.
+- ADS: the search API does not accept the `object:` field, so the name is first translated through
+  ADS's `/v1/objects/query` endpoint and then searched with `doctype:(article OR eprint)`. If the
+  translation fails, it searches for the exact phrase in abstracts. While CDS is down, ADS's own SIMBAD
+  lookup fails too, so matching falls back to abstract text and finds fewer papers.
+- KOA is queried through its public TAP service with pyvo (not pykoa).
+- Timeouts: `sources.timeout_s` (30 s) by default; `sources.timeout_overrides` raises it per source.
+  MAST is 90 s because its observation query can take about 45 s for stars in TESS's continuous
+  viewing zone. Light-curve downloads use `plots.lightcurve_timeout_s` (120 s).
+- The CMD background (50k Gaia stars) is fetched once and cached indefinitely.
+
+## LLM cost
+
+About $0.10-0.25 per report. The model, effort and token limit are under `llm:` in the config
+(defaults: `claude-opus-5-5`, `high`, server-side refusal fallback on). The output is cached and never
+expires, so re-rendering is free; `--refresh` regenerates it. Note: the LLM call has not yet been run
+live during development (no Anthropic credentials were available), so the first real run is also its
+first live test.
+
+## Tests
+
+```
+.venv/bin/pytest            # offline; sockets are blocked
+.venv/bin/pytest -m live    # real services; slow
+```
+
+Unit tests never touch the network; they run against recorded fixtures in `tests/fixtures/`. The live
+suite (reference stars in `tests/reference_stars.yaml`) needs `ADS_DEV_KEY` and `ANTHROPIC_API_KEY`
+set, and can fail when ESA Gaia, MAST or the VizieR mirror time out: re-run before debugging.
+
+Re-record fixtures from the live services:
+
+```
+python scripts/record_fixtures.py --source NAME [--star SLUG]
+python scripts/record_fixtures.py --lookups [--star SLUG]
+```
