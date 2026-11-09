@@ -80,6 +80,7 @@ def test_make_plots_isolates_failures(tmp_path, monkeypatch):
 
     monkeypatch.setitem(plots.PLOTTERS, "cmd", ok_cmd)
     monkeypatch.setitem(plots.PLOTTERS, "lightcurve", bad_lightcurve)
+    monkeypatch.setitem(plots.PLOTTERS, "sky", lambda *a: (None, None))
     cfg = load_config(cwd=tmp_path)
     paths, notes = plots.make_plots(make_report(), tmp_path / "plots", cfg, None)
     assert paths == {"cmd": "plots/cmd.png"}
@@ -237,3 +238,110 @@ def test_merge_marks_and_plot_draws_one_line(tmp_path, monkeypatch):
                                                     real(self, x, *a, **k))[1])
     plot_lightcurves([curve], marks, cfg, tmp_path / "lc.png")
     assert drawn == ["b / TOI 1.01 (9.98 d)", "c (16.1 d)"]
+
+
+# ---- sky ----
+
+def _tan_wcs(ra=10.0, dec=20.0, n=300):
+    from astropy.wcs import WCS
+
+    w = WCS(naxis=2)
+    w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+    w.wcs.crval = [ra, dec]
+    w.wcs.crpix = [n / 2, n / 2]
+    w.wcs.cdelt = [-1 / 3600, 1 / 3600]
+    return w
+
+
+def test_select_neighbors_filters_delta_g_and_drops_target():
+    from star_report.plots.sky import select_neighbors
+
+    rows = [{"source_id": "1", "delta_g": 0.0}, {"source_id": "2", "delta_g": 2.5},
+            {"source_id": "3", "delta_g": 6.0}, {"source_id": "4", "delta_g": 6.1},
+            {"source_id": "5", "delta_g": -1.0}, "junk", {"source_id": "6"}]
+    assert [r["source_id"] for r in select_neighbors(rows, 6)] == ["2", "3", "5"]
+
+
+def test_plot_sky_with_image(tmp_path):
+    import numpy as np
+
+    from star_report.plots.sky import plot_sky
+
+    cfg = load_config(cwd=tmp_path)
+    img = np.random.default_rng(1).normal(100, 5, (300, 300))
+    nb = [{"ra": 10.0 + 20 / 3600, "dec": 20.0 + 10 / 3600, "delta_g": 3.2}]
+    out = plot_sky(img, _tan_wcs(), (10.0, 20.0), nb, cfg, "DSS2 red (STScI)", tmp_path / "s.png")
+    assert out.read_bytes().startswith(PNG)
+
+
+def test_plot_sky_without_image(tmp_path):
+    from star_report.plots.sky import plot_sky
+
+    cfg = load_config(cwd=tmp_path)
+    nb = [{"ra": 10.0 + 20 / 3600, "dec": 20.0 + 10 / 3600, "delta_g": 3.2}]
+    out = plot_sky(None, None, (10.0, 20.0), nb, cfg, "", tmp_path / "s.png")
+    assert out.read_bytes().startswith(PNG)
+
+
+def _fits_bytes():
+    import io
+
+    import numpy as np
+    from astropy.io import fits
+
+    buf = io.BytesIO()
+    fits.PrimaryHDU(np.ones((20, 20)), header=_tan_wcs(n=20).to_header()).writeto(buf)
+    return buf.getvalue()
+
+
+class _Resp:
+    def __init__(self, content):
+        self.content = content
+
+    def raise_for_status(self):
+        pass
+
+
+class _Session:
+    def __init__(self, content):
+        self.content, self.calls = content, []
+
+    def get(self, url, **kw):
+        self.calls.append((url, kw))
+        return _Resp(self.content)
+
+
+def test_fetch_cutout_falls_back_to_stsci(tmp_path, monkeypatch):
+    from star_report.plots import sky
+
+    monkeypatch.setattr(sky, "is_reachable", lambda host: False)
+    cfg = load_config(cwd=tmp_path)
+    session = _Session(_fits_bytes())
+    image, wcs, label = sky.fetch_cutout("10.0", 20.0, cfg, session)
+    assert "STScI" in label and image.shape == (20, 20) and wcs.has_celestial
+    url, kw = session.calls[0]
+    assert url == "https://archive.stsci.edu/cgi-bin/dss_search"
+    assert kw["params"]["v"] == cfg.plots.sky_fallback_survey and kw["params"]["r"] == 10.0
+    assert kw["timeout"] == cfg.sources.timeout_s
+
+
+def test_fetch_cutout_rejects_non_fits(tmp_path, monkeypatch):
+    from star_report.plots import sky
+
+    monkeypatch.setattr(sky, "is_reachable", lambda host: False)
+    cfg = load_config(cwd=tmp_path)
+    with pytest.raises(ValueError, match="not return a FITS"):
+        sky.fetch_cutout(10.0, 20.0, cfg, _Session(b"<html>error</html>"))
+
+
+def test_sky_plotter_draws_no_image_chart_when_cutout_fails(tmp_path, monkeypatch):
+    from star_report.plots import sky
+
+    def boom(*a, **k):
+        raise ValueError("STScI down")
+
+    monkeypatch.setattr(sky, "fetch_cutout", boom)
+    cfg = load_config(cwd=tmp_path)
+    path, note = plots._plot_sky(make_report(), tmp_path / "sky.png", cfg, None, None)
+    assert path.read_bytes().startswith(PNG)
+    assert "STScI down" in note

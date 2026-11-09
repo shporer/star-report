@@ -13,7 +13,7 @@ matplotlib.use("Agg")
 from star_report.cache import Cache  # noqa: E402
 from star_report.config import Config  # noqa: E402
 from star_report.models import Report  # noqa: E402
-from star_report.plots import cmd, lightcurve  # noqa: E402
+from star_report.plots import cmd, lightcurve, sky  # noqa: E402
 from star_report.sources.base import make_session  # noqa: E402
 
 log = logging.getLogger("star_report.plots")
@@ -34,8 +34,29 @@ def _plot_lightcurve(report, path, cfg, cache, session):
     return lightcurve.plot_stage(report, path, cfg)
 
 
-# Report order. Task 23 adds "sky".
-PLOTTERS: dict[str, Plotter] = {"cmd": _plot_cmd, "lightcurve": _plot_lightcurve}
+def _plot_sky(report, path, cfg, cache, session):
+    pos = report.identity.position
+    target = (float(pos.ra), float(pos.dec))
+    res = report.results.get("gaia_neighbors")
+    note = None
+    neighbors: list[dict] = []
+    if res is not None and res.status == "ok" and isinstance(res.data, list):
+        neighbors = sky.select_neighbors(res.data, cfg.plots.neighbor_max_delta_g)
+    else:
+        note = "Gaia neighbors unavailable; only the target is marked."
+    try:
+        image, wcs, label = sky.fetch_cutout(target[0], target[1], cfg, session)
+    except Exception as e:  # noqa: BLE001 - fall back to the no-image chart
+        log.warning("sky cutout failed: %s: %s", type(e).__name__, e)
+        image, wcs, label = None, None, ""
+        msg = f"Sky image unavailable ({type(e).__name__}: {e})."
+        note = f"{note} {msg}" if note else msg
+    return sky.plot_sky(image, wcs, target, neighbors, cfg, label, path), note
+
+
+# Report order.
+PLOTTERS: dict[str, Plotter] = {"cmd": _plot_cmd, "lightcurve": _plot_lightcurve,
+                                "sky": _plot_sky}
 
 
 def make_plots(report: Report, plots_dir: Path, cfg: Config,
