@@ -109,3 +109,194 @@ def test_schema_and_prompt():
 
 def props_types():
     return {k: v["type"] for k, v in WRITER_SCHEMA["properties"].items()}
+
+
+# ---- Claude call, retry, failures, caching ----
+
+from contextlib import nullcontext  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+
+import anthropic  # noqa: E402
+import httpx2  # noqa: E402
+
+from star_report.cache import Cache  # noqa: E402
+from star_report.config import load_config  # noqa: E402
+from star_report.writer import write_sections  # noqa: E402
+
+EXPIRY = load_config().cache.expiry_days
+
+
+class FakeClient:
+    def __init__(self, replies):
+        self.replies, self.calls = list(replies), []
+        self.beta = SimpleNamespace(messages=SimpleNamespace(stream=self._stream))
+
+    def _stream(self, **kw):
+        self.calls.append(kw)
+        r = self.replies.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return nullcontext(SimpleNamespace(get_final_message=lambda: r))
+
+
+def reply(text, stop="end_turn", model="claude-opus-5-5"):
+    return SimpleNamespace(stop_reason=stop, model=model, content=[SimpleNamespace(type="text", text=text)])
+
+
+def _out(cite=A, overview="A star."):
+    return json.dumps({"overview": overview, "literature_summary": f"It transits [{cite}].",
+                       "cited_bibcodes": [cite]})
+
+
+good_json = _out()
+
+
+def report_with_papers():
+    report = make_report()
+    ads = SourceResult(source="ads", status="ok",
+                       data={"num_found": 2, "papers": [p.model_dump() for p in _papers()]})
+    return report.model_copy(update={"results": {**report.results, "ads": ads}})
+
+
+def _run(tmp_path, replies, report=None, cfg=None):
+    fake = FakeClient(replies)
+    cfg = cfg or load_config()
+    block = write_sections(report or report_with_papers(), cfg, Cache(tmp_path, EXPIRY),
+                           client_factory=lambda: fake)
+    return block, fake
+
+
+def test_request_shape(tmp_path):
+    block, fake = _run(tmp_path, [reply(good_json)])
+    kw = fake.calls[0]
+    assert block.status == "ok" and kw["model"] == "claude-opus-5-5" and kw["fallbacks"] == "default"
+    assert kw["betas"] == ["server-side-fallback-2026-07-01"] and kw["output_config"]["effort"] == "high"
+    assert kw["output_config"]["format"]["schema"] == WRITER_SCHEMA
+    assert "thinking" not in kw and "temperature" not in kw
+    assert block.bibcodes_sent == [A, B] and block.effort == "high" and block.generated is not None
+    assert block.cited_bibcodes == [A] and block.from_cache is False
+
+
+def test_no_server_fallback(tmp_path):
+    cfg = load_config()
+    cfg.llm.server_fallback = False
+    block, fake = _run(tmp_path, [reply(good_json)], cfg=cfg)
+    assert block.status == "ok" and "betas" not in fake.calls[0] and "fallbacks" not in fake.calls[0]
+
+
+def test_model_comes_from_response(tmp_path):
+    block, _ = _run(tmp_path, [reply(good_json, model="claude-fallback-x")])
+    assert block.model == "claude-fallback-x"
+
+
+def test_bad_citation_retry_succeeds(tmp_path):
+    block, fake = _run(tmp_path, [reply(_out("1999XXX...1....1Z")), reply(good_json)])
+    assert block.status == "ok" and len(fake.calls) == 2
+    second = fake.calls[1]["messages"][0]["content"]
+    assert "1999XXX...1....1Z" in second and "Cite only bibcodes from the list" in second
+    assert "<correction>" not in fake.calls[0]["messages"][0]["content"]
+
+
+def test_bad_citation_twice_fails(tmp_path):
+    block, fake = _run(tmp_path, [reply(_out("1999XXX...1....1Z"))] * 2)
+    assert block.status == "failed" and block.reason == "LLM summary failed citation check"
+    assert len(fake.calls) == 2
+
+
+def test_refusal_no_retry(tmp_path):
+    block, fake = _run(tmp_path, [reply("", stop="refusal")])
+    assert block.status == "failed" and len(fake.calls) == 1
+    assert block.reason == "Claude declined to write this summary (refusal)."
+
+
+def test_max_tokens(tmp_path):
+    block, fake = _run(tmp_path, [reply('{"overview": "cut', stop="max_tokens")])
+    assert block.reason == "Claude's output was cut off (max_tokens)." and len(fake.calls) == 1
+
+
+@pytest.mark.parametrize("text", ["not json", '{"overview": "x"}'])
+def test_invalid_output(tmp_path, text):
+    block, fake = _run(tmp_path, [reply(text)])
+    assert block.status == "failed" and len(fake.calls) == 1
+    assert block.reason == "Claude's output did not match the expected format."
+
+
+def test_no_text_block(tmp_path):
+    r = SimpleNamespace(stop_reason="end_turn", model="m", content=[SimpleNamespace(type="thinking")])
+    block, _ = _run(tmp_path, [r])
+    assert block.reason == "Claude's output did not match the expected format."
+
+
+def test_credentials_type_error(tmp_path):
+    block, fake = _run(tmp_path, [TypeError("Could not resolve authentication method. Expected ...")])
+    assert block.status == "failed" and len(fake.calls) == 1
+    assert block.reason == "No Anthropic credentials found (set ANTHROPIC_API_KEY or run `ant auth login`)."
+
+
+def test_other_type_error_propagates(tmp_path):
+    with pytest.raises(TypeError):
+        _run(tmp_path, [TypeError("something else")])
+
+
+def test_credentials_error(tmp_path):
+    block, _ = _run(tmp_path, [anthropic.CredentialsError("no profile")])
+    assert block.reason.startswith("No Anthropic credentials found")
+
+
+def test_credentials_error_from_factory(tmp_path):
+    def factory():
+        raise anthropic.CredentialsError("no profile")
+    block = write_sections(report_with_papers(), load_config(), Cache(tmp_path, EXPIRY), client_factory=factory)
+    assert block.reason.startswith("No Anthropic credentials found")
+
+
+def test_api_connection_error(tmp_path):
+    err = anthropic.APIConnectionError(message="down", request=httpx2.Request("POST", "https://api.anthropic.com"))
+    block, _ = _run(tmp_path, [err])
+    assert block.status == "failed" and block.reason.startswith("Claude API error: APIConnectionError: ")
+    assert len(block.reason) <= 200
+
+
+def test_authentication_error(tmp_path):
+    req = httpx2.Request("POST", "https://api.anthropic.com")
+    err = anthropic.AuthenticationError("bad", response=httpx2.Response(401, request=req), body=None)
+    block, _ = _run(tmp_path, [err])
+    assert block.reason == "Anthropic API rejected the credentials."
+
+
+def test_cache_hit_and_failures_not_cached(tmp_path):
+    fake = FakeClient([TypeError("Could not resolve authentication method"), reply(good_json)])
+    cache = Cache(tmp_path, EXPIRY)
+    report, cfg = report_with_papers(), load_config()
+    first = write_sections(report, cfg, cache, client_factory=lambda: fake)
+    assert first.status == "failed"
+    second = write_sections(report, cfg, cache, client_factory=lambda: fake)
+    assert second.status == "ok" and second.from_cache is False and len(fake.calls) == 2
+    third = write_sections(report, cfg, cache, client_factory=lambda: fake)
+    assert third.status == "ok" and third.from_cache is True and len(fake.calls) == 2
+    assert third.overview == second.overview and third.model == "claude-opus-5-5"
+
+
+def test_cache_key_changes_with_effort(tmp_path):
+    fake = FakeClient([reply(good_json), reply(good_json)])
+    cache, report = Cache(tmp_path, EXPIRY), report_with_papers()
+    cfg = load_config()
+    write_sections(report, cfg, cache, client_factory=lambda: fake)
+    cfg.llm.effort = "low"
+    block = write_sections(report, cfg, cache, client_factory=lambda: fake)
+    assert block.from_cache is False and len(fake.calls) == 2
+
+
+@pytest.mark.parametrize("status,note", [
+    ("skipped", "ADS_DEV_KEY not set; the literature was not searched."),
+    ("error", "ADS search failed."), ("timeout", "ADS search failed."),
+    ("empty", "ADS found no papers for this object."),
+])
+def test_literature_note(tmp_path, status, note):
+    report = make_report()
+    ads = SourceResult(source="ads", status=status, error="x" if status != "empty" else None)
+    report = report.model_copy(update={"results": {**report.results, "ads": ads}})
+    block, fake = _run(tmp_path, [reply(json.dumps({"overview": "o", "literature_summary": "none",
+                                                    "cited_bibcodes": []}))], report=report)
+    assert block.status == "ok" and block.bibcodes_sent == []
+    assert note in fake.calls[0]["messages"][0]["content"]

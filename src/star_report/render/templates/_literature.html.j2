@@ -3,6 +3,13 @@
 {% if ads_r is not none %}
 <section id="literature">
 <h2>Literature</h2>
+{% if report.llm.status == "ok" %}
+<p class="muted"><small>LLM-written · {{ report.llm.model }}{% if report.llm.from_cache %} (cached){% endif %}</small></p>
+{% for para in (report.llm.literature_summary or "").split("\n\n") if para.strip() %}<p>{{ para | cite }}</p>
+{% endfor %}
+{% else %}
+<p class="muted">LLM sections not included: {{ report.llm.reason or "not available" }}</p>
+{% endif %}
 {% if ads_r.status == "skipped" %}
 <p class="muted">{{ ads_r.error }}; the literature was not searched.</p>
 {% elif ads_r.status == "empty" %}

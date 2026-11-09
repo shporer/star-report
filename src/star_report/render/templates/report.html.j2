@@ -56,7 +56,10 @@ Dec {{ dec_s }} ({{ "%.5f"|format(report.identity.position.dec) }}°) &middot; {
 
 <section id="overview">
 <h2>Overview</h2>
-{% if report.llm.status != "ok" %}
+{% if report.llm.status == "ok" %}
+<p class="muted"><small>LLM-written · {{ report.llm.model }}{% if report.llm.from_cache %} (cached){% endif %}</small></p>
+<p>{{ (report.llm.overview or "") | cite }}</p>
+{% else %}
 <p class="muted">LLM sections not included: {{ report.llm.reason or "not available" }}</p>
 {% endif %}
 </section>

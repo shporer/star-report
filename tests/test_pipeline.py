@@ -106,3 +106,31 @@ def test_plots_not_called_when_disabled(env):
     outcome = run_target("HD 209458", cfg, opts, cache, console, deps)
     assert outcome.status == "ok"
     assert calls == []
+
+
+def test_plots_and_writer_run_together(env):
+    import threading
+    cfg, cache, opts, console = env
+    cfg.llm.enabled = True
+    barrier = threading.Barrier(2, timeout=5)
+    seen = {}
+    deps = _deps()
+
+    def plots(report, d, cfg, cache):
+        barrier.wait()
+        return {"cmd": "plots/cmd.png"}, {}
+
+    def writer(report, cfg, cache):
+        barrier.wait()
+        seen["plots"] = dict(report.plots)
+        return report.llm.model_copy(update={"reason": "writer ran"})
+
+    deps.plots, deps.writer = plots, writer
+    outcome = run_target("HD 209458", cfg, opts, cache, console, deps)
+    assert outcome.report.plots == {"cmd": "plots/cmd.png"} and outcome.report.llm.reason == "writer ran"
+    assert seen["plots"] == {}
+
+
+def test_default_writer_is_write_sections():
+    from star_report.writer import write_sections
+    assert PipelineDeps().writer is write_sections

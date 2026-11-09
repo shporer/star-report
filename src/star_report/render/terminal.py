@@ -102,6 +102,12 @@ def print_summary(report: Report, report_path: Path | None, console: Console) ->
 
     console.print(escape(_data_line(report)))
 
+    if report.llm.status == "ok":
+        console.print(f"[bold]Overview[/bold] [dim](LLM-written, {escape(report.llm.model or '?')})[/dim]")
+        console.print(escape(report.llm.overview or ""))
+    else:
+        console.print(f"LLM sections not included: {escape(report.llm.reason or 'not available')}", style="dim")
+
     for name, res in report.results.items():
         mark, style = _MARKS[res.status]
         label = STATUS_LABELS[res.status]

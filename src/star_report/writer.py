@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+import anthropic
+from pydantic import BaseModel, ConfigDict, ValidationError
 
+from star_report.cache import Cache
+from star_report.config import Config, LLMConfig
 from star_report.derive import description_line, display_name, toi_entries
-from star_report.models import BIBCODE_RE, Paper, ParamCell, Report
+from star_report.models import BIBCODE_RE, LLMBlock, Paper, ParamCell, Report
 
 PROMPT_VERSION = 1
 
@@ -259,3 +265,111 @@ def check_citations(out: WriterOutput, allowed: set[str]) -> list[str]:
     found = set(find_citations(out.overview)) | set(find_citations(out.literature_summary))
     found |= set(out.cited_bibcodes)
     return sorted(found - set(allowed))
+
+
+# ---- Claude call, retry, failures, caching ----
+
+_LITERATURE_NOTES = {
+    "skipped": "ADS_DEV_KEY not set; the literature was not searched.",
+    "error": "ADS search failed.",
+    "timeout": "ADS search failed.",
+    "empty": "ADS found no papers for this object.",
+}
+_NO_CREDENTIALS = "No Anthropic credentials found (set ANTHROPIC_API_KEY or run `ant auth login`)."
+
+
+@dataclass
+class ClaudeReply:
+    stop_reason: str | None
+    text: str | None
+    model: str
+
+
+class WriterFailure(Exception):
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
+def call_claude(client, llm: LLMConfig, system: str, user: str) -> ClaudeReply:
+    params = dict(model=llm.model, max_tokens=llm.max_tokens, system=system,
+                  messages=[{"role": "user", "content": user}],
+                  output_config={"effort": llm.effort,
+                                 "format": {"type": "json_schema", "schema": WRITER_SCHEMA}})
+    if llm.server_fallback:
+        params |= dict(betas=["server-side-fallback-2026-07-01"], fallbacks="default")
+    with client.beta.messages.stream(**params) as stream:   # streaming: long input, adaptive thinking
+        msg = stream.get_final_message()
+    text = next((b.text for b in msg.content if b.type == "text"), None)
+    return ClaudeReply(msg.stop_reason, text, msg.model)     # msg.model = model that served it (fallback-aware)
+
+
+def _ask(client, llm: LLMConfig, user: str) -> tuple[ClaudeReply, WriterOutput]:
+    try:
+        reply = call_claude(client, llm, SYSTEM_PROMPT, user)
+    except (anthropic.CredentialsError, TypeError) as e:
+        if isinstance(e, TypeError) and "Could not resolve authentication method" not in str(e):
+            raise
+        raise WriterFailure(_NO_CREDENTIALS) from e
+    except anthropic.AuthenticationError as e:
+        raise WriterFailure("Anthropic API rejected the credentials.") from e
+    except anthropic.APIError as e:
+        raise WriterFailure(f"Claude API error: {type(e).__name__}: {e}"[:200]) from e
+    if reply.stop_reason == "refusal":
+        raise WriterFailure("Claude declined to write this summary (refusal).")
+    if reply.stop_reason == "max_tokens":
+        raise WriterFailure("Claude's output was cut off (max_tokens).")
+    try:
+        if not reply.text:
+            raise ValueError("no text")
+        return reply, WriterOutput.model_validate_json(reply.text)
+    except ValueError as e:   # includes pydantic ValidationError
+        raise WriterFailure("Claude's output did not match the expected format.") from e
+
+
+def _papers_and_note(report: Report) -> tuple[list[Paper], str | None]:
+    ads = report.results.get("ads")
+    if ads is not None and ads.status == "ok":
+        papers = []
+        for d in _paper_dicts(report):
+            try:
+                papers.append(Paper.model_validate(d))
+            except ValidationError:
+                continue
+        return papers, None
+    return [], _LITERATURE_NOTES.get(ads.status if ads is not None else "skipped",
+                                     "ADS search failed.")
+
+
+def write_sections(report: Report, cfg: Config, cache: Cache,
+                   client_factory: Callable[[], Any] = anthropic.Anthropic) -> LLMBlock:
+    llm = cfg.llm
+    facts = build_fact_sheet(report)
+    papers, note = _papers_and_note(report)
+    sent = [p.bibcode for p in papers]
+    key = {"facts": facts, "bibcodes": sent, "model": llm.model, "effort": llm.effort,
+           "server_fallback": llm.server_fallback, "prompt_version": PROMPT_VERSION}
+
+    def producer() -> dict:
+        try:
+            client = client_factory()
+        except anthropic.CredentialsError as e:
+            raise WriterFailure(_NO_CREDENTIALS) from e
+        reply, out = _ask(client, llm, build_user_message(facts, papers, note))
+        bad = check_citations(out, set(sent))
+        if bad:
+            correction = (f"Your previous answer cited bibcodes that are not in the paper list: "
+                          f"{', '.join(bad)}. Cite only bibcodes from the list, written as [bibcode].")
+            reply, out = _ask(client, llm, build_user_message(facts, papers, note, correction))
+            if check_citations(out, set(sent)):
+                raise WriterFailure("LLM summary failed citation check")
+        return LLMBlock(status="ok", overview=out.overview, literature_summary=out.literature_summary,
+                        cited_bibcodes=out.cited_bibcodes, model=reply.model, effort=llm.effort,
+                        generated=datetime.now(timezone.utc), bibcodes_sent=sent).model_dump(mode="json")
+
+    try:
+        entry = cache.fetch("llm", "writer", key, producer)
+    except WriterFailure as e:
+        return LLMBlock(status="failed", reason=e.reason, bibcodes_sent=sent)
+    block = LLMBlock.model_validate(entry.payload)
+    return block.model_copy(update={"from_cache": entry.from_cache})

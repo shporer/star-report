@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import shutil
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,14 +25,11 @@ from star_report.render.terminal import print_summary
 from star_report.resolve import CatalogLookup, LiveLookup, ResolutionError, parse_target, resolve
 from star_report.sources.base import Source, SourceContext, make_session, run_sources
 from star_report.sources.registry import build_sources
+from star_report.writer import write_sections
 
 log = logging.getLogger("star_report.pipeline")
 
 LLM_DISABLED_REASON = "LLM disabled (--no-llm or config)"
-
-
-def no_llm(report: Report, cfg: Config, cache: Cache) -> LLMBlock:
-    return LLMBlock(status="skipped", reason="LLM writer not available yet")
 
 
 @dataclass
@@ -56,7 +54,7 @@ class PipelineDeps:
     sources: Callable[[Config], list[Source]] = build_sources
     plots: Callable[[Report, Path, Config, Cache],
                     tuple[dict[str, str], dict[str, str]]] = make_plots
-    writer: Callable[[Report, Config, Cache], LLMBlock] = no_llm
+    writer: Callable[[Report, Config, Cache], LLMBlock] = write_sections
 
 
 def _fresh_plots_dir(out: Path, out_root: Path, slug: str) -> Path:
@@ -98,11 +96,19 @@ def run_target(target: str, cfg: Config, opts: RunOptions, cache: Cache, console
     slug = slugify(display_name(identity.main_name))
     out = opts.out_dir / slug
     plots_dir = _fresh_plots_dir(out, opts.out_dir, slug)
-    if cfg.plots.enabled:
-        plots, plot_notes = deps.plots(report, plots_dir, cfg, cache)
-        report = report.model_copy(update={"plots": plots, "plot_notes": plot_notes})
-    if cfg.llm.enabled:
-        report = report.model_copy(update={"llm": deps.writer(report, cfg, cache)})
+    # Plots and the writer are independent: run them together, then assign both results.
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        plots_future = (pool.submit(deps.plots, report, plots_dir, cfg, cache)
+                        if cfg.plots.enabled else None)
+        llm_future = pool.submit(deps.writer, report, cfg, cache) if cfg.llm.enabled else None
+        updates: dict = {}
+        if plots_future is not None:
+            plots, plot_notes = plots_future.result()
+            updates.update(plots=plots, plot_notes=plot_notes)
+        if llm_future is not None:
+            updates["llm"] = llm_future.result()
+    if updates:
+        report = report.model_copy(update=updates)
 
     report_path = write_outputs(report, out)
     print_summary(report, report_path, console)

@@ -159,3 +159,46 @@ def test_toi_rule_archive_error_falls_back_to_exofop(tmp_path):
     console = Console(record=True, width=110)
     print_summary(report, tmp_path / "r.html", console)
     assert "TOIs: 700.01" in console.export_text()
+
+
+def _ads_report(llm):
+    from star_report.models import SourceResult
+    r = make_report()
+    ads = SourceResult(source="ads", status="ok", data={"num_found": 1, "papers": [
+        {"bibcode": "2008A&A...481..529X", "title": "T", "authors": [], "citation_count": 1}]})
+    return r.model_copy(update={"results": {**r.results, "ads": ads}, "llm": llm})
+
+
+def _ok_llm(cached=False):
+    from star_report.models import LLMBlock
+    return LLMBlock(status="ok", overview="A <b>star</b>.", model="claude-opus-5-5", from_cache=cached,
+                    literature_summary="Transit seen [2008A&A...481..529X].",
+                    cited_bibcodes=["2008A&A...481..529X"], bibcodes_sent=["2008A&A...481..529X"])
+
+
+def test_llm_ok_renders(tmp_path):
+    html = render_html(_ads_report(_ok_llm()), tmp_path)
+    assert "LLM-written · claude-opus-5-5" in html and "(cached)" not in html
+    assert "A &lt;b&gt;star&lt;/b&gt;." in html
+    assert 'href="https://ui.adsabs.harvard.edu/abs/2008A&amp;A...481..529X/abstract">2008A&amp;A...481..529X</a>.' in html
+    assert html.index("Transit seen") < html.index('class="papers"')
+    assert "LLM sections not included" not in html
+    assert "LLM-written · claude-opus-5-5 (cached)" in render_html(_ads_report(_ok_llm(True)), tmp_path)
+
+
+def test_llm_failed_renders_reason_in_both_places(tmp_path):
+    from star_report.models import LLMBlock
+    html = render_html(_ads_report(LLMBlock(status="failed", reason="boom <x>")), tmp_path)
+    assert html.count("LLM sections not included: boom &lt;x&gt;") == 2
+    assert "LLM-written" not in html
+
+
+def test_terminal_llm(tmp_path):
+    console = Console(record=True, width=110)
+    print_summary(_ads_report(_ok_llm()), tmp_path / "r.html", console)
+    text = console.export_text()
+    assert "A <b>star</b>." in text and "claude-opus-5-5" in text
+    from star_report.models import LLMBlock
+    console = Console(record=True, width=110)
+    print_summary(_ads_report(LLMBlock(status="failed", reason="boom")), None, console)
+    assert "LLM sections not included: boom" in console.export_text()
