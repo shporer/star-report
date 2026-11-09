@@ -1,8 +1,10 @@
 from types import SimpleNamespace
 
+import pytest
+
 from conftest import load_fixture, make_ctx, ref_identity
 
-from star_report.sources.base import run_source
+from star_report.sources.base import run_source, run_sources
 from star_report.sources.exofop import ExoFop
 
 
@@ -41,3 +43,34 @@ def test_html_response_is_error(ctx):
     result = run_source(ExoFop(), ctx)
     assert result.status == "error"
     assert "non-JSON" in result.error
+
+
+_GOOD_TOI = {"toi": "TOI 1.01", "disp_tfop": "PC", "sector": "1,2"}
+
+
+@pytest.mark.parametrize("raw, expected_tois, expected_followup", [
+    ({"tois": {}}, 0, 0),
+    ({"tois": [None, _GOOD_TOI]}, 1, 0),
+    ({"files": [{}]}, 0, 0),
+    ({"files": [{"ftype": ["x"]}], "tois": [_GOOD_TOI]}, 1, 0),
+    ({"imaging": 5}, 0, 0),
+    ({"imaging": "abc"}, 0, 0),
+    ({"imaging": [{}, {}]}, 0, 2),
+    ([], 0, 0),
+    ("text", 0, 0),
+])
+def test_wrong_shapes_are_ignored(ctx, raw, expected_tois, expected_followup):
+    d = ExoFop().parse(raw, ctx)
+    if not (expected_tois or expected_followup):
+        assert d == {}
+    else:
+        assert len(d["tois"]) == expected_tois
+        assert d["followup"]["imaging"] == expected_followup
+        assert d["files"] == {}
+
+
+def test_malformed_tic_is_skipped(ctx):
+    ctx.identity = ctx.identity.model_copy(update={"tic_id": "abc"})
+    ctx.session = SimpleNamespace(get=lambda *a, **k: pytest.fail("no request expected"))
+    result = run_sources([ExoFop()], ctx)["exofop"]
+    assert result.status == "skipped"

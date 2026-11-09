@@ -22,18 +22,39 @@ def _toi_number(value: Any) -> str | None:
     return re.sub(r"^\s*TOI[\s-]*", "", str(value), flags=re.IGNORECASE).strip()
 
 
+def _as_list(value: Any) -> list:
+    return value if isinstance(value, list) else []
+
+
+def _dicts(value: Any) -> list[dict]:
+    return [v for v in _as_list(value) if isinstance(v, dict)]
+
+
+def _tic(value: Any) -> int | None:
+    """The TIC ID as an int when it is an integer or an all-digit string, else None."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    text = value.strip() if isinstance(value, str) else ""
+    return int(text) if text.isascii() and text.isdigit() else None
+
+
 class ExoFop(Source):
     name = "exofop"
     group = "exofop"
     service = "ExoFOP-TESS"
     needs = ("tic_id",)
 
+    def skip_reason(self, ctx: SourceContext) -> str | None:
+        return None if _tic(ctx.identity.tic_id) is not None else "no TIC ID"
+
     def query(self, ctx: SourceContext) -> dict:
-        return {"tic": int(ctx.identity.tic_id)}
+        return {"tic": _tic(ctx.identity.tic_id)}
 
     def fetch(self, ctx: SourceContext) -> Any:
-        tic = self.query(ctx)["tic"]
-        response = ctx.session.get(f"{BASE_URL}?id={tic}&json",
+        tic = _tic(ctx.identity.tic_id)
+        response = ctx.session.get(f"{BASE_URL}?id={int(tic)}&json",
                                    timeout=ctx.config.sources.timeout_s)
         response.raise_for_status()
         content_type = response.headers.get("Content-Type", "")
@@ -42,19 +63,20 @@ class ExoFop(Source):
         return response.json()
 
     def parse(self, raw: Any, ctx: SourceContext) -> dict:
+        if not isinstance(raw, dict):
+            raw = {}
         tois = [{"toi": _toi_number(t.get("toi")), "disp_tess": t.get("disp_tess"),
                  "disp_tfop": t.get("disp_tfop"), "sectors": _sectors(t.get("sector")),
-                 "notes": t.get("notes")} for t in raw.get("tois") or []]
+                 "notes": t.get("notes")} for t in _dicts(raw.get("tois"))]
         ctois = [{"ctoi": c.get("ctoi"), "disposition": c.get("disposition"),
-                  "notes": c.get("notes")} for c in raw.get("ctois") or []]
-        followup = {key: len(raw.get(key) or []) for key in _FOLLOWUP}
+                  "notes": c.get("notes")} for c in _dicts(raw.get("ctois"))]
+        followup = {key: len(_as_list(raw.get(key))) for key in _FOLLOWUP}
         files: dict[str, int] = {}
-        for f in raw.get("files") or []:
+        for f in _dicts(raw.get("files")):
             ftype = f.get("ftype")
-            if ftype is not None:
+            if isinstance(ftype, str):
                 files[ftype] = files.get(ftype, 0) + 1
         if not (tois or ctois or any(followup.values()) or files):
             return {}
-        tic = self.query(ctx)["tic"]
-        return {"url": f"{BASE_URL}?id={tic}", "tois": tois, "ctois": ctois,
-                "followup": followup, "files": files}
+        return {"url": f"{BASE_URL}?id={_tic(ctx.identity.tic_id)}", "tois": tois,
+                "ctois": ctois, "followup": followup, "files": files}
