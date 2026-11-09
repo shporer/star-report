@@ -34,7 +34,7 @@ def fake(monkeypatch):
     def install(**kw):
         client = FakeVizier(**kw)
 
-        def make(cfg, columns, row_limit=200):
+        def make(cfg, columns, row_limit=200, timeout=None):
             client.column_requests.append(list(columns))
             return client
         monkeypatch.setattr(vizier, "vizier_client", make)

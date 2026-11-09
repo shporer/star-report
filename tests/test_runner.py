@@ -94,6 +94,18 @@ def test_timeout_does_not_block(ctx):
     assert res["slow"].status == "timeout" and res["fast"].status == "ok" and elapsed < 2
 
 
+def test_timeout_override_beats_default_only_for_named_source(ctx):
+    ctx.config.sources.timeout_overrides = {"slowok": 1.0}
+    res = run_sources([Fake("slowok", payload={"x": 1}, delay=0.5), Fake("plain", delay=5)], ctx)
+    RELEASE.set()
+    assert res["slowok"].status == "ok" and res["plain"].status == "timeout"
+
+
+def test_timeout_overrides_default_to_empty(tmp_path):
+    cfg = load_config(cwd=tmp_path)
+    assert Fake("x").timeout_s(cfg) == 30 and Fake("mast").timeout_s(cfg) == 90
+
+
 def test_timeout_frees_slot_for_queue(ctx):
     ctx.config.sources.max_workers = 1
     t0 = time.monotonic()

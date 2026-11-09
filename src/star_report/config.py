@@ -43,6 +43,7 @@ class CacheConfig(_Section):
 class SourcesConfig(_Section):
     max_workers: int
     timeout_s: float
+    timeout_overrides: dict[str, float] = {}
     enabled: dict[str, bool]
     radius_arcsec: dict[str, float]
     vizier_catalogs: dict[str, str]

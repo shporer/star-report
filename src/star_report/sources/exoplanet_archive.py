@@ -78,7 +78,7 @@ class ExoplanetArchive(Source):
 
     def fetch(self, ctx: SourceContext) -> Any:
         q = self.query(ctx)
-        session, timeout = ctx.session, ctx.config.sources.timeout_s
+        session, timeout = ctx.session, self.timeout_s(ctx.config)
         out: dict[str, list[dict]] = {"planets": [], "tois": [], "kois": [], "k2": []}
         if q["tic"] is not None:
             out["planets"] = tap(_PLANETS + f"tic_id = 'TIC {q['tic']}'", session, timeout)

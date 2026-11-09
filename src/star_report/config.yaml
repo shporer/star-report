@@ -24,6 +24,7 @@ cache:
 sources:
   max_workers: 8
   timeout_s: 30
+  timeout_overrides: {mast: 90}   # per-source timeouts in seconds; others use timeout_s
   enabled: {simbad: true, gaia_core: true, gaia_neighbors: true, tic: true,
             exoplanet_archive: true, exofop: true, gaia_nss: true, gaia_vari: true,
             wide_binaries: true, wds: true, sb9: true, vsx: true, mast: true,

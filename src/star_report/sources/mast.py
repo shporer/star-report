@@ -130,7 +130,7 @@ class MastObservations(Source):
         client = mast.ObservationsClass()
         # Per-instance, no global write. astroquery only checks this timeout after the
         # call returns, so it never bounds a hung socket; the runner's timeout is the guard.
-        client.TIMEOUT = ctx.config.sources.timeout_s
+        client.TIMEOUT = self.timeout_s(ctx.config)
         table = client.query_region(SkyCoord(ra, dec, unit="deg"), radius=f"{_radius(ctx)} arcsec")
         return aggregate(table)
 

@@ -91,7 +91,7 @@ class Tic(Source):
         return {"catalog": "TIC", "ID": ctx.identity.tic_id}
 
     def fetch(self, ctx: SourceContext) -> Any:
-        table = _client(ctx.config.sources.timeout_s).query_criteria(
+        table = _client(self.timeout_s(ctx.config)).query_criteria(
             catalog="TIC", ID=int(ctx.identity.tic_id))
         return _rows(table)
 

@@ -55,7 +55,7 @@ class ExoFop(Source):
     def fetch(self, ctx: SourceContext) -> Any:
         tic = _tic(ctx.identity.tic_id)
         response = ctx.session.get(f"{BASE_URL}?id={int(tic)}&json",
-                                   timeout=ctx.config.sources.timeout_s)
+                                   timeout=self.timeout_s(ctx.config))
         response.raise_for_status()
         content_type = response.headers.get("Content-Type", "")
         if "json" not in content_type.lower():

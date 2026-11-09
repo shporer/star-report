@@ -106,7 +106,7 @@ class TessSectors(Source):
         error: str | None = None
         try:
             resp = ctx.session.get(TESSCUT_URL.format(ra=ra, dec=dec),
-                                   timeout=ctx.config.sources.timeout_s)
+                                   timeout=self.timeout_s(ctx.config))
             resp.raise_for_status()
             payload = resp.json()
             results = payload.get("results") if isinstance(payload, dict) else None

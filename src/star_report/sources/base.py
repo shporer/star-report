@@ -139,7 +139,7 @@ class Source(ABC):
         return None
 
     def timeout_s(self, cfg: Config) -> float:
-        return cfg.sources.timeout_s
+        return cfg.sources.timeout_overrides.get(self.name, cfg.sources.timeout_s)
 
 
 def _error_text(e: BaseException) -> str:

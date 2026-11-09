@@ -136,7 +136,7 @@ def test_fetch_uses_fresh_client_with_instance_timeout(monkeypatch):
     before = mast.conf.timeout
     ctx = make_ctx()
     raw = MastObservations().fetch(ctx)
-    assert seen["client"].TIMEOUT == ctx.config.sources.timeout_s
+    assert seen["client"].TIMEOUT == 90
     assert mast.conf.timeout == before
     assert raw["counts"][0]["n"] == 1 and "3" in seen["args"][2]
 

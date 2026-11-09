@@ -9,6 +9,7 @@ def test_defaults(tmp_path):
     cfg = load_config(cwd=tmp_path)
     assert (cfg.llm.model, cfg.llm.effort) == ("claude-opus-5-5", "high")
     assert (cfg.sources.max_workers, cfg.sources.timeout_s) == (8, 30)
+    assert cfg.sources.timeout_overrides == {"mast": 90}
     assert cfg.cache.expiry_days["cmd_background"] is None and cfg.cache.expiry_days["simbad"] == 30
     assert (cfg.literature.most_cited, cfg.literature.most_recent) == (15, 10)
     assert cfg.servers.simbad == ["simbad.cds.unistra.fr", "simbad.harvard.edu"]

@@ -39,10 +39,11 @@ class VizierSpec:
     needs: tuple[str, ...] = ()
 
 
-def vizier_client(cfg: Config, columns: Sequence[str], row_limit: int = 200) -> Vizier:
+def vizier_client(cfg: Config, columns: Sequence[str], row_limit: int = 200,
+                  timeout: float | None = None) -> Vizier:
     """A client on the first reachable VizieR host. The catalog goes to each query call."""
     return Vizier(vizier_server=pick_server(cfg.servers.vizier), columns=list(columns),
-                  row_limit=row_limit, timeout=cfg.sources.timeout_s)
+                  row_limit=row_limit, timeout=cfg.sources.timeout_s if timeout is None else timeout)
 
 
 def _named(result: Any) -> list[tuple[str, Any]]:
@@ -111,7 +112,7 @@ class VizierSource(Source):
         gaia_id = digits_only(ctx.identity.gaia_dr3_id)
         if gaia_id is None:
             return {}
-        client = vizier_client(ctx.config, CONSTRAINT_COLUMNS)
+        client = vizier_client(ctx.config, CONSTRAINT_COLUMNS, timeout=self.timeout_s(ctx.config))
         out: dict[str, list[dict]] = {}
         for column in self.spec.gaia_columns:
             # Constraint values are bare: a leading "=" matches nothing.
@@ -121,7 +122,8 @@ class VizierSource(Source):
 
     def _fetch_cone(self, ctx: SourceContext, catalog: str) -> dict[str, list[dict]]:
         ra, dec = propagate(ctx.identity.position, 2000.0)
-        client = vizier_client(ctx.config, [*self.spec.columns, *_POSITION_COLUMNS])
+        client = vizier_client(ctx.config, [*self.spec.columns, *_POSITION_COLUMNS],
+                               timeout=self.timeout_s(ctx.config))
         target = f"{catalog}/{self.spec.table}" if self.spec.table else catalog
         result = client.query_region(
             SkyCoord(float(ra) * u.deg, float(dec) * u.deg, frame="icrs"),
