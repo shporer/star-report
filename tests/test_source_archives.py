@@ -141,3 +141,35 @@ def test_recorded_hd209458():
 def test_registry_order():
     names = [s.name for s in build_sources(make_ctx().config)]
     assert names.index("tess_pointing") < names.index("eso") < names.index("koa")
+
+
+def _fetch_with(monkeypatch, failing):
+    def fake(url, adql, session):
+        if any(f"koa_{i}" in adql for i in failing):
+            raise RuntimeError("down")
+        return [obj("2010-01-02 00:00:00")]
+
+    monkeypatch.setattr(koa_src, "tap_rows", fake)
+    ctx = make_ctx()
+    ctx.config.sources.koa_instruments[:] = ["hires", "kpf"]
+    return ctx, KeckKoa().fetch(ctx)
+
+
+def test_koa_all_instruments_failing_raises(monkeypatch):
+    with pytest.raises(RuntimeError, match="all KOA instrument queries failed: RuntimeError: down"):
+        _fetch_with(monkeypatch, ["hires", "kpf"])
+
+
+def test_koa_mixed_payload_and_parse_keep_errors(monkeypatch):
+    ctx, raw = _fetch_with(monkeypatch, ["kpf"])
+    assert raw[0]["frames"] == 1 and set(raw[1]) == {"instrument", "error"}
+    out = KeckKoa().parse(raw, ctx)
+    assert [i["instrument"] for i in out["instruments"]] == ["hires"]
+    assert out["errors"][0]["instrument"] == "kpf"
+
+
+def test_koa_no_valid_instruments_returns_empty(monkeypatch):
+    monkeypatch.setattr(koa_src, "tap_rows", lambda *a: pytest.fail("no query expected"))
+    ctx = make_ctx()
+    ctx.config.sources.koa_instruments[:] = ["Bad Name"]
+    assert KeckKoa().fetch(ctx) == []

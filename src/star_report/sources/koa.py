@@ -65,7 +65,10 @@ class KeckKoa(Source):
         if not instruments:
             return []
         with ThreadPoolExecutor(max_workers=len(instruments)) as pool:
-            return list(pool.map(one, instruments))
+            results = list(pool.map(one, instruments))
+        if all("error" in r for r in results):
+            raise RuntimeError(f"all KOA instrument queries failed: {results[0]['error']}")
+        return results
 
     def parse(self, raw: Any, ctx: SourceContext) -> dict:
         found: list[dict] = []
