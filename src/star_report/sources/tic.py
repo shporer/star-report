@@ -56,8 +56,11 @@ def _rows(table: Table) -> list[dict]:
 
 
 def _client(timeout: float) -> mast.CatalogsClass:
-    mast.conf.timeout = max(1, round(timeout))  # astroquery types this option as int
-    return mast.CatalogsClass()
+    # Per-instance, no global write. astroquery only checks this timeout after the
+    # call returns, so it never bounds a hung socket; the runner's timeout is the guard.
+    client = mast.CatalogsClass()
+    client.TIMEOUT = timeout
+    return client
 
 
 def by_id(tic: int, timeout: float) -> dict | None:
