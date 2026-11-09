@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from rich.console import Console
 
@@ -79,7 +81,9 @@ def test_apogee_malformed_gaia_id_skips_query(monkeypatch):
 def test_inventory_section_hd209458(tmp_path):
     html = render_html(make_report("HD_209458"), tmp_path)
     sec = html[html.index('id="inventory"'):]
-    assert "ESPRESSO" in sec and "HARPS" in sec and "56" in sec and "None" not in sec
+    assert "ESPRESSO" in sec and "HARPS" in sec and "None" not in sec
+    observed = re.search(r"<li>Observed: ([^<]*)</li>", sec)
+    assert observed and 56 in [int(x) for x in observed.group(1).split(", ")]
 
 
 def test_inventory_barnards_star(tmp_path):
@@ -128,3 +132,12 @@ def test_terminal_data_line():
     print_summary(make_report("HD_209458"), None, console)
     line = next(ln for ln in console.export_text().splitlines() if ln.startswith("Data:"))
     assert "ESO 341" in line and "2 observed" in line
+
+
+def test_inventory_upcoming_sector_with_date(tmp_path):
+    base = make_report("HD_209458")
+    results = dict(base.results)
+    tp = dict(results["tess_pointing"].data, upcoming=[{"sector": 99, "start": "2027-01-05"}])
+    results["tess_pointing"] = results["tess_pointing"].model_copy(update={"data": tp})
+    html = render_html(base.model_copy(update={"results": results}), tmp_path)
+    assert "<li>Upcoming: sector 99 (2027-01-05)</li>" in html

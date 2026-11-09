@@ -1,9 +1,4 @@
-{% macro status_note(name) -%}
-{%- set res = report.results.get(name) -%}
-{%- if res is none -%}<p class="muted">{{ name }}: not run</p>
-{%- elif res.status != "ok" -%}<p class="muted status-{{ res.status }}">{{ name }}: {{ STATUS_LABELS[res.status] }}{% if res.status in ("error", "timeout", "skipped") and res.error %}: {{ res.error }}{% endif %}</p>
-{%- endif -%}
-{%- endmacro %}
+{% from "_macros.html.j2" import status_note with context %}
 {% macro rows(name) -%}
 {%- set res = report.results.get(name) -%}
 {%- if res is not none and res.status == "ok" and res.data is sequence and res.data is not string -%}{{ caller(res.data) }}{%- endif -%}
