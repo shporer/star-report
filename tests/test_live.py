@@ -148,18 +148,35 @@ def test_no_llm_deterministic(tmp_path, live_config):
     assert a == b, f"data.json differs at: {diff_paths(a, b)}"
 
 
-def test_cold_run_time(tmp_path, capsys):
-    cache_dir = tmp_path / "empty-cache"
-    config = _config_file(tmp_path, cache_dir)
+def _cold_run(tmp_path, capsys, *extra: str) -> tuple[int, dict, float]:
+    config = _config_file(tmp_path, tmp_path / "empty-cache")
     start = time.perf_counter()
-    rc, data = run_report(_target(MAIN), tmp_path / "out", config)  # plots and the LLM on
+    rc, data = run_report(_target(MAIN), tmp_path / "out", config, *extra)
     elapsed = time.perf_counter() - start
     with capsys.disabled():
-        print(f"\ncold run of HD 209458 (llm: {data['llm']['status']}): {elapsed:.1f} s")
+        print(f"\ncold run of HD 209458 {extra or '(plots and LLM)'}: {elapsed:.1f} s")
+    return rc, data, elapsed
+
+
+def test_cold_run_time_no_llm(tmp_path, capsys):
+    """Cold cache, plots on, LLM off. Does not cover the LLM leg; see the with_llm test."""
+    rc, _, elapsed = _cold_run(tmp_path, capsys, "--no-llm")
     assert rc == 0
     assert elapsed < 150.0
 
 
+# `ant auth login` profiles are deliberately not detected: the live LLM tests run only when
+# the environment variables are set.
+@pytest.mark.skipif(not (os.environ.get("ANTHROPIC_API_KEY") and os.environ.get("ADS_DEV_KEY")),
+                    reason="needs ANTHROPIC_API_KEY and ADS_DEV_KEY")
+def test_cold_run_time_with_llm(tmp_path, capsys):
+    rc, data, elapsed = _cold_run(tmp_path, capsys)
+    assert rc == 0
+    assert data["llm"]["status"] == "ok", data["llm"].get("reason")
+    assert elapsed < 150.0
+
+
+# Same credentials-only rule as above (no `ant auth login` detection).
 @pytest.mark.skipif(not (os.environ.get("ANTHROPIC_API_KEY") and os.environ.get("ADS_DEV_KEY")),
                     reason="needs ANTHROPIC_API_KEY and ADS_DEV_KEY")
 def test_llm_end_to_end(tmp_path, live_config):
