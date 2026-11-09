@@ -48,6 +48,9 @@ def test_exit_codes(monkeypatch, tmp_path):
     bad = tmp_path / "bad.yaml"
     bad.write_text("output: [unclosed")
     assert cli.main(["a", "--config", str(bad)]) == 2
+    bad.write_text("sources: {max_workers: 0}\n")
+    ran.clear()
+    assert cli.main(["a", "--config", str(bad)]) == 2 and ran == []
     with pytest.raises(SystemExit) as e:
         cli.main([])
     assert e.value.code == 2

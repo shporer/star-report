@@ -5,14 +5,25 @@ from __future__ import annotations
 import os
 from importlib.resources import files
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    NonNegativeInt,
+    PositiveInt,
+    ValidationError,
+    field_validator,
+)
+
+# A timeout in seconds: positive and finite.
+Seconds = Annotated[float, Field(gt=0, allow_inf_nan=False)]
 
 
 class ConfigError(Exception):
-    """Raised for YAML errors, unknown keys, bad types and a missing explicit path."""
+    """Raised for YAML errors, unknown keys, bad types or values, and a missing explicit path."""
 
 
 class _Section(BaseModel):
@@ -41,9 +52,9 @@ class CacheConfig(_Section):
 
 
 class SourcesConfig(_Section):
-    max_workers: int
-    timeout_s: float
-    timeout_overrides: dict[str, float] = {}
+    max_workers: PositiveInt  # 0 would leave run_sources waiting forever for a free slot
+    timeout_s: Seconds
+    timeout_overrides: dict[str, Seconds] = {}
     enabled: dict[str, bool]
     radius_arcsec: dict[str, float]
     vizier_catalogs: dict[str, str]
@@ -72,14 +83,14 @@ class FlagsConfig(_Section):
 class PlotsConfig(_Section):
     enabled: bool
     max_sectors: int
-    lightcurve_timeout_s: float
+    lightcurve_timeout_s: Seconds
     cutout_arcmin: float
     sky_survey: str
     sky_fallback_survey: str
     neighbor_max_delta_g: float
     tess_pixel_arcsec: float
     cmd_background_rows: int
-    cmd_background_timeout_s: float
+    cmd_background_timeout_s: Seconds
     periodogram_min_period_d: float
     periodogram_max_period_d: float
     period_merge_tolerance: float
@@ -98,8 +109,8 @@ class LLMConfig(_Section):
     effort: str
     max_tokens: int
     server_fallback: bool
-    timeout_s: float
-    max_retries: int
+    timeout_s: Seconds
+    max_retries: NonNegativeInt
 
 
 class Config(_Section):

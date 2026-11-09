@@ -38,6 +38,33 @@ def test_unknown_key_is_config_error(tmp_path):
         load_config(cwd=tmp_path)
 
 
+@pytest.mark.parametrize("override,key", [
+    ("sources: {max_workers: 0}", "sources.max_workers"),
+    ("sources: {max_workers: -2}", "sources.max_workers"),
+    ("sources: {timeout_s: 0}", "sources.timeout_s"),
+    ("sources: {timeout_s: -5}", "sources.timeout_s"),
+    ("sources: {timeout_s: .nan}", "sources.timeout_s"),
+    ("sources: {timeout_s: .inf}", "sources.timeout_s"),
+    ("sources: {timeout_overrides: {mast: -90}}", "sources.timeout_overrides.mast"),
+    ("plots: {lightcurve_timeout_s: 0}", "plots.lightcurve_timeout_s"),
+    ("plots: {cmd_background_timeout_s: -1}", "plots.cmd_background_timeout_s"),
+    ("llm: {timeout_s: -300}", "llm.timeout_s"),
+    ("llm: {max_retries: -1}", "llm.max_retries"),
+])
+def test_non_positive_workers_and_timeouts_are_config_errors(tmp_path, override, key):
+    (tmp_path / "config.yaml").write_text(override + "\n")
+    with pytest.raises(ConfigError, match=f"invalid configuration: {key}: "):
+        load_config(cwd=tmp_path)
+
+
+def test_positive_timeouts_and_zero_retries_are_valid(tmp_path):
+    (tmp_path / "config.yaml").write_text(
+        "sources: {max_workers: 1, timeout_s: 0.5, timeout_overrides: {mast: 2}}\n"
+        "llm: {max_retries: 0}\n")
+    cfg = load_config(cwd=tmp_path)
+    assert (cfg.sources.max_workers, cfg.sources.timeout_s, cfg.llm.max_retries) == (1, 0.5, 0)
+
+
 def test_bad_yaml_is_config_error(tmp_path):
     (tmp_path / "config.yaml").write_text("llm: [")
     with pytest.raises(ConfigError):
