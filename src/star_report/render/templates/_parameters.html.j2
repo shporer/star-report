@@ -1,0 +1,18 @@
+{% if report.parameters %}
+<table>
+<thead><tr><th>Parameter</th><th>Gaia</th><th>TIC</th><th>SIMBAD</th></tr></thead>
+<tbody>
+{% for row in report.parameters %}
+<tr{% if row.disagree %} class="disagree" title="Sources disagree: the difference exceeds the configured threshold (combined-error sigma when both errors are known, otherwise an absolute or fractional difference)."{% endif %}>
+<th scope="row">{% if row.disagree %}⚠ {% endif %}{{ row.label }}{% if row.unit %} <small>({{ row.unit }})</small>{% endif %}</th>
+{% for key in ("gaia", "tic", "simbad") %}
+{% set cell = row.cells.get(key) %}
+<td class="num">{% if cell and cell.value is not none %}{{ fmt_cell(cell.value, cell.err, row.decimals) }}{% if cell.note %} <small>{{ cell.note }}</small>{% endif %}{% else %}<span class="muted">-</span>{% endif %}</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p class="muted">No parameters available.</p>
+{% endif %}

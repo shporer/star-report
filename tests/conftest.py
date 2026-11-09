@@ -10,7 +10,7 @@ def pytest_collection_modifyitems(items):
 # ---- shared helpers for source tests and the fixture recorder ----
 import json  # noqa: E402
 import tempfile  # noqa: E402
-from datetime import datetime  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
 from pathlib import Path  # noqa: E402
 from typing import Any  # noqa: E402
 
@@ -85,3 +85,44 @@ def make_ctx(
 @pytest.fixture
 def ctx(tmp_path):
     return make_ctx(cache_dir=tmp_path / "cache")
+
+
+# ---- full-report builder for render tests ----
+from star_report import derive  # noqa: E402
+from star_report.models import LLMBlock, Provenance, Report, SourceResult  # noqa: E402
+from star_report.sources.registry import build_sources  # noqa: E402
+
+REPORT_SOURCES = ["simbad", "gaia_core", "gaia_neighbors", "tic"]
+_FIXED_TIME = datetime(2026, 11, 9, 12, 0, 0, tzinfo=timezone.utc)
+
+
+def make_report(slug: str = DEFAULT_STAR, **overrides) -> Report:
+    """A deterministic Report built by parsing the recorded fixtures offline."""
+    cfg = load_config(cwd=Path(tempfile.gettempdir()))
+    sources = {s.name: s for s in build_sources(cfg)}
+    identity = ref_identity(slug)
+    ctx = make_ctx(identity=identity, cfg=cfg)
+    results: dict[str, SourceResult] = {}
+    for name in REPORT_SOURCES:
+        src = sources[name]
+        data = src.parse(load_fixture(name, slug), ctx)
+        results[name] = SourceResult(
+            source=name,
+            status="ok" if data else "empty",
+            data=data,
+            provenance=Provenance(service=src.service, query=json.dumps(src.query(ctx), default=str),
+                                  catalog_version=src.catalog_version, retrieved=_FIXED_TIME,
+                                  from_cache=True),
+            elapsed_s=0.4,
+        )
+    rows = derive.parameter_rows(results, cfg.parameters)
+    report = Report(
+        tool_version="0.1.0",
+        generated=_FIXED_TIME,
+        identity=identity,
+        results=results,
+        parameters=rows,
+        flags=derive.flags(identity, results, cfg.flags),
+        llm=LLMBlock(status="skipped", reason="LLM disabled (--no-llm or config)"),
+    )
+    return report.model_copy(update=overrides) if overrides else report

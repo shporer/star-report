@@ -1,0 +1,80 @@
+import json
+import re
+
+from rich.console import Console
+
+from star_report.models import Position, Report
+from star_report.render.html import link_citations, render_html, write_outputs
+from star_report.render.terminal import print_summary
+from conftest import make_report
+
+
+def _all_failed():
+    base = make_report()
+    results = {
+        k: v.model_copy(update={"status": "error", "data": None, "error": "ConnectionError: down"})
+        for k, v in base.results.items()
+    }
+    return base.model_copy(update={"results": results, "parameters": [], "flags": []}), results
+
+
+def test_full_report_renders(tmp_path):
+    html = render_html(make_report(), tmp_path)
+    for s in ["HD 209458", "TIC 420814525", "Gaia DR3 1779546757669063552", "Teff", "<details"]:
+        assert s in html
+    assert "{{" not in html and "{%" not in html
+    assert re.search(r'<(img|script|link)[^>]+(src|href)="https?://', html) is None
+
+
+def test_all_sources_failed_still_renders(tmp_path):
+    report, results = _all_failed()
+    html = render_html(report, tmp_path)
+    assert html.count("unavailable") == len(results)
+    assert "No parameters available" in html
+    assert "Traceback" not in html
+
+
+def test_empty_and_error_are_distinct(tmp_path):
+    base = make_report()
+    results = dict(base.results)
+    results["tic"] = results["tic"].model_copy(update={"status": "empty", "data": None})
+    results["gaia_core"] = results["gaia_core"].model_copy(
+        update={"status": "error", "data": None, "error": "ConnectionError: down"})
+    html = render_html(base.model_copy(update={"results": results}), tmp_path)
+    assert "no data found" in html
+    assert "unavailable: ConnectionError: down" in html
+
+
+def test_no_gaia_identity(tmp_path):
+    base = make_report()
+    pos = Position(ra=base.identity.position.ra, dec=base.identity.position.dec,
+                   epoch=2000.0, source="simbad")
+    ident = base.identity.model_copy(update={"position": pos, "gaia_dr3_id": None})
+    html = render_html(base.model_copy(update={"identity": ident}), tmp_path)
+    assert "J2000 (SIMBAD)" in html
+
+
+def test_link_citations():
+    out = str(link_citations("Hot Jupiter [2000ApJ...529L..45C] & [2008A&A...481..529X]."))
+    assert 'href="https://ui.adsabs.harvard.edu/abs/2000ApJ...529L..45C/abstract"' in out and "&amp; " in out
+    assert "2008A&amp;A...481..529X</a>" in out
+
+
+def test_write_outputs(tmp_path):
+    out = tmp_path / "nested" / "star"
+    path = write_outputs(make_report(), out)
+    assert path == out / "report.html" and path.is_file()
+    data = json.loads((out / "data.json").read_text())
+    assert data["schema_version"] == 1
+    Report.model_validate(data)
+    (out / "report.html").write_text("stale")
+    write_outputs(make_report(), out)
+    assert "HD 209458" in (out / "report.html").read_text()
+
+
+def test_terminal_summary(tmp_path):
+    console = Console(record=True, width=110)
+    print_summary(make_report(), tmp_path / "report.html", console)
+    text = console.export_text()
+    assert "HD 209458" in text and "TIC 420814525" in text and str(tmp_path / "report.html") in text
+    assert text.count("gaia_core") == 1

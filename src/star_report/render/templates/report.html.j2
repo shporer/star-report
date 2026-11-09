@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ name }} - star report</title>
+<style>
+:root {
+  --bg: #ffffff; --fg: #1d2330; --muted: #5d6677; --card: #f4f6fa; --line: #d6dbe5;
+  --accent: #1f5fbf; --warn-bg: #fff4d6; --warn-fg: #6b4b00; --bad: #b3261e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12151c; --fg: #e3e7ef; --muted: #98a2b5; --card: #1b202b; --line: #2f3646;
+    --accent: #7aa7ee; --warn-bg: #3a2f10; --warn-fg: #f1cf7a; --bad: #f2877f;
+  }
+}
+body { background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif;
+  max-width: 62rem; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
+h1 { margin: 0.5rem 0 0.25rem; }
+h2 { margin-top: 2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.25rem; }
+a { color: var(--accent); }
+.muted, small { color: var(--muted); }
+.ids { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin: 0.25rem 0; }
+.warnings, .flags { background: var(--warn-bg); color: var(--warn-fg); padding: 0.5rem 1rem 0.5rem 2rem;
+  border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; }
+td.num { font-variant-numeric: tabular-nums; }
+tr.disagree td:first-child { color: var(--warn-fg); background: var(--warn-bg); }
+details { background: var(--card); border-radius: 6px; padding: 0.5rem 1rem; margin-top: 2rem; }
+summary { cursor: pointer; font-weight: 600; }
+.status-error, .status-timeout { color: var(--bad); }
+img.plot { max-width: 100%; }
+</style>
+</head>
+<body>
+<header>
+<h1>{{ name }}</h1>
+<div class="ids">
+{%- for label, text in ids %}<span>{{ text }}</span>{% endfor -%}
+</div>
+<div class="muted">RA {{ ra_s }} ({{ "%.5f"|format(report.identity.position.ra) }}°),
+Dec {{ dec_s }} ({{ "%.5f"|format(report.identity.position.dec) }}°) &middot; {{ epoch }}</div>
+{% if description %}<p>{{ description }}</p>{% endif %}
+</header>
+
+{% if report.identity.warnings %}
+<section id="warnings">
+<ul class="warnings">
+{% for w in report.identity.warnings %}<li>{{ w }}</li>{% endfor %}
+</ul>
+</section>
+{% endif %}
+
+<section id="overview">
+<h2>Overview</h2>
+{% if report.llm.status != "ok" %}
+<p class="muted">LLM sections not included: {{ report.llm.reason or "not available" }}</p>
+{% endif %}
+</section>
+
+<section id="parameters">
+<h2>Parameters</h2>
+{% include "_parameters.html.j2" %}
+</section>
+
+{% if report.flags %}
+<section id="flags">
+<h2>Flags</h2>
+<ul class="flags">
+{% for f in report.flags %}<li>{{ f }}</li>{% endfor %}
+</ul>
+</section>
+{% endif %}
+
+{% include "_sources.html.j2" %}
+</body>
+</html>

@@ -1,0 +1,17 @@
+<details id="sources">
+<summary>Data sources</summary>
+<table>
+<thead><tr><th>Source</th><th>Status</th><th>Origin</th><th>Elapsed</th><th>Catalog version</th></tr></thead>
+<tbody>
+{% for name, res in report.results.items() %}
+<tr>
+<td>{{ name }}</td>
+<td class="status-{{ res.status }}">{{ STATUS_LABELS[res.status] }}{% if res.status in ("error", "timeout", "skipped") and res.error %}: {{ res.error }}{% endif %}</td>
+<td>{% if res.provenance %}{{ "cache" if res.provenance.from_cache else "live" }}{% else %}-{% endif %}</td>
+<td>{{ "%.1f"|format(res.elapsed_s) }} s</td>
+<td>{{ (res.provenance.catalog_version if res.provenance else none) or "-" }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</details>
