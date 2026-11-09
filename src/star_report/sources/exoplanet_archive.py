@@ -50,6 +50,12 @@ def _number(other_ids: dict, key: str) -> int | None:
     return int(match.group()) if match else None
 
 
+def _digits(value: Any) -> str | None:
+    """`str(int(value))` for an all-digit value, else None; keeps ADQL free of stray text."""
+    text = str(value).strip() if value is not None else ""
+    return str(int(text)) if text.isascii() and text.isdigit() else None
+
+
 def _sort_key(value: Any) -> tuple:
     """Numeric-aware, None-safe: '5972.01' sorts by value, other strings alphabetically."""
     text = "" if value is None else str(value)
@@ -66,7 +72,8 @@ class ExoplanetArchive(Source):
 
     def query(self, ctx: SourceContext) -> dict:
         ident = ctx.identity
-        return {"tic": ident.tic_id, "gaia_dr3": ident.gaia_dr3_id,
+        tic = _digits(ident.tic_id)
+        return {"tic": None if tic is None else int(tic), "gaia_dr3": _digits(ident.gaia_dr3_id),
                 "kic": _number(ident.other_ids, "KIC"), "epic": _number(ident.other_ids, "EPIC")}
 
     def fetch(self, ctx: SourceContext) -> Any:

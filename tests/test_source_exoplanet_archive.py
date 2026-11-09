@@ -84,3 +84,35 @@ def test_known_periods():
     assert known_periods(results) == [("TOI-700 d", 37.42), ("TOI 700.01", 9.98)]
     assert known_periods({}) == []
     assert known_periods({"exoplanet_archive": SimpleNamespace(data=None)}) == []
+
+
+def _spy(monkeypatch):
+    calls = []
+    monkeypatch.setattr(exoplanet_archive, "tap",
+                        lambda adql, session, timeout: calls.append(adql) or [])
+    return calls
+
+
+def test_malformed_kic_epic_skip_queries(monkeypatch):
+    calls = _spy(monkeypatch)
+    ident = ref_identity("Kepler-10").model_copy(
+        update={"other_ids": {"KIC": "KIC abc", "EPIC": ""}})
+    raw = ExoplanetArchive().fetch(make_ctx(identity=ident))
+    assert len(calls) == 2 and raw["kois"] == [] and raw["k2"] == []
+
+
+def test_malformed_gaia_id_never_reaches_adql(monkeypatch):
+    calls = _spy(monkeypatch)
+    ident = ref_identity("Kepler-10").model_copy(
+        update={"tic_id": None, "gaia_dr3_id": "1' or '1'='1", "other_ids": {}})
+    raw = ExoplanetArchive().fetch(make_ctx(identity=ident))
+    assert calls == [] and raw == {"planets": [], "tois": [], "kois": [], "k2": []}
+
+
+def test_non_int_tic_is_skipped_or_coerced(monkeypatch):
+    calls = _spy(monkeypatch)
+    base = ref_identity("Kepler-10").model_copy(update={"other_ids": {}, "gaia_dr3_id": None})
+    ExoplanetArchive().fetch(make_ctx(identity=base.model_copy(update={"tic_id": "1' or '1'='1"})))
+    assert calls == []
+    ExoplanetArchive().fetch(make_ctx(identity=base.model_copy(update={"tic_id": "0377780790"})))
+    assert "tic_id = 'TIC 377780790'" in calls[0] and "tid = 377780790" in calls[1]
