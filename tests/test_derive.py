@@ -146,3 +146,62 @@ def test_core_flags(cfg):
     }
     assert flags(identity(), quiet, cfg.flags) == []
     assert flags(identity(), {"gaia_core": failed("gaia_core")}, cfg.flags) == []
+
+
+def _flags_for(results):
+    return flags(identity(), results, load_config(cwd=__import__("pathlib").Path("/tmp")).flags)
+
+
+def test_companion_flags_in_order():
+    results = {
+        "exoplanet_archive": ok("exoplanet_archive", {
+            "planets": [{"name": "a b"}, {"name": "a c"}],
+            "tois": [{"toi": "700.01", "disposition": "CP"}, {"toi": "700.02", "disposition": None}],
+            "kois": [{"koi": "K00001.01", "disposition": "CONFIRMED"}], "k2": []}),
+        "exofop": ok("exofop", {"tois": [{"toi": "9.01", "disp_tfop": "PC"}]}),
+        "gaia_nss": ok("gaia_nss", [{"type": "SB1", "period_d": 12.345},
+                                    {"type": "Astrometric", "period_d": None}]),
+        "gaia_vari": ok("gaia_vari", {"classes": [{"class": "EP"}],
+                                      "periods": [{"type": "planetary_transit", "period_d": 0.899005}]}),
+        "vsx": ok("vsx", [{"name": "V0376 Peg", "type": "EP", "period_d": 3.52474859},
+                          {"name": "X", "type": "RR", "period_d": None}]),
+        "wds": ok("wds", [{"wds": "00001+0001", "disc": "AB", "comp": "C", "sep_arcsec": 4.26,
+                           "last_obs": 2015}]),
+        "sb9": ok("sb9", [{"period_d": 2.8673, "k1_kms": 80.1}]),
+        "wide_binaries": ok("wide_binaries", [{"companion": "123", "sep_arcsec": 10.04,
+                                               "sep_au": 1500.4, "R_chance": 0.00123}]),
+    }
+    assert _flags_for(results) == [
+        "2 confirmed planets",
+        "TOIs: 700.01 (CP), 700.02",
+        "KOIs: K00001.01 (CONFIRMED)",
+        "Gaia DR3 SB1 orbit, P = 12.35 d",
+        "Gaia DR3 Astrometric solution",
+        "Gaia DR3 variability class: EP",
+        "Gaia DR3 planetary_transit period 0.899 d",
+        "VSX: V0376 Peg, type EP, P = 3.52474859 d",
+        "VSX: X, type RR",
+        "WDS 00001+0001 AB C: 4.3″ (observed 2015)",
+        "SB9 orbit: P = 2.8673 d, K1 = 80.1 km/s",
+        "Gaia wide binary: Gaia DR3 123 at 10.0″ (1500 au), R = 0.0012",
+    ]
+
+
+def test_toi_flag_fallback_and_singular():
+    results = {
+        "exoplanet_archive": failed("exoplanet_archive"),
+        "exofop": ok("exofop", {"tois": [{"toi": "9.01", "disp_tfop": "PC"}]}),
+    }
+    assert _flags_for(results) == ["TOIs: 9.01 (PC)"]
+    one = {"exoplanet_archive": ok("exoplanet_archive", {"planets": [{"name": "p"}], "tois": [],
+                                                         "kois": [], "k2": []}),
+           "exofop": ok("exofop", {"tois": [{"toi": "9.01", "disp_tfop": "PC"}]})}
+    assert _flags_for(one) == ["1 confirmed planet"]
+
+
+def test_companion_flags_tolerate_missing_fields():
+    results = {"wide_binaries": ok("wide_binaries", [{"companion": "1", "sep_arcsec": 3.0,
+                                                      "sep_au": None, "R_chance": None}])}
+    out = _flags_for(results)
+    assert out == ["Gaia wide binary: Gaia DR3 1 at 3.0″"]
+    assert not any("None" in f for f in out)

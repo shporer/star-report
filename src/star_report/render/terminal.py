@@ -26,6 +26,18 @@ def _cell(c, decimals: int) -> str:
     return text
 
 
+def _planets_line(report: Report) -> str:
+    arch = report.results.get("exoplanet_archive")
+    if arch is None or arch.status != "ok" or not isinstance(arch.data, dict):
+        return ""
+    planets = [p for p in arch.data.get("planets") or [] if isinstance(p, dict)]
+    tois = [str(t["toi"]) for t in arch.data.get("tois") or [] if isinstance(t, dict) and t.get("toi")]
+    text = f"Planets: {len(planets)} confirmed"
+    if tois:
+        text += f"; TOIs: {', '.join(tois)}"
+    return text
+
+
 def print_summary(report: Report, report_path: Path | None, console: Console) -> None:
     ident = report.identity
     lines = [f"[bold]{escape(display_name(ident.main_name))}[/bold]"]
@@ -63,6 +75,10 @@ def print_summary(report: Report, report_path: Path | None, console: Console) ->
 
     for text in [*ident.warnings, *report.flags]:
         console.print(f"⚠ {escape(text)}", style="yellow")
+
+    planets_line = _planets_line(report)
+    if planets_line:
+        console.print(escape(planets_line))
 
     for name, res in report.results.items():
         mark, style = _MARKS[res.status]

@@ -155,6 +155,106 @@ def flags(identity: StarIdentity, results: Mapping[str, SourceResult],
     nss = _num(gaia.get("non_single_star"))
     if nss is not None and nss > 0:
         out.append("Gaia DR3 non-single-star flag set")
+    out.extend(_companion_flags(results))
+    return out
+
+
+def _ok_rows(results: Mapping[str, SourceResult], name: str) -> list[Mapping[str, Any]]:
+    res = results.get(name)
+    if res is None or res.status != "ok" or not isinstance(res.data, list):
+        return []
+    return [r for r in res.data if isinstance(r, Mapping)]
+
+
+def _dict_rows(value: Any) -> list[Mapping[str, Any]]:
+    return [r for r in value if isinstance(r, Mapping)] if isinstance(value, list) else []
+
+
+def _tagged(items: list[tuple[Any, Any]]) -> list[str]:
+    return [f"{ident} ({disp})" if disp else str(ident) for ident, disp in items if ident]
+
+
+def _companion_flags(results: Mapping[str, SourceResult]) -> list[str]:
+    out: list[str] = []
+    archive = _ok_data(results, "exoplanet_archive")
+    exofop = _ok_data(results, "exofop")
+
+    planets = _dict_rows(archive.get("planets")) if archive else []
+    if planets:
+        n = len(planets)
+        out.append(f"{n} confirmed planet{'s' if n != 1 else ''}")
+    if archive is not None:
+        tois = _tagged([(t.get("toi"), t.get("disposition")) for t in _dict_rows(archive.get("tois"))])
+    elif exofop is not None:
+        tois = _tagged([(t.get("toi"), t.get("disp_tfop")) for t in _dict_rows(exofop.get("tois"))])
+    else:
+        tois = []
+    if tois:
+        out.append("TOIs: " + ", ".join(tois))
+    kois = _tagged([(k.get("koi"), k.get("disposition"))
+                    for k in _dict_rows(archive.get("kois"))]) if archive else []
+    if kois:
+        out.append("KOIs: " + ", ".join(kois))
+
+    for row in _ok_rows(results, "gaia_nss"):
+        kind, period = row.get("type"), _num(row.get("period_d"))
+        if not kind:
+            continue
+        if period is not None:
+            out.append(f"Gaia DR3 {kind} orbit, P = {period:.2f} d")
+        else:
+            out.append(f"Gaia DR3 {kind} solution")
+
+    vari = _ok_data(results, "gaia_vari") or {}
+    for cls in _dict_rows(vari.get("classes")):
+        if cls.get("class"):
+            out.append(f"Gaia DR3 variability class: {cls['class']}")
+    for per in _dict_rows(vari.get("periods")):
+        period = _num(per.get("period_d"))
+        if per.get("type") and period is not None:
+            out.append(f"Gaia DR3 {per['type']} period {period:.3f} d")
+
+    for row in _ok_rows(results, "vsx"):
+        if not row.get("name") or not row.get("type"):
+            continue
+        text = f"VSX: {row['name']}, type {row['type']}"
+        period = _num(row.get("period_d"))
+        if period is not None:
+            text += f", P = {period:.10g} d"
+        out.append(text)
+
+    for row in _ok_rows(results, "wds"):
+        sep = _num(row.get("sep_arcsec"))
+        if row.get("wds") is None or sep is None:
+            continue
+        label = " ".join(str(row[k]) for k in ("wds", "disc", "comp") if row.get(k))
+        text = f"WDS {label}: {sep:.1f}″"
+        if row.get("last_obs") is not None:
+            text += f" (observed {row['last_obs']})"
+        out.append(text)
+
+    for row in _ok_rows(results, "sb9"):
+        period = _num(row.get("period_d"))
+        if period is None:
+            continue
+        text = f"SB9 orbit: P = {period:.10g} d"
+        k1 = _num(row.get("k1_kms"))
+        if k1 is not None:
+            text += f", K1 = {k1:.10g} km/s"
+        out.append(text)
+
+    for row in _ok_rows(results, "wide_binaries"):
+        sep = _num(row.get("sep_arcsec"))
+        if row.get("companion") is None or sep is None:
+            continue
+        text = f"Gaia wide binary: Gaia DR3 {row['companion']} at {sep:.1f}″"
+        sep_au = _num(row.get("sep_au"))
+        if sep_au is not None:
+            text += f" ({sep_au:.0f} au)"
+        chance = _num(row.get("R_chance"))
+        if chance is not None:
+            text += f", R = {chance:.2g}"
+        out.append(text)
     return out
 
 

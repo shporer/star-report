@@ -29,7 +29,8 @@ def test_full_report_renders(tmp_path):
 def test_all_sources_failed_still_renders(tmp_path):
     report, results = _all_failed()
     html = render_html(report, tmp_path)
-    assert html.count("unavailable") == len(results)
+    assert html[html.index('id="sources"'):].count("unavailable") == len(results)
+    assert "unavailable" in html[html.index('id="planets"'):html.index('id="sources"')]
     assert "No parameters available" in html
     assert "Traceback" not in html
 
@@ -98,3 +99,28 @@ def test_html_escaping(tmp_path):
 def test_link_citations_escapes_html():
     out = str(link_citations("<b>bold</b> [2000ApJ...529L..45C]"))
     assert "<b>" not in out and "&lt;b&gt;" in out
+
+
+def test_companions_section_toi700(tmp_path):
+    html = render_html(make_report("TOI-700"), tmp_path)
+    assert "TOI-700 d" in html and "700.01" in html
+
+
+def test_companions_section_hd209458(tmp_path):
+    assert "V0376 Peg" in render_html(make_report("HD_209458"), tmp_path)
+
+
+def test_companions_status_labels_distinct(tmp_path):
+    base = make_report("TOI-700")
+    results = dict(base.results)
+    results["vsx"] = results["vsx"].model_copy(update={"status": "error", "data": None, "error": "x"})
+    html = render_html(base.model_copy(update={"results": results}), tmp_path)
+    sec = html[html.index('id="variability"'):]
+    assert "unavailable" in sec
+    assert "no data found" in html[html.index('id="binarity"'):html.index('id="variability"')]
+
+
+def test_terminal_planets_line(tmp_path):
+    console = Console(record=True, width=110)
+    print_summary(make_report("TOI-700"), tmp_path / "report.html", console)
+    assert "Planets:" in console.export_text()

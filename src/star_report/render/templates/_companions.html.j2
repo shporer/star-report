@@ -1,0 +1,182 @@
+{% macro status_note(name) -%}
+{%- set res = report.results.get(name) -%}
+{%- if res is none -%}<p class="muted">{{ name }}: not run</p>
+{%- elif res.status != "ok" -%}<p class="muted status-{{ res.status }}">{{ name }}: {{ STATUS_LABELS[res.status] }}{% if res.status in ("error", "timeout", "skipped") and res.error %}: {{ res.error }}{% endif %}</p>
+{%- endif -%}
+{%- endmacro %}
+{% macro rows(name) -%}
+{%- set res = report.results.get(name) -%}
+{%- if res is not none and res.status == "ok" and res.data is sequence and res.data is not string -%}{{ caller(res.data) }}{%- endif -%}
+{%- endmacro %}
+{% set arch = report.results.get("exoplanet_archive") %}
+{% set arch_ok = arch is not none and arch.status == "ok" and arch.data is mapping %}
+{% set fop = report.results.get("exofop") %}
+{% set fop_ok = fop is not none and fop.status == "ok" and fop.data is mapping %}
+{% set vari = report.results.get("gaia_vari") %}
+{% set vari_ok = vari is not none and vari.status == "ok" and vari.data is mapping %}
+{% set gaia = report.results.get("gaia_core") %}
+
+<section id="planets">
+<h2>Planets and candidates</h2>
+{{ status_note("exoplanet_archive") }}
+{{ status_note("exofop") }}
+{% if arch_ok and arch.data.planets %}
+<h3>Confirmed planets</h3>
+<table>
+<thead><tr><th>Name</th><th>Period (d)</th><th>Radius (R&oplus;)</th><th>Mass (M&oplus;)</th><th>Method</th><th>Year</th></tr></thead>
+<tbody>
+{% for p in arch.data.planets %}
+<tr><td>{{ p.name }}</td><td class="num">{{ "%.4f"|format(p.period_d) if p.period_d is not none else "" }}</td><td class="num">{{ "%.2f"|format(p.radius_re) if p.radius_re is not none else "" }}</td><td class="num">{{ "%.2f"|format(p.mass_me) if p.mass_me is not none else "" }}</td><td>{{ p.method or "" }}</td><td>{{ p.year if p.year is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% set toi_rows = arch.data.tois if arch_ok else [] %}
+{% if toi_rows %}
+<h3>TESS Objects of Interest</h3>
+<table>
+<thead><tr><th>TOI</th><th>Disposition</th><th>Period (d)</th><th>Depth (ppm)</th><th>Radius (R&oplus;)</th></tr></thead>
+<tbody>
+{% for t in toi_rows %}
+<tr><td>{{ t.toi }}</td><td>{{ t.disposition or "" }}</td><td class="num">{{ "%.4f"|format(t.period_d) if t.period_d is not none else "" }}</td><td class="num">{{ "%.0f"|format(t.depth_ppm) if t.depth_ppm is not none else "" }}</td><td class="num">{{ "%.2f"|format(t.radius_re) if t.radius_re is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% elif fop_ok and fop.data.tois %}
+<h3>TESS Objects of Interest (ExoFOP)</h3>
+<table>
+<thead><tr><th>TOI</th><th>TESS disposition</th><th>TFOP disposition</th><th>Notes</th></tr></thead>
+<tbody>
+{% for t in fop.data.tois %}
+<tr><td>{{ t.toi }}</td><td>{{ t.disp_tess or "" }}</td><td>{{ t.disp_tfop or "" }}</td><td>{{ t.notes or "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if fop_ok and fop.data.ctois %}
+<h3>Community TOIs (ExoFOP)</h3>
+<table>
+<thead><tr><th>CTOI</th><th>Details</th></tr></thead>
+<tbody>
+{% for c in fop.data.ctois %}
+<tr><td>{{ c.ctoi if c is mapping and c.ctoi is defined else (c.toi if c is mapping and c.toi is defined else "") }}</td><td>{{ c.notes if c is mapping and c.notes else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if arch_ok and arch.data.kois %}
+<h3>Kepler objects of interest</h3>
+<table>
+<thead><tr><th>KOI</th><th>Name</th><th>Disposition</th><th>Period (d)</th><th>Radius (R&oplus;)</th></tr></thead>
+<tbody>
+{% for k in arch.data.kois %}
+<tr><td>{{ k.koi }}</td><td>{{ k.name or "" }}</td><td>{{ k.disposition or "" }}</td><td class="num">{{ "%.4f"|format(k.period_d) if k.period_d is not none else "" }}</td><td class="num">{{ "%.2f"|format(k.radius_re) if k.radius_re is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if arch_ok and arch.data.k2 %}
+<h3>K2 candidates</h3>
+<table>
+<thead><tr><th>Name</th><th>Candidate</th><th>Disposition</th><th>Period (d)</th><th>Radius (R&oplus;)</th></tr></thead>
+<tbody>
+{% for k in arch.data.k2 %}
+<tr><td>{{ k.name }}</td><td>{{ k.candidate or "" }}</td><td>{{ k.disposition or "" }}</td><td class="num">{{ "%.4f"|format(k.period_d) if k.period_d is not none else "" }}</td><td class="num">{{ "%.2f"|format(k.radius_re) if k.radius_re is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+</section>
+
+<section id="binarity">
+<h2>Binarity</h2>
+{% set ruwe = gaia.data.ruwe if gaia is not none and gaia.status == "ok" and gaia.data is mapping else none %}
+{% if ruwe is not none %}<p>Gaia DR3 RUWE: {{ "%.2f"|format(ruwe) }}</p>{% endif %}
+{{ status_note("gaia_nss") }}
+{% call(data) rows("gaia_nss") %}
+<h3>Gaia DR3 non-single-star orbits</h3>
+<table>
+<thead><tr><th>Type</th><th>Period (d)</th><th>Eccentricity</th><th>K1 (km/s)</th><th>Inclination (deg)</th><th>Mass ratio</th></tr></thead>
+<tbody>
+{% for r in data %}
+<tr><td>{{ r.type }}</td><td class="num">{{ "%.3f"|format(r.period_d) if r.period_d is not none else "" }}</td><td class="num">{{ "%.3f"|format(r.ecc) if r.ecc is not none else "" }}</td><td class="num">{{ "%.2f"|format(r.k1_kms) if r.k1_kms is not none else "" }}</td><td class="num">{{ "%.1f"|format(r.inclination) if r.inclination is not none else "" }}</td><td class="num">{{ "%.3f"|format(r.mass_ratio) if r.mass_ratio is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endcall %}
+{{ status_note("wds") }}
+{% call(data) rows("wds") %}
+<h3>Washington Double Star catalog</h3>
+<table>
+<thead><tr><th>WDS</th><th>Discoverer</th><th>Components</th><th>Separation (&Prime;)</th><th>PA (deg)</th><th>Last observed</th><th>Mag 1</th><th>Mag 2</th></tr></thead>
+<tbody>
+{% for r in data %}
+<tr><td>{{ r.wds }}</td><td>{{ r.disc or "" }}</td><td>{{ r.comp or "" }}</td><td class="num">{{ "%.1f"|format(r.sep_arcsec) if r.sep_arcsec is not none else "" }}</td><td class="num">{{ r.pa if r.pa is not none else "" }}</td><td>{{ r.last_obs if r.last_obs is not none else "" }}</td><td class="num">{{ r.mag1 if r.mag1 is not none else "" }}</td><td class="num">{{ r.mag2 if r.mag2 is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endcall %}
+{{ status_note("sb9") }}
+{% call(data) rows("sb9") %}
+<h3>Spectroscopic binary orbits (SB9)</h3>
+<table>
+<thead><tr><th>Name</th><th>Period (d)</th><th>Eccentricity</th><th>K1 (km/s)</th><th>K2 (km/s)</th><th>Grade</th></tr></thead>
+<tbody>
+{% for r in data %}
+<tr><td>{{ r.name or "" }}</td><td class="num">{{ r.period_d if r.period_d is not none else "" }}</td><td class="num">{{ r.ecc if r.ecc is not none else "" }}</td><td class="num">{{ r.k1_kms if r.k1_kms is not none else "" }}</td><td class="num">{{ r.k2_kms if r.k2_kms is not none else "" }}</td><td>{{ r.grade if r.grade is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endcall %}
+{{ status_note("wide_binaries") }}
+{% call(data) rows("wide_binaries") %}
+<h3>Gaia wide binaries</h3>
+<table>
+<thead><tr><th>Companion (Gaia DR3)</th><th>Separation (&Prime;)</th><th>Separation (au)</th><th>R (chance alignment)</th><th>Type</th></tr></thead>
+<tbody>
+{% for r in data %}
+<tr><td>{{ r.companion }}</td><td class="num">{{ "%.1f"|format(r.sep_arcsec) if r.sep_arcsec is not none else "" }}</td><td class="num">{{ "%.0f"|format(r.sep_au) if r.sep_au is not none else "" }}</td><td class="num">{{ "%.2g"|format(r.R_chance) if r.R_chance is not none else "" }}</td><td>{{ r.type or "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endcall %}
+</section>
+
+<section id="variability">
+<h2>Variability</h2>
+{{ status_note("gaia_vari") }}
+{% if vari_ok and vari.data.classes %}
+<h3>Gaia DR3 variability classes</h3>
+<table>
+<thead><tr><th>Classifier</th><th>Class</th><th>Score</th></tr></thead>
+<tbody>
+{% for c in vari.data.classes %}
+<tr><td>{{ c.classifier or "" }}</td><td>{{ c.class }}</td><td class="num">{{ "%.2f"|format(c.score) if c.score is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if vari_ok and vari.data.periods %}
+<h3>Gaia DR3 variability periods</h3>
+<table>
+<thead><tr><th>Type</th><th>Period (d)</th></tr></thead>
+<tbody>
+{% for p in vari.data.periods %}
+<tr><td>{{ p.type }}</td><td class="num">{{ "%.5f"|format(p.period_d) if p.period_d is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{{ status_note("vsx") }}
+{% call(data) rows("vsx") %}
+<h3>AAVSO VSX</h3>
+<table>
+<thead><tr><th>Name</th><th>Type</th><th>Period (d)</th><th>Max</th><th>Min</th><th>Distance (&Prime;)</th></tr></thead>
+<tbody>
+{% for r in data %}
+<tr><td>{{ r.name }}</td><td>{{ r.type or "" }}</td><td class="num">{{ r.period_d if r.period_d is not none else "" }}</td><td class="num">{{ r.max if r.max is not none else "" }}</td><td class="num">{{ r.min if r.min is not none else "" }}</td><td class="num">{{ "%.2f"|format(r.dist_arcsec) if r.dist_arcsec is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endcall %}
+</section>
