@@ -18,6 +18,7 @@ from star_report.cache import Cache
 from star_report.config import Config, ads_token
 from star_report.derive import display_name, flags, parameter_rows, slugify
 from star_report.models import LLMBlock, Report
+from star_report.plots import make_plots
 from star_report.render.html import write_outputs
 from star_report.render.terminal import print_summary
 from star_report.resolve import CatalogLookup, LiveLookup, ResolutionError, parse_target, resolve
@@ -27,11 +28,6 @@ from star_report.sources.registry import build_sources
 log = logging.getLogger("star_report.pipeline")
 
 LLM_DISABLED_REASON = "LLM disabled (--no-llm or config)"
-
-
-def no_plots(report: Report, plots_dir: Path, cfg: Config,
-             cache: Cache) -> tuple[dict[str, str], dict[str, str]]:
-    return {}, {}
 
 
 def no_llm(report: Report, cfg: Config, cache: Cache) -> LLMBlock:
@@ -59,7 +55,7 @@ class PipelineDeps:
     lookup: Callable[[Cache, requests.Session, Config], CatalogLookup] = LiveLookup
     sources: Callable[[Config], list[Source]] = build_sources
     plots: Callable[[Report, Path, Config, Cache],
-                    tuple[dict[str, str], dict[str, str]]] = no_plots
+                    tuple[dict[str, str], dict[str, str]]] = make_plots
     writer: Callable[[Report, Config, Cache], LLMBlock] = no_llm
 
 

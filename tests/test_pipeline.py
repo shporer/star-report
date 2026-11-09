@@ -35,7 +35,8 @@ def _deps():
         tic_rows={1: tic_row(1)},
     )
     return PipelineDeps(lookup=lambda cache, session, cfg: sky,
-                        sources=lambda cfg: [_Fake("fake_a"), _Fake("fake_b")])
+                        sources=lambda cfg: [_Fake("fake_a"), _Fake("fake_b")],
+                        plots=lambda *a: ({}, {}))
 
 
 @pytest.fixture
@@ -94,3 +95,14 @@ def test_logs_one_line_per_source(env, caplog):
     lines = [r.getMessage() for r in caplog.records]
     assert sum("fake_a" in m for m in lines) == 1
     assert sum("fake_b" in m for m in lines) == 1
+
+
+def test_plots_not_called_when_disabled(env):
+    cfg, cache, opts, console = env
+    cfg.plots.enabled = False
+    calls = []
+    deps = _deps()
+    deps.plots = lambda *a: calls.append(a) or ({}, {})
+    outcome = run_target("HD 209458", cfg, opts, cache, console, deps)
+    assert outcome.status == "ok"
+    assert calls == []

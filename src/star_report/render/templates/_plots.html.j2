@@ -1,0 +1,14 @@
+{% if report.plots or report.plot_notes %}
+<section id="plots">
+<h2>Quick-look plots</h2>
+{% for name, b64 in plot_images.items() %}
+<figure class="plot">
+<img src="data:image/png;base64,{{ b64 }}" alt="{{ name }} plot" style="max-width:100%;height:auto">
+{% if report.plot_notes.get(name) %}<figcaption class="note">{{ report.plot_notes[name] }}</figcaption>{% endif %}
+</figure>
+{% endfor %}
+{% for name, note in report.plot_notes.items() if name not in plot_images %}
+<p class="note"><strong>{{ name }}:</strong> {{ note }}</p>
+{% endfor %}
+</section>
+{% endif %}
