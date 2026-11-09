@@ -104,3 +104,11 @@ def test_corrupt_file_is_a_miss(tmp_path):
 def test_unknown_group_raises(tmp_path):
     with pytest.raises(ValueError, match="nope"):
         Cache(tmp_path, {"gaia": 90}).fetch("nope", "x", {}, dict)
+
+
+@pytest.mark.parametrize("payload", [{"x": object()}, {"x": float("nan")}])
+def test_non_json_payload_raises_and_writes_nothing(tmp_path, payload):
+    cache = Cache(tmp_path, {"gaia": 90})
+    with pytest.raises((TypeError, ValueError)):
+        cache.fetch("gaia", "core", "q", lambda: payload)
+    assert not list((tmp_path / "gaia").glob("*"))

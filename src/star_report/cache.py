@@ -95,7 +95,7 @@ class Cache:
         fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump(doc, f, default=str)
+                json.dump(doc, f, allow_nan=False)
             os.replace(tmp, path)
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
