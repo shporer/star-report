@@ -96,6 +96,10 @@ def _embed_plots(report: Report, base_dir: Path) -> dict[str, str]:
     return images
 
 
+def _strip_prefix(prefix: str, value: str) -> str:
+    return re.sub(rf"^{re.escape(prefix)}\s*", "", value)
+
+
 def render_html(report: Report, base_dir: Path) -> str:
     ident = report.identity
     ids: list[tuple[str, str]] = []
@@ -105,9 +109,9 @@ def render_html(report: Report, base_dir: Path) -> str:
         ids.append(("Gaia DR3", f"Gaia DR3 {ident.gaia_dr3_id}"))
     for key in ("HD", "HIP"):
         if key in ident.other_ids:
-            ids.append((key, f"{key} {re.sub(rf'^{key}\s*', '', ident.other_ids[key])}"))
+            ids.append((key, f"{key} {_strip_prefix(key, ident.other_ids[key])}"))
     if "2MASS" in ident.other_ids:
-        ids.append(("2MASS", f"2MASS {re.sub(r'^2MASS\s*', '', ident.other_ids['2MASS'])}"))
+        ids.append(("2MASS", f"2MASS {_strip_prefix('2MASS', ident.other_ids['2MASS'])}"))
     ra_s, dec_s = sexagesimal(ident.position.ra, ident.position.dec)
     return _env.get_template("report.html.j2").render(
         report=report,

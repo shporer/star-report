@@ -78,3 +78,23 @@ def test_terminal_summary(tmp_path):
     text = console.export_text()
     assert "HD 209458" in text and "TIC 420814525" in text and str(tmp_path / "report.html") in text
     assert text.count("gaia_core") == 1
+
+
+def test_html_escaping(tmp_path):
+    from star_report.models import ParamCell
+    evil = "<script>alert(1)</script>&"
+    base = make_report()
+    ident = base.identity.model_copy(update={"main_name": evil, "warnings": [evil]})
+    results = {k: v.model_copy(update={"status": "error", "error": evil})
+               for k, v in base.results.items()}
+    rows = [r.model_copy(update={"cells": {k: ParamCell(value=1.0, note=evil)
+                                           for k in r.cells}}) for r in base.parameters]
+    html = render_html(base.model_copy(update={"identity": ident, "results": results,
+                                               "parameters": rows, "flags": [evil]}), tmp_path)
+    assert "<script>alert(1)</script>" not in html
+    assert "&lt;script&gt;" in html
+
+
+def test_link_citations_escapes_html():
+    out = str(link_citations("<b>bold</b> [2000ApJ...529L..45C]"))
+    assert "<b>" not in out and "&lt;b&gt;" in out
