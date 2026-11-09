@@ -1,0 +1,552 @@
+{
+ "responseHeader": {
+  "status": 0,
+  "QTime": 12
+ },
+ "response": {
+  "numFound": 412,
+  "start": 0,
+  "docs": [
+   {
+    "bibcode": "2015SynJ.621..022G",
+    "title": [
+     "A synthetic study of radial velocity monitoring in a bright transiting-planet host, part 22"
+    ],
+    "year": "2015",
+    "pubdate": "2015-10-00",
+    "author": [
+     "Granger, V.",
+     "Holm, W.",
+     "Ivanova, X.",
+     "Jansen, Y.",
+     "Kessler, Z."
+    ],
+    "citation_count": 80,
+    "abstract": "We present a fictional analysis of radial velocity monitoring for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 22).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2004SynJ.605..006F",
+    "title": [
+     "A synthetic study of orbital architecture in a bright transiting-planet host, part 6"
+    ],
+    "year": "2004",
+    "pubdate": "2004-02-00",
+    "author": [
+     "Farrow, F.",
+     "Granger, G.",
+     "Holm, H.",
+     "Ivanova, I.",
+     "Jansen, J."
+    ],
+    "citation_count": 870,
+    "abstract": "We present a fictional analysis of orbital architecture for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 6).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2011SynJ.615..016A",
+    "title": [
+     "A synthetic study of orbital architecture in a bright transiting-planet host, part 16"
+    ],
+    "year": "2011",
+    "pubdate": "2011-04-00",
+    "author": [
+     "Alder, P.",
+     "Brandt, Q.",
+     "Cortez, R.",
+     "Dvorak, S.",
+     "Eklund, T."
+    ],
+    "citation_count": 240,
+    "abstract": "We present a fictional analysis of orbital architecture for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 16).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2020SynJ.629..030O",
+    "title": [
+     "A synthetic study of phase curve analysis in a bright transiting-planet host, part 30"
+    ],
+    "year": "2020",
+    "pubdate": "2020-02-00",
+    "author": [
+     "Okafor, D.",
+     "Alder, E.",
+     "Brandt, F.",
+     "Cortez, G.",
+     "Dvorak, H."
+    ],
+    "citation_count": 2,
+    "abstract": "We present a fictional analysis of phase curve analysis for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 30).",
+    "doctype": "eprint"
+   },
+   {
+    "bibcode": "2005SynJ.607..008H",
+    "title": [
+     "A synthetic study of asteroseismic modelling in a bright transiting-planet host, part 8"
+    ],
+    "year": "2005",
+    "pubdate": "2005-12-00",
+    "author": [
+     "Holm, H.",
+     "Ivanova, I.",
+     "Jansen, J.",
+     "Kessler, K.",
+     "Lindqvist, L."
+    ],
+    "citation_count": 610,
+    "abstract": "We present a fictional analysis of asteroseismic modelling for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 8).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2019SynJ.628..029N",
+    "title": [
+     "A synthetic study of abundance analysis in a bright transiting-planet host, part 29"
+    ],
+    "year": "2019",
+    "pubdate": "2019-09-00",
+    "author": [
+     "Nakamura, C.",
+     "Okafor, D.",
+     "Alder, E.",
+     "Brandt, F.",
+     "Cortez, G."
+    ],
+    "citation_count": 6,
+    "abstract": "We present a fictional analysis of abundance analysis for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 29).",
+    "doctype": "eprint"
+   },
+   {
+    "bibcode": "2007SynJ.609..010J",
+    "title": [
+     "A synthetic study of phase curve analysis in a bright transiting-planet host, part 10"
+    ],
+    "year": "2007",
+    "pubdate": "2007-10-00",
+    "author": [
+     "Jansen, J.",
+     "Kessler, K.",
+     "Lindqvist, L.",
+     "Moreau, M.",
+     "Nakamura, N."
+    ],
+    "citation_count": 480,
+    "abstract": "We present a fictional analysis of phase curve analysis for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 10).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2001SynJ.600..001A",
+    "title": [
+     "A synthetic study of transit spectroscopy in a bright transiting-planet host, part 1"
+    ],
+    "year": "2001",
+    "pubdate": "2001-01-00",
+    "author": [
+     "Alder, A.",
+     "Brandt, B.",
+     "Cortez, C.",
+     "Dvorak, D.",
+     "Eklund, E."
+    ],
+    "citation_count": 2400,
+    "abstract": "We present a fictional analysis of transit spectroscopy for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 1).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2009SynJ.613..014N",
+    "title": [
+     "A synthetic study of stellar activity in a bright transiting-planet host, part 14"
+    ],
+    "year": "2009",
+    "pubdate": "2009-06-00",
+    "author": [
+     "Nakamura, N.",
+     "Okafor, O.",
+     "Alder, P.",
+     "Brandt, Q.",
+     "Cortez, R."
+    ],
+    "citation_count": 300,
+    "abstract": "We present a fictional analysis of stellar activity for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 14).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2006SynJ.608..009I",
+    "title": [
+     "A synthetic study of abundance analysis in a bright transiting-planet host, part 9"
+    ],
+    "year": "2006",
+    "pubdate": "2006-05-00",
+    "author": [
+     "Ivanova, I.",
+     "Jansen, J.",
+     "Kessler, K.",
+     "Lindqvist, L.",
+     "Moreau, M."
+    ],
+    "citation_count": 610,
+    "abstract": "We present a fictional analysis of abundance analysis for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 9).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2019SynJ.627..028M",
+    "title": [
+     "A synthetic study of asteroseismic modelling in a bright transiting-planet host, part 28"
+    ],
+    "year": "2019",
+    "pubdate": "2019-04-00",
+    "author": [
+     "Moreau, B.",
+     "Nakamura, C.",
+     "Okafor, D.",
+     "Alder, E.",
+     "Brandt, F."
+    ],
+    "citation_count": 12,
+    "abstract": "We present a fictional analysis of asteroseismic modelling for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 28).",
+    "doctype": "eprint"
+   },
+   {
+    "bibcode": "2015SynJ.622..023H",
+    "title": [
+     "A synthetic study of atmospheric escape in a bright transiting-planet host, part 23"
+    ],
+    "year": "2015",
+    "pubdate": "2015-03-00",
+    "author": [
+     "Holm, W.",
+     "Ivanova, X.",
+     "Jansen, Y.",
+     "Kessler, Z.",
+     "Lindqvist, A."
+    ],
+    "citation_count": 64,
+    "abstract": "We present a fictional analysis of atmospheric escape for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 23).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2018SynJ.626..027L",
+    "title": [
+     "A synthetic study of limb darkening in a bright transiting-planet host, part 27"
+    ],
+    "year": "2018",
+    "pubdate": "2018-11-00",
+    "author": [
+     "Lindqvist, A.",
+     "Moreau, B.",
+     "Nakamura, C.",
+     "Okafor, D.",
+     "Alder, E."
+    ],
+    "citation_count": 22,
+    "abstract": "We present a fictional analysis of limb darkening for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 27).",
+    "doctype": "eprint"
+   },
+   {
+    "bibcode": "2010SynJ.614..015O",
+    "title": [
+     "A synthetic study of photometric variability in a bright transiting-planet host, part 15"
+    ],
+    "year": "2010",
+    "pubdate": "2010-11-00",
+    "author": [
+     "Okafor, O.",
+     "Alder, P.",
+     "Brandt, Q.",
+     "Cortez, R.",
+     "Dvorak, S."
+    ],
+    "citation_count": 260,
+    "abstract": "We present a fictional analysis of photometric variability for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 15).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2016SynJ.623..024I",
+    "title": [
+     "A synthetic study of stellar activity in a bright transiting-planet host, part 24"
+    ],
+    "year": "2016",
+    "pubdate": "2016-08-00",
+    "author": [
+     "Ivanova, X.",
+     "Jansen, Y.",
+     "Kessler, Z.",
+     "Lindqvist, A.",
+     "Moreau, B."
+    ],
+    "citation_count": 50,
+    "abstract": "We present a fictional analysis of stellar activity for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 24).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2017SynJ.624..025J",
+    "title": [
+     "A synthetic study of photometric variability in a bright transiting-planet host, part 25"
+    ],
+    "year": "2017",
+    "pubdate": "2017-01-00",
+    "author": [
+     "Jansen, Y.",
+     "Kessler, Z.",
+     "Lindqvist, A.",
+     "Moreau, B.",
+     "Nakamura, C."
+    ],
+    "citation_count": 41,
+    "abstract": "We present a fictional analysis of photometric variability for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 25).",
+    "doctype": "eprint"
+   },
+   {
+    "bibcode": "2013SynJ.619..020E",
+    "title": [
+     "A synthetic study of phase curve analysis in a bright transiting-planet host, part 20"
+    ],
+    "year": "2013",
+    "pubdate": "2013-12-00",
+    "author": [
+     "Eklund, T.",
+     "Farrow, U.",
+     "Granger, V.",
+     "Holm, W.",
+     "Ivanova, X."
+    ],
+    "citation_count": 120,
+    "abstract": "We present a fictional analysis of phase curve analysis for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 20).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2005SynJ.606..007G",
+    "title": [
+     "A synthetic study of limb darkening in a bright transiting-planet host, part 7"
+    ],
+    "year": "2005",
+    "pubdate": "2005-07-00",
+    "author": [
+     "Granger, G.",
+     "Holm, H.",
+     "Ivanova, I.",
+     "Jansen, J.",
+     "Kessler, K."
+    ],
+    "citation_count": 640,
+    "abstract": "We present a fictional analysis of limb darkening for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 7).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2011SynJ.616..017B",
+    "title": [
+     "A synthetic study of limb darkening in a bright transiting-planet host, part 17"
+    ],
+    "year": "2011",
+    "pubdate": "2011-09-00",
+    "author": [
+     "Brandt, Q.",
+     "Cortez, R.",
+     "Dvorak, S.",
+     "Eklund, T.",
+     "Farrow, U."
+    ],
+    "citation_count": 210,
+    "abstract": "We present a fictional analysis of limb darkening for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 17).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2017SynJ.625..026K",
+    "title": [
+     "A synthetic study of orbital architecture in a bright transiting-planet host, part 26"
+    ],
+    "year": "2017",
+    "pubdate": "2017-06-00",
+    "author": [
+     "Kessler, Z.",
+     "Lindqvist, A.",
+     "Moreau, B.",
+     "Nakamura, C.",
+     "Okafor, D."
+    ],
+    "citation_count": 30,
+    "abstract": "We present a fictional analysis of orbital architecture for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 26).",
+    "doctype": "eprint"
+   },
+   {
+    "bibcode": "2013SynJ.618..019D",
+    "title": [
+     "A synthetic study of abundance analysis in a bright transiting-planet host, part 19"
+    ],
+    "year": "2013",
+    "pubdate": "2013-07-00",
+    "author": [
+     "Dvorak, S.",
+     "Eklund, T.",
+     "Farrow, U.",
+     "Granger, V.",
+     "Holm, W."
+    ],
+    "citation_count": 150,
+    "abstract": "We present a fictional analysis of abundance analysis for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 19).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2008SynJ.611..012L",
+    "title": [
+     "A synthetic study of radial velocity monitoring in a bright transiting-planet host, part 12"
+    ],
+    "year": "2008",
+    "pubdate": "2008-08-00",
+    "author": [
+     "Lindqvist, L.",
+     "Moreau, M.",
+     "Nakamura, N.",
+     "Okafor, O.",
+     "Alder, P."
+    ],
+    "citation_count": 390,
+    "abstract": "We present a fictional analysis of radial velocity monitoring for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 12).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2003SynJ.603..004D",
+    "title": [
+     "A synthetic study of stellar activity in a bright transiting-planet host, part 4"
+    ],
+    "year": "2003",
+    "pubdate": "2003-04-00",
+    "author": [
+     "Dvorak, D.",
+     "Eklund, E.",
+     "Farrow, F.",
+     "Granger, G.",
+     "Holm, H."
+    ],
+    "citation_count": 1200,
+    "abstract": "We present a fictional analysis of stellar activity for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 4).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2012SynJ.617..018C",
+    "title": [
+     "A synthetic study of asteroseismic modelling in a bright transiting-planet host, part 18"
+    ],
+    "year": "2012",
+    "pubdate": "2012-02-00",
+    "author": [
+     "Cortez, R.",
+     "Dvorak, S.",
+     "Eklund, T.",
+     "Farrow, U.",
+     "Granger, V."
+    ],
+    "citation_count": 175,
+    "abstract": "We present a fictional analysis of asteroseismic modelling for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 18).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2002SynJ.602..003C",
+    "title": [
+     "A synthetic study of atmospheric escape in a bright transiting-planet host, part 3"
+    ],
+    "year": "2002",
+    "pubdate": "2002-11-00",
+    "author": [
+     "Cortez, C.",
+     "Dvorak, D.",
+     "Eklund, E.",
+     "Farrow, F.",
+     "Granger, G."
+    ],
+    "citation_count": 1500,
+    "abstract": "We present a fictional analysis of atmospheric escape for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 3).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2001SynJ.601..002B",
+    "title": [
+     "A synthetic study of radial velocity monitoring in a bright transiting-planet host, part 2"
+    ],
+    "year": "2001",
+    "pubdate": "2001-06-00",
+    "author": [
+     "Brandt, B.",
+     "Cortez, C.",
+     "Dvorak, D.",
+     "Eklund, E.",
+     "Farrow, F."
+    ],
+    "citation_count": 1800,
+    "abstract": "We present a fictional analysis of radial velocity monitoring for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 2).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2014SynJ.620..021F",
+    "title": [
+     "A synthetic study of transit spectroscopy in a bright transiting-planet host, part 21"
+    ],
+    "year": "2014",
+    "pubdate": "2014-05-00",
+    "author": [
+     "Farrow, U.",
+     "Granger, V.",
+     "Holm, W.",
+     "Ivanova, X.",
+     "Jansen, Y."
+    ],
+    "citation_count": 95,
+    "abstract": "We present a fictional analysis of transit spectroscopy for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 21).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2009SynJ.612..013M",
+    "title": [
+     "A synthetic study of atmospheric escape in a bright transiting-planet host, part 13"
+    ],
+    "year": "2009",
+    "pubdate": "2009-01-00",
+    "author": [
+     "Moreau, M.",
+     "Nakamura, N.",
+     "Okafor, O.",
+     "Alder, P.",
+     "Brandt, Q."
+    ],
+    "citation_count": 330,
+    "abstract": "We present a fictional analysis of atmospheric escape for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 13).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2003SynJ.604..005E",
+    "title": [
+     "A synthetic study of photometric variability in a bright transiting-planet host, part 5"
+    ],
+    "year": "2003",
+    "pubdate": "2003-09-00",
+    "author": [
+     "Eklund, E.",
+     "Farrow, F.",
+     "Granger, G.",
+     "Holm, H.",
+     "Ivanova, I."
+    ],
+    "citation_count": 950,
+    "abstract": "We present a fictional analysis of photometric variability for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 5).",
+    "doctype": "article"
+   },
+   {
+    "bibcode": "2007SynJ.610..011K",
+    "title": [
+     "A synthetic study of transit spectroscopy in a bright transiting-planet host, part 11"
+    ],
+    "year": "2007",
+    "pubdate": "2007-03-00",
+    "author": [
+     "Kessler, K.",
+     "Lindqvist, L.",
+     "Moreau, M.",
+     "Nakamura, N.",
+     "Okafor, O."
+    ],
+    "citation_count": 455,
+    "abstract": "We present a fictional analysis of transit spectroscopy for a well-studied star. Using simulated data we derive illustrative constraints and discuss how they would affect interpretation. This abstract is invented for testing (item 11).",
+    "doctype": "article"
+   }
+  ]
+ }
+}

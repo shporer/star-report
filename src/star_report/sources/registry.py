@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from star_report.config import Config
+from star_report.sources.ads import Ads
 from star_report.sources.base import Source
 from star_report.sources.exoplanet_archive import ExoplanetArchive
 from star_report.sources.eso import EsoSpectra
@@ -22,5 +23,5 @@ def build_sources(cfg: Config) -> list[Source]:
                        ExoFop(), GaiaNss(), GaiaVari(), WDS, SB9, VSX, WIDE_BINARIES,
                        MastObservations(), TessSectors(),
                        EsoSpectra(), KeckKoa(),
-                       HARPS_RVBANK, APOGEE, LAMOST]
+                       HARPS_RVBANK, APOGEE, LAMOST, Ads()]
     return sources

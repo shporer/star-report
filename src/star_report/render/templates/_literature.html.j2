@@ -1,0 +1,24 @@
+{% from "_macros.html.j2" import status_note with context %}
+{% set ads_r = report.results.get("ads") %}
+{% if ads_r is not none %}
+<section id="literature">
+<h2>Literature</h2>
+{% if ads_r.status == "skipped" %}
+<p class="muted">{{ ads_r.error }}; the literature was not searched.</p>
+{% elif ads_r.status == "empty" %}
+<p class="muted">ADS found no records.</p>
+{% elif ads_r.status == "ok" and ads_r.data is mapping %}
+{% set papers = ads_r.data.papers | as_list %}
+<p>ADS found {{ ads_r.data.num_found }} records; showing {{ papers | length }}.</p>
+<ol class="papers">
+{% for p in papers %}
+<li><a href="https://ui.adsabs.harvard.edu/abs/{{ p.bibcode | urlencode }}/abstract">{{ p.title or p.bibcode }}</a>
+<small>{{ (p.authors | as_list) | join(", ") }}{% if p.year %} ({{ p.year }}){% endif %}
+&middot; {{ p.citation_count }} citations &middot; {{ p.bibcode }}</small></li>
+{% endfor %}
+</ol>
+{% else %}
+{{ status_note("ads") }}
+{% endif %}
+</section>
+{% endif %}
