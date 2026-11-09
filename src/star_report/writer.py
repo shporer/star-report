@@ -371,5 +371,8 @@ def write_sections(report: Report, cfg: Config, cache: Cache,
         entry = cache.fetch("llm", "writer", key, producer)
     except WriterFailure as e:
         return LLMBlock(status="failed", reason=e.reason, bibcodes_sent=sent)
+    except Exception as e:  # the report must still render; nothing is cached on failure
+        return LLMBlock(status="failed", reason=f"LLM writer error: {type(e).__name__}: {e}"[:200],
+                        bibcodes_sent=sent)
     block = LLMBlock.model_validate(entry.payload)
     return block.model_copy(update={"from_cache": entry.from_cache})

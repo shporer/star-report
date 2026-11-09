@@ -233,9 +233,10 @@ def test_credentials_type_error(tmp_path):
     assert block.reason == "No Anthropic credentials found (set ANTHROPIC_API_KEY or run `ant auth login`)."
 
 
-def test_other_type_error_propagates(tmp_path):
-    with pytest.raises(TypeError):
-        _run(tmp_path, [TypeError("something else")])
+def test_other_type_error_becomes_failed_block(tmp_path):
+    block, fake = _run(tmp_path, [TypeError("something else")])
+    assert block.status == "failed" and len(fake.calls) == 1
+    assert block.reason.startswith("LLM writer error: TypeError")
 
 
 def test_credentials_error(tmp_path):
