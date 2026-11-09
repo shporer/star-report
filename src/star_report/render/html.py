@@ -10,7 +10,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 from markupsafe import Markup, escape
 
-from star_report.derive import description_line, display_name, toi_source
+from star_report.derive import display_name, header_line, toi_source
 from star_report.models import BIBCODE_RE, Report
 
 STATUS_LABELS = {
@@ -122,7 +122,7 @@ def render_html(report: Report, base_dir: Path) -> str:
         ra_s=ra_s,
         dec_s=dec_s,
         epoch=_epoch_text(report),
-        description=description_line(report.results, report.parameters),
+        description=header_line(report.results, report.parameters),
         plot_images=_embed_plots(report, base_dir),
     )
 

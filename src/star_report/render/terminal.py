@@ -9,7 +9,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from star_report.derive import description_line, display_name, toi_entries, toi_source
+from star_report.derive import display_name, header_line, toi_entries, toi_source
 from star_report.models import Report
 from star_report.render.html import STATUS_LABELS
 
@@ -26,15 +26,23 @@ def _cell(c, decimals: int) -> str:
     return text
 
 
-def _planets_line(report: Report) -> str:
+def _planet_count(report: Report) -> str:
+    """'N confirmed' when the archive answered (empty means none); 'unknown' when it did not."""
     arch = report.results.get("exoplanet_archive")
+    if arch is not None and arch.status == "empty":
+        return "0 confirmed"
+    if arch is None or arch.status != "ok" or not isinstance(arch.data, dict):
+        return "unknown"
+    planets = arch.data.get("planets")
+    count = len([p for p in planets if isinstance(p, dict)]) if isinstance(planets, list) else 0
+    return f"{count} confirmed"
+
+
+def _planets_line(report: Report) -> str:
     if toi_source(report.results) is None:
         return ""
-    count = 0
-    if arch is not None and arch.status == "ok" and isinstance(arch.data, dict):
-        count = len([p for p in arch.data.get("planets") or [] if isinstance(p, dict)])
     tois = [str(t) for t, _ in toi_entries(report.results) if t]
-    text = f"Planets: {count} confirmed"
+    text = f"Planets: {_planet_count(report)}"
     if tois:
         text += f"; TOIs: {', '.join(tois)}"
     return text
@@ -71,7 +79,7 @@ def print_summary(report: Report, report_path: Path | None, console: Console) ->
             ids.append(ident.other_ids[key] if ident.other_ids[key].startswith(key)
                        else f"{key} {ident.other_ids[key]}")
     lines.append(escape("  ".join(ids)))
-    desc = description_line(report.results, report.parameters)
+    desc = header_line(report.results, report.parameters)
     if desc:
         lines.append(escape(desc))
     console.print(Panel("\n".join(lines), expand=True))

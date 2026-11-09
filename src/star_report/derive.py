@@ -289,3 +289,17 @@ def description_line(results: Mapping[str, SourceResult], rows: list[ParamRow]) 
         if cell and cell.value is not None:
             parts.append(f"{cell.value:.1f} pc")
     return ", ".join(parts)
+
+
+def simbad_references(results: Mapping[str, SourceResult]) -> str:
+    """'SIMBAD: N references' when SIMBAD answered with a numeric reference count, else ''."""
+    count = _num((_ok_data(results, "simbad") or {}).get("nbref"))
+    if count is None or not math.isfinite(count):
+        return ""
+    n = int(count)
+    return f"SIMBAD: {n} reference{'s' if n != 1 else ''}"
+
+
+def header_line(results: Mapping[str, SourceResult], rows: list[ParamRow]) -> str:
+    """The line under the star's name in the report and the terminal summary."""
+    return " · ".join(t for t in (description_line(results, rows), simbad_references(results)) if t)

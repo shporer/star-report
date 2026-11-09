@@ -1,6 +1,8 @@
+import io
 import json
 import re
 
+import pytest
 from rich.console import Console
 
 from star_report import derive
@@ -159,6 +161,57 @@ def test_toi_rule_archive_error_falls_back_to_exofop(tmp_path):
     console = Console(record=True, width=110)
     print_summary(report, tmp_path / "r.html", console)
     assert "TOIs: 700.01" in console.export_text()
+
+
+def _summary(report, tmp_path):
+    console = Console(record=True, width=110, file=io.StringIO())
+    print_summary(report, tmp_path / "r.html", console)
+    return console.export_text()
+
+
+def _planets(text):
+    return [line for line in text.splitlines() if line.startswith("Planets:")]
+
+
+@pytest.mark.parametrize("update", [
+    {"status": "error", "data": None, "error": "ConnectionError: down"},
+    {"status": "timeout", "data": None, "error": "timed out after 30 s"},
+    {"status": "skipped", "data": None, "error": "disabled in config"},
+])
+def test_terminal_planet_count_unknown_when_archive_did_not_answer(tmp_path, update):
+    text = _summary(_with(make_report("TOI-700"), exoplanet_archive=update), tmp_path)
+    assert _planets(text) == ["Planets: unknown; TOIs: 700.01, 700.02, 700.03, 700.04"]
+    assert "0 confirmed" not in text
+
+
+def test_terminal_planet_count_unknown_without_archive_result(tmp_path):
+    base = make_report("TOI-700")
+    results = {k: v for k, v in base.results.items() if k != "exoplanet_archive"}
+    text = _summary(base.model_copy(update={"results": results}), tmp_path)
+    assert _planets(text) == ["Planets: unknown; TOIs: 700.01, 700.02, 700.03, 700.04"]
+
+
+def test_terminal_planet_count_from_archive(tmp_path):
+    base = make_report("TOI-700")
+    assert _planets(_summary(base, tmp_path)) == [
+        "Planets: 4 confirmed; TOIs: 700.01, 700.02, 700.03, 700.04"]
+    empty = _with(base, exoplanet_archive={"status": "empty", "data": {}})  # answered: none
+    assert _planets(_summary(empty, tmp_path)) == [
+        "Planets: 0 confirmed; TOIs: 700.01, 700.02, 700.03, 700.04"]
+
+
+def test_header_shows_simbad_reference_count(tmp_path):
+    report = make_report()
+    html = render_html(report, tmp_path)
+    header = html[html.index("<header>"):html.index("</header>")]
+    assert "<p>F9V, V = 7.63, 48.1 pc · SIMBAD: 1203 references</p>" in header
+    assert "F9V, V = 7.63, 48.1 pc · SIMBAD: 1203 references" in _summary(report, tmp_path)
+
+
+def test_no_reference_count_without_simbad(tmp_path):
+    report = _with(make_report(), simbad={"status": "error", "data": None, "error": "down"})
+    assert "references" not in render_html(report, tmp_path)
+    assert "references" not in _summary(report, tmp_path)
 
 
 def _ads_report(llm):

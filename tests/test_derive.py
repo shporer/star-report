@@ -10,7 +10,9 @@ from star_report.derive import (
     disagree,
     display_name,
     flags,
+    header_line,
     parameter_rows,
+    simbad_references,
     slugify,
 )
 from star_report.models import ParamCell, Position, SourceResult, StarIdentity
@@ -125,6 +127,33 @@ def test_description_line(cfg):
     rows2 = parameter_rows(results2, cfg.parameters)
     assert description_line(results2, rows2) == "V = 7.65, 50.0 pc"
     assert description_line({}, []) == ""
+
+
+@pytest.mark.parametrize("result,text", [
+    (ok("simbad", {"nbref": 1203}), "SIMBAD: 1203 references"),
+    (ok("simbad", {"nbref": 1}), "SIMBAD: 1 reference"),
+    (ok("simbad", {"nbref": 0}), "SIMBAD: 0 references"),
+    (ok("simbad", {"nbref": 12.0}), "SIMBAD: 12 references"),
+    (ok("simbad", {"nbref": None}), ""),
+    (ok("simbad", {"nbref": "1203"}), ""),
+    (ok("simbad", {"nbref": True}), ""),
+    (ok("simbad", {"nbref": float("nan")}), ""),
+    (ok("simbad", {"nbref": float("inf")}), ""),
+    (ok("simbad", {}), ""),
+    (ok("simbad", ["not", "a", "dict"]), ""),
+    (SourceResult(source="simbad", status="empty"), ""),
+    (failed("simbad"), ""),
+])
+def test_simbad_references(result, text):
+    assert simbad_references({"simbad": result}) == text
+
+
+def test_header_line(cfg):
+    results = {"simbad": ok("simbad", {"sp_type": "G0V", "V": 7.65, "nbref": 1203})}
+    rows = parameter_rows(results, cfg.parameters)
+    assert header_line(results, rows) == "G0V, V = 7.65 · SIMBAD: 1203 references"
+    assert header_line({"simbad": ok("simbad", {"nbref": 3})}, []) == "SIMBAD: 3 references"
+    assert header_line({}, []) == simbad_references({}) == ""
 
 
 def test_core_flags(cfg):
