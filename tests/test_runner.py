@@ -94,6 +94,20 @@ def test_timeout_does_not_block(ctx):
     assert res["slow"].status == "timeout" and res["fast"].status == "ok" and elapsed < 2
 
 
+def test_timeout_frees_slot_for_queue(ctx):
+    ctx.config.sources.max_workers = 1
+    t0 = time.monotonic()
+    res = run_sources([Fake("slow", delay=5), Fake("fast", payload={"x": 1})], ctx)
+    elapsed = time.monotonic() - t0
+    RELEASE.set()
+    assert res["slow"].status == "timeout" and res["fast"].status == "ok" and elapsed < 2
+
+
+def test_system_exit_is_error_status(ctx):
+    r = run_sources([Fake("s", exc=SystemExit(3))], ctx)["s"]
+    assert r.status == "error" and "SystemExit" in r.error
+
+
 def test_skipped_when_needs_missing(ctx):
     assert run_sources([Fake("t", needs=("tic_id",))], ctx)["t"].model_dump(include={"status", "error"}) == {
         "status": "skipped", "error": "no TIC ID"}
@@ -131,10 +145,12 @@ def test_records_json_safe():
     t["f"] = np.array([1.5, np.nan, 3.0], dtype=np.float32)
     t["i"] = np.array([1, 2, 3], dtype=np.int64)
     t["b"] = np.array([b"a", b"b", b"c"])
+    t["g"] = np.array([np.inf, -np.inf, 1.0])
     out = records(t)
     json.dumps(out, allow_nan=False)
     assert out[1]["m"] is None and out[1]["f"] is None and out[0]["m"] == 1
     assert out[0]["i"] == 1 and out[0]["b"] == "a" and out[2]["f"] == 3.0
+    assert [r["g"] for r in out] == [None, None, 1.0]
 
 
 def test_session_user_agent():

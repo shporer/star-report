@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import functools
 import json
+import math
 import socket
 import threading
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
-from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, ClassVar
@@ -65,7 +65,7 @@ def _json_safe(value: Any) -> Any:
         value = value.item()
         if isinstance(value, bytes):
             return value.decode("utf-8", errors="replace")
-    if isinstance(value, float) and value != value:
+    if isinstance(value, float) and not math.isfinite(value):
         return None
     if isinstance(value, np.ndarray):
         return [_json_safe(v) for v in value.tolist()]
@@ -170,6 +170,13 @@ def run_source(src: Source, ctx: SourceContext) -> SourceResult:
 
 
 def run_sources(sources: Sequence[Source], ctx: SourceContext) -> dict[str, SourceResult]:
+    """Run sources in parallel (at most max_workers at a time); never raises.
+
+    Each source runs in its own daemon thread, gated by a semaphore. The runner
+    stops waiting on a timed-out source and frees its slot, but cannot kill its
+    thread, so every source must still pass its own timeout to the underlying
+    library (requests timeout=, astroquery TIMEOUT, or the pyvo session).
+    """
     cfg = ctx.config
     results: dict[str, SourceResult] = {}
     runnable: list[Source] = []
@@ -183,31 +190,45 @@ def run_sources(sources: Sequence[Source], ctx: SourceContext) -> dict[str, Sour
         else:
             runnable.append(src)
 
+    slots = threading.BoundedSemaphore(cfg.sources.max_workers)
+    cond = threading.Condition()
+    state = {s.name: "queued" for s in runnable}  # queued -> running -> done | timeout
     starts: dict[str, float] = {}
-    lock = threading.Lock()
 
-    def worker(src: Source) -> SourceResult:
-        with lock:
+    def worker(src: Source) -> None:
+        slots.acquire()
+        with cond:
+            state[src.name] = "running"
             starts[src.name] = time.monotonic()
-        return run_source(src, ctx)
+        t0 = time.monotonic()
+        try:
+            res = run_source(src, ctx)
+        except BaseException as e:  # noqa: BLE001 - nothing may escape the thread
+            res = SourceResult(source=src.name, status="error", error=_error_text(e),
+                               elapsed_s=time.monotonic() - t0)
+        with cond:
+            if state[src.name] == "running":
+                state[src.name] = "done"
+                results[src.name] = res
+                slots.release()
+                cond.notify_all()
+            # else: already timed out and its slot freed; discard the late result
 
-    executor = ThreadPoolExecutor(max_workers=cfg.sources.max_workers)
-    try:
-        pending: dict[Future, Source] = {executor.submit(worker, s): s for s in runnable}
-        while pending:
-            done, _ = wait(pending, timeout=0.2, return_when=FIRST_COMPLETED)
-            for fut in done:
-                results[pending.pop(fut).name] = fut.result()
+    for src in runnable:
+        threading.Thread(target=worker, args=(src,), daemon=True, name=f"source-{src.name}").start()
+
+    with cond:
+        while any(st in ("queued", "running") for st in state.values()):
+            cond.wait(0.2)
             now = time.monotonic()
-            for fut, src in list(pending.items()):
-                with lock:
-                    started = starts.get(src.name)
+            for src in runnable:
+                if state[src.name] != "running":
+                    continue
                 limit = src.timeout_s(cfg)
-                if started is not None and now - started > limit:
-                    del pending[fut]
+                if now - starts[src.name] > limit:
+                    state[src.name] = "timeout"
                     results[src.name] = SourceResult(
                         source=src.name, status="timeout",
-                        error=f"timed out after {limit:g} s", elapsed_s=now - started)
-    finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+                        error=f"timed out after {limit:g} s", elapsed_s=now - starts[src.name])
+                    slots.release()
     return {s.name: results[s.name] for s in sources}
