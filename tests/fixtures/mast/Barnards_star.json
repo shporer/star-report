@@ -1,0 +1,124 @@
+{
+ "counts": [
+  {
+   "collection": "HLA",
+   "instrument": "WFPC2/WFC",
+   "n": 6,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "FGS",
+   "n": 409,
+   "product": "timeseries"
+  },
+  {
+   "collection": "HST",
+   "instrument": "NICMOS/NIC3",
+   "n": 7,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "NICMOS/NIC3",
+   "n": 5,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "WFPC2",
+   "n": 4,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "WFPC2/PC",
+   "n": 4,
+   "product": "image"
+  },
+  {
+   "collection": "PS1",
+   "instrument": "GPC1",
+   "n": 5,
+   "product": "image"
+  },
+  {
+   "collection": "SDSS",
+   "instrument": "SDSS Camera",
+   "n": 2,
+   "product": "image"
+  }
+ ],
+ "rows": [
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0080-1-2",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 80,
+   "t_exptime": 158.399925,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024170053053-s0080-0000000325554331-0275-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 80,
+   "t_exptime": 20.0,
+   "target_name": "325554331"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024170053053-s0080-0000000325554331-0275-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 80,
+   "t_exptime": 120.0,
+   "target_name": "325554331"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_muscles_gj699",
+   "product": "spectrum",
+   "project": "CXO;HST;MODEL",
+   "provenance_name": "MUSCLES",
+   "sequence_number": null,
+   "t_exptime": null,
+   "target_name": "GJ699"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0080-0000000325554331_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 80,
+   "t_exptime": 200.0,
+   "target_name": "325554331"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000325554331-s0080_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 80,
+   "t_exptime": 200.0,
+   "target_name": "325554331"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0080-cam1-ccd2",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 80,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  }
+ ]
+}

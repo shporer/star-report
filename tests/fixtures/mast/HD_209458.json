@@ -1,0 +1,394 @@
+{
+ "counts": [
+  {
+   "collection": "FUSE",
+   "instrument": "FUV",
+   "n": 1,
+   "product": "spectrum"
+  },
+  {
+   "collection": "GALEX",
+   "instrument": "GALEX",
+   "n": 2,
+   "product": "image"
+  },
+  {
+   "collection": "HLA",
+   "instrument": "ACS/HRC",
+   "n": 130,
+   "product": "image"
+  },
+  {
+   "collection": "HLA",
+   "instrument": "ACS/SBC",
+   "n": 50,
+   "product": "image"
+  },
+  {
+   "collection": "HLA",
+   "instrument": "NICMOS/NIC3",
+   "n": 6,
+   "product": "image"
+  },
+  {
+   "collection": "HLA",
+   "instrument": "WFC3/IR",
+   "n": 32,
+   "product": "catalog"
+  },
+  {
+   "collection": "HLA",
+   "instrument": "WFC3/IR",
+   "n": 570,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "ACS",
+   "n": 91,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "ACS/HRC",
+   "n": 124,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "ACS/HRC",
+   "n": 34,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "ACS/SBC",
+   "n": 6,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "ACS/SBC",
+   "n": 24,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "COS",
+   "n": 2,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "COS-STIS",
+   "n": 1,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "COS/FUV",
+   "n": 38,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "COS/NUV",
+   "n": 19,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "FGS",
+   "n": 35,
+   "product": "timeseries"
+  },
+  {
+   "collection": "HST",
+   "instrument": "NICMOS/NIC3",
+   "n": 17,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "NICMOS/NIC3",
+   "n": 132,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "STIS",
+   "n": 5,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "STIS/CCD",
+   "n": 58,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "STIS/CCD",
+   "n": 229,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "STIS/FUV-MAMA",
+   "n": 42,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "STIS/NUV-MAMA",
+   "n": 33,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "WFC3/IR",
+   "n": 742,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "WFC3/IR",
+   "n": 1321,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "WFC3/UVIS",
+   "n": 18,
+   "product": "image"
+  },
+  {
+   "collection": "JWST",
+   "instrument": "MIRI/SLITLESS",
+   "n": 1,
+   "product": "timeseries"
+  },
+  {
+   "collection": "JWST",
+   "instrument": "NIRCAM/GRISM",
+   "n": 2,
+   "product": "timeseries"
+  },
+  {
+   "collection": "JWST",
+   "instrument": "NIRCAM/IMAGE",
+   "n": 23,
+   "product": "timeseries"
+  },
+  {
+   "collection": "JWST",
+   "instrument": "NIRISS/SOSS",
+   "n": 10,
+   "product": "timeseries"
+  },
+  {
+   "collection": "PS1",
+   "instrument": "GPC1",
+   "n": 5,
+   "product": "image"
+  },
+  {
+   "collection": "SDSS",
+   "instrument": "SDSS Camera",
+   "n": 2,
+   "product": "image"
+  }
+ ],
+ "rows": [
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0056-1-2",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 56,
+   "t_exptime": 158.399927,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0082-1-1",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 82,
+   "t_exptime": 158.399927,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2019199201929-s0014-s0086-0000000420814525",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 86,
+   "t_exptime": 120.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022244194134-s0056-0000000420814525-0243-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 56,
+   "t_exptime": 20.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022244194134-s0056-0000000420814525-0243-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 56,
+   "t_exptime": 120.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024223182411-s0082-0000000420814525-0278-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 82,
+   "t_exptime": 20.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024223182411-s0082-0000000420814525-0278-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 82,
+   "t_exptime": 120.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_lowlib_hst_stis_hd209458_g230lb-g430l-g750l_v1.0_spect",
+   "product": "spectrum",
+   "project": "HST",
+   "provenance_name": "LOWLIB",
+   "sequence_number": null,
+   "t_exptime": 1102.0,
+   "target_name": "hd209458"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_owls_apo_arces_hd209458-2020-08-02-07-21_clear",
+   "product": "spectrum",
+   "project": "APO-3.5m",
+   "provenance_name": "OWLS",
+   "sequence_number": null,
+   "t_exptime": 360.00017404556,
+   "target_name": "HD 209458"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_owls_apo_arces_hd209458-2020-08-02-07-29_clear",
+   "product": "spectrum",
+   "project": "APO-3.5m",
+   "provenance_name": "OWLS",
+   "sequence_number": null,
+   "t_exptime": 360.00018310547,
+   "target_name": "HD 209458"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0056-0000000420814525_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 56,
+   "t_exptime": 200.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0082-0000000420814525_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 82,
+   "t_exptime": 200.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_starcat_hst_stis_hd209458_1140-1729_52132.571-52212.788_0.2x0.2_second-stage_v1_spc",
+   "product": "image",
+   "project": "hlsp_starcat",
+   "provenance_name": "hlsp_starcat",
+   "sequence_number": null,
+   "t_exptime": 7600.0,
+   "target_name": "hd209458"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0056-0000000420814525_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 56,
+   "t_exptime": 200.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0082-0000000420814525_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 82,
+   "t_exptime": 200.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000420814525-s0056_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 56,
+   "t_exptime": 200.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000420814525-s0082_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 82,
+   "t_exptime": 200.0,
+   "target_name": "420814525"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0056-cam1-ccd2",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 56,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0082-cam1-ccd1",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 82,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  }
+ ]
+}

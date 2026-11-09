@@ -1,0 +1,1044 @@
+{
+ "counts": [
+  {
+   "collection": "HST",
+   "instrument": "STIS",
+   "n": 2,
+   "product": "spectrum"
+  },
+  {
+   "collection": "HST",
+   "instrument": "STIS/CCD",
+   "n": 1,
+   "product": "image"
+  },
+  {
+   "collection": "HST",
+   "instrument": "STIS/FUV-MAMA",
+   "n": 1,
+   "product": "spectrum"
+  },
+  {
+   "collection": "KeplerFFI",
+   "instrument": "Kepler",
+   "n": 39,
+   "product": "image"
+  },
+  {
+   "collection": "PS1",
+   "instrument": "GPC1",
+   "n": 5,
+   "product": "image"
+  },
+  {
+   "collection": "ROMAN",
+   "instrument": "WFI",
+   "n": 3,
+   "product": "image"
+  },
+  {
+   "collection": "SDSS",
+   "instrument": "SDSS Spectrograph",
+   "n": 1,
+   "product": "spectrum"
+  },
+  {
+   "collection": "SDSS",
+   "instrument": "apogee-apo25m",
+   "n": 1,
+   "product": "spectrum"
+  }
+ ],
+ "rows": [
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0014-2-3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 14,
+   "t_exptime": 1425.599392,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0015-2-2",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 15,
+   "t_exptime": 1425.599379,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0026-2-1",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 26,
+   "t_exptime": 1425.599348,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0040-2-4",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 40,
+   "t_exptime": 475.199784,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0041-2-3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 41,
+   "t_exptime": 475.199767,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0053-2-1",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 53,
+   "t_exptime": 475.199775,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0054-3-3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 54,
+   "t_exptime": 475.199781,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0055-3-4",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 55,
+   "t_exptime": 475.199786,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0074-4-1",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 74,
+   "t_exptime": 158.399928,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0075-3-3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 75,
+   "t_exptime": 158.399924,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0080-3-3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 80,
+   "t_exptime": 158.399925,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0081-3-3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 81,
+   "t_exptime": 158.399927,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess-s0082-3-4",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 82,
+   "t_exptime": 158.399927,
+   "target_name": "TESS FFI"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2019198215352-s0014-0000000377780790-0150-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 14,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2019199201929-s0014-s0041-0000000377780790",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 41,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2019199201929-s0014-s0055-0000000377780790",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 55,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2019199201929-s0014-s0078-0000000377780790",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 78,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2019199201929-s0014-s0086-0000000377780790",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 86,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2021175071901-s0040-0000000377780790-0211-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 40,
+   "t_exptime": 20.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2021175071901-s0040-0000000377780790-0211-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 40,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2021204101404-s0041-0000000377780790-0212-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 41,
+   "t_exptime": 20.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2021204101404-s0041-0000000377780790-0212-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 41,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022164095748-s0053-0000000377780790-0226-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 53,
+   "t_exptime": 20.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022164095748-s0053-0000000377780790-0226-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 53,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022190063128-s0054-0000000377780790-0227-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 54,
+   "t_exptime": 20.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022190063128-s0054-0000000377780790-0227-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 54,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022217014003-s0055-0000000377780790-0242-a_fast",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 55,
+   "t_exptime": 20.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2022217014003-s0055-0000000377780790-0242-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 55,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024003055635-s0074-0000000377780790-0269-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 74,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024030031500-s0075-0000000377780790-0270-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 75,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024170053053-s0080-0000000377780790-0275-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 80,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024196212429-s0081-0000000377780790-0276-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 81,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "TESS",
+   "obs_id": "tess2024223182411-s0082-0000000377780790-0278-s",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "SPOC",
+   "sequence_number": 82,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "Kepler",
+   "obs_id": "kplr011904151_lc_Q111111110111011101",
+   "product": "timeseries",
+   "project": "Kepler",
+   "provenance_name": "Kepler",
+   "sequence_number": null,
+   "t_exptime": 1800.0,
+   "target_name": "kplr011904151"
+  },
+  {
+   "obs_collection": "Kepler",
+   "obs_id": "kplr011904151_sc_Q001313330333033302",
+   "product": "timeseries",
+   "project": "Kepler",
+   "provenance_name": "Kepler",
+   "sequence_number": null,
+   "t_exptime": 60.0,
+   "target_name": "kplr011904151"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_cdips_tess_ffi_gaiatwo0002132155017099178624-s0015-cam2-ccd2_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "CDIPS",
+   "sequence_number": 15,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_cdips_tess_ffi_gaiatwo0002132155017099178624-s0026-cam2-ccd1_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "CDIPS",
+   "sequence_number": 26,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_cdips_tess_ffi_gaiatwo0002132155017099178624-s0040-cam2-ccd4_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "CDIPS",
+   "sequence_number": 40,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_cdips_tess_ffi_gaiatwo0002132155017099178624-s0041-cam2-ccd3_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "CDIPS",
+   "sequence_number": 41,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_cdips_tess_ffi_gaiatwo0002132155017099178624-s0053-cam2-ccd1_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "CDIPS",
+   "sequence_number": 53,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_cdips_tess_ffi_gaiatwo0002132155017099178624-s0054-cam3-ccd3_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "CDIPS",
+   "sequence_number": 54,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_cdips_tess_ffi_gaiatwo0002132155017099178624-s0055-cam3-ccd4_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "CDIPS",
+   "sequence_number": 55,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_kbonus-bkg_kepler_kepler_kic-011904151_kepler_v1.0",
+   "product": "timeseries",
+   "project": "Kepler",
+   "provenance_name": "KBONUS-BKG",
+   "sequence_number": null,
+   "t_exptime": 1765.464,
+   "target_name": "Gaia DR3 2132155017099178624"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_kepseismic_kepler_phot_kplr011904151-20d_kepler_v1_cor-filt-inp",
+   "product": "timeseries",
+   "project": "Kepler",
+   "provenance_name": "KEPSEISMIC",
+   "sequence_number": null,
+   "t_exptime": 1800.0,
+   "target_name": "kplr011904151"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_kepseismic_kepler_phot_kplr011904151-55d_kepler_v1_cor-filt-inp",
+   "product": "timeseries",
+   "project": "Kepler",
+   "provenance_name": "KEPSEISMIC",
+   "sequence_number": null,
+   "t_exptime": 1800.0,
+   "target_name": "kplr011904151"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_kepseismic_kepler_phot_kplr011904151-80d_kepler_v1_cor-filt-inp",
+   "product": "timeseries",
+   "project": "Kepler",
+   "provenance_name": "KEPSEISMIC",
+   "sequence_number": null,
+   "t_exptime": 1800.0,
+   "target_name": "kplr011904151"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0014-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 14,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0015-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 15,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0026-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 26,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0040-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 40,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0041-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 41,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0053-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 53,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0054-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 54,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0055-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 55,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0074-0000000377780790_tess_v02_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 74,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0075-0000000377780790_tess_v02_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 75,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0080-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 80,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0081-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 81,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_qlp_tess_ffi_s0082-0000000377780790_tess_v01_llc",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "QLP",
+   "sequence_number": 82,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0014-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 14,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0015-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 15,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0026-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 26,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0040-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 40,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0041-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 41,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0053-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 53,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0054-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 54,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0055-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 55,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0074-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 74,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0075-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 75,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0080-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 80,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0081-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 81,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tars_tess_ffi_s0082-0000000377780790_tess",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TARS",
+   "sequence_number": 82,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tasoc_tess_ffi_tic00377780790-s0014-cam2-ccd3-c1800_tess_v06",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TASOC",
+   "sequence_number": 14,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tasoc_tess_ffi_tic00377780790-s0015-cam2-ccd2-c1800_tess_v06",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TASOC",
+   "sequence_number": 15,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tasoc_tess_ffi_tic00377780790-s0026-cam2-ccd1-c1800_tess_v06",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TASOC",
+   "sequence_number": 26,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tasoc_tess_tpf_tic00377780790-s0014-cam2-ccd3-c0120_tess_v06",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TASOC",
+   "sequence_number": 14,
+   "t_exptime": 120.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0014_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 14,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0015_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 15,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0026_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 26,
+   "t_exptime": 1800.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0040_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 40,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0041_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 41,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0053_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 53,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0054_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 54,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0055_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 55,
+   "t_exptime": 600.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0074_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 74,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0075_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 75,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0080_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 80,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0081_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 81,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tess-spoc_tess_phot_0000000377780790-s0082_tess_v1_tp",
+   "product": "timeseries",
+   "project": "TESS",
+   "provenance_name": "TESS-SPOC",
+   "sequence_number": 82,
+   "t_exptime": 200.0,
+   "target_name": "377780790"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0040-cam2-ccd4",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 40,
+   "t_exptime": 475.2,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0041-cam2-ccd3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 41,
+   "t_exptime": 475.2,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0053-cam2-ccd1",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 53,
+   "t_exptime": 475.2,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0054-cam3-ccd3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 54,
+   "t_exptime": 475.2,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0055-cam3-ccd4",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 55,
+   "t_exptime": 475.2,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0074-cam4-ccd1",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 74,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0075-cam3-ccd3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 75,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0080-cam3-ccd3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 80,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0081-cam3-ccd3",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 81,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  },
+  {
+   "obs_collection": "HLSP",
+   "obs_id": "hlsp_tica_s0082-cam3-ccd4",
+   "product": "image",
+   "project": "TESS",
+   "provenance_name": "TICA",
+   "sequence_number": 82,
+   "t_exptime": 158.4,
+   "target_name": "TICA FFI"
+  }
+ ]
+}
