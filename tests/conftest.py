@@ -126,3 +126,106 @@ def make_report(slug: str = DEFAULT_STAR, **overrides) -> Report:
         llm=LLMBlock(status="skipped", reason="LLM disabled (--no-llm or config)"),
     )
     return report.model_copy(update=overrides) if overrides else report
+
+
+# ---- a fake sky shared by resolver and pipeline tests ----
+from dataclasses import dataclass, field  # noqa: E402
+
+from star_report.coords import separation_arcsec  # noqa: E402
+
+
+def _cone(rows, ra, dec, radius_arcsec, dist_key):
+    hits = []
+    for row in rows:
+        dist = separation_arcsec(ra, dec, row["ra"], row["dec"])
+        if dist <= radius_arcsec:
+            hits.append({**row, dist_key: dist})
+    return sorted(hits, key=lambda r: r[dist_key])
+
+
+def _neighbourhood(dr2_id, dr3_id):
+    return {"dr2_source_id": dr2_id, "dr3_source_id": dr3_id,
+            "angular_distance": 1.0, "magnitude_difference": 0.0}
+
+
+@dataclass
+class FakeLookup:
+    """A dict-backed CatalogLookup over a tiny fake sky; cones search the stored rows.
+
+    `errors` maps a method name to the exception that method raises.
+    """
+
+    simbad_objects: list[dict] = field(default_factory=list)  # matched by main_id or any of ids
+    gaia_rows: dict[str, dict] = field(default_factory=dict)  # Gaia DR3 ID -> row
+    dr2_to_dr3: dict[str, str] = field(default_factory=dict)
+    tic_rows: dict[int, dict] = field(default_factory=dict)  # TIC ID -> row
+    tois: dict[str, int] = field(default_factory=dict)  # TOI number -> host TIC ID
+    kois: dict[str, int] = field(default_factory=dict)  # KOI number -> host KIC ID
+    errors: dict[str, Exception] = field(default_factory=dict)
+    calls: list[str] = field(default_factory=list)
+
+    def _enter(self, method):
+        self.calls.append(method)
+        if method in self.errors:
+            raise self.errors[method]
+
+    def simbad(self, name):
+        self._enter("simbad")
+        return [o for o in self.simbad_objects if name == o["main_id"] or name in o["ids"]]
+
+    def gaia_by_id(self, dr3_id):
+        self._enter("gaia_by_id")
+        return self.gaia_rows.get(dr3_id)
+
+    def gaia_dr3_from_dr2(self, dr2_id):
+        self._enter("gaia_dr3_from_dr2")
+        return [_neighbourhood(d2, d3) for d2, d3 in self.dr2_to_dr3.items() if d2 == dr2_id]
+
+    def gaia_dr2_from_dr3(self, dr3_id):
+        self._enter("gaia_dr2_from_dr3")
+        return [_neighbourhood(d2, d3) for d2, d3 in self.dr2_to_dr3.items() if d3 == dr3_id]
+
+    def gaia_cone(self, ra, dec, radius_arcsec):
+        self._enter("gaia_cone")
+        return _cone(self.gaia_rows.values(), ra, dec, radius_arcsec, "dist_arcsec")
+
+    def tic_by_id(self, tic):
+        self._enter("tic_by_id")
+        return self.tic_rows.get(tic)
+
+    def tic_by_gaia_dr2(self, dr2_id):
+        self._enter("tic_by_gaia_dr2")
+        return [r for r in self.tic_rows.values() if r.get("GAIA") == dr2_id]
+
+    def tic_cone(self, ra, dec, radius_arcsec):
+        self._enter("tic_cone")
+        return _cone(self.tic_rows.values(), ra, dec, radius_arcsec, "dstArcSec")
+
+    def toi_host(self, toi):
+        self._enter("toi_host")
+        return self.tois.get(toi)
+
+    def koi_host(self, koi):
+        self._enter("koi_host")
+        return self.kois.get(koi)
+
+
+RA, DEC = 150.0, 20.0
+
+
+def gaia_row(source_id, ra=RA, dec=DEC, g=10.0, **extra):
+    return {"source_id": source_id, "ra": ra, "dec": dec, "ref_epoch": 2016.0, "parallax": 10.0,
+            "pmra": 0.0, "pmdec": 0.0, "radial_velocity": None, "phot_g_mean_mag": g,
+            "bp_rp": 0.8, **extra}
+
+
+def tic_row(tic_id, ra=RA, dec=DEC, **extra):
+    return {"ID": tic_id, "ra": ra, "dec": dec, "pmRA": 0.0, "pmDEC": 0.0, "GAIA": None,
+            "disposition": None, "duplicate_id": None, "HIP": None, "TWOMASS": None, "KIC": None,
+            "Tmag": 9.5, **extra}
+
+
+def simbad_obj(main_id, ids=(), ra=RA, dec=DEC, otype="*", **extra):
+    return {"main_id": main_id, "ra": ra, "dec": dec, "otype": otype, "sp_type": "G2V",
+            "rv": None, "nbref": 10, "pmra": 0.0, "pmdec": 0.0, "plx": 10.0, "B": None,
+            "V": 9.0, "ids": [main_id, *ids], **extra}
