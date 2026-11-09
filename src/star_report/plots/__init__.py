@@ -13,7 +13,7 @@ matplotlib.use("Agg")
 from star_report.cache import Cache  # noqa: E402
 from star_report.config import Config  # noqa: E402
 from star_report.models import Report  # noqa: E402
-from star_report.plots import cmd  # noqa: E402
+from star_report.plots import cmd, lightcurve  # noqa: E402
 from star_report.sources.base import make_session  # noqa: E402
 
 log = logging.getLogger("star_report.plots")
@@ -30,8 +30,12 @@ def _plot_cmd(report, path, cfg, cache, session):
     return cmd.plot_cmd(background, target, label, path), note
 
 
-# Report order. Tasks 22-23 add "lightcurve" and "sky".
-PLOTTERS: dict[str, Plotter] = {"cmd": _plot_cmd}
+def _plot_lightcurve(report, path, cfg, cache, session):
+    return lightcurve.plot_stage(report, path, cfg)
+
+
+# Report order. Task 23 adds "sky".
+PLOTTERS: dict[str, Plotter] = {"cmd": _plot_cmd, "lightcurve": _plot_lightcurve}
 
 
 def make_plots(report: Report, plots_dir: Path, cfg: Config,

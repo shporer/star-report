@@ -99,3 +99,87 @@ def test_html_embeds_plot_and_note(tmp_path):
 
 def test_html_without_plots_has_no_images(tmp_path):
     assert "data:image/png" not in render_html(make_report(), tmp_path)
+
+
+# ---- light curves ----------------------------------------------------------
+
+import numpy as np  # noqa: E402
+
+from star_report.plots.lightcurve import (  # noqa: E402
+    SectorCurve,
+    choose_products,
+    periodogram,
+    plot_lightcurves,
+)
+
+
+def _row(author, exptime, seq, mission=""):
+    return {"author": author, "exptime": exptime, "sequence_number": seq, "mission": mission}
+
+
+def test_choose_most_recent_spoc():
+    rows = [_row("SPOC", 120, s, f"TESS Sector {s:02d}") for s in range(1, 38)]
+    rows += [_row("TESS-SPOC", 200, s) for s in (36, 37)]
+    idx, note = choose_products(rows, 10)
+    assert [rows[i]["sequence_number"] for i in idx] == list(range(37, 27, -1))
+    assert all(rows[i]["author"] == "SPOC" for i in idx)
+    assert note == "Showing the 10 most recent of 37 sectors."
+
+
+def test_no_note_when_under_limit():
+    idx, note = choose_products([_row("SPOC", 120, 1), _row("SPOC", 120, 2)], 10)
+    assert len(idx) == 2 and note is None
+
+
+def test_qlp_fills_missing_sector():
+    rows = [_row("SPOC", 120, 4), _row("QLP", 1800, 5), _row("SPOC", 120, 6)]
+    idx, _ = choose_products(rows, 10)
+    assert sorted(rows[i]["sequence_number"] for i in idx) == [4, 5, 6]
+    assert rows[[i for i in idx if rows[i]["sequence_number"] == 5][0]]["author"] == "QLP"
+
+
+def test_spoc_20s_ignored():
+    rows = [_row("SPOC", 20, 5), _row("SPOC", 120, 5)]
+    idx, _ = choose_products(rows, 10)
+    assert idx == [1]
+    assert choose_products([_row("SPOC", 20, 5)], 10) == ([], None)
+
+
+def test_kepler_long_cadence_only():
+    rows = []
+    for q in (1, 2, 3):
+        rows += [_row("Kepler", 60, q), _row("Kepler", 1800, q), _row("KBONUS-BKG", 1800, q)]
+    idx, _ = choose_products(rows, 10)
+    assert len(idx) == 3 and all(rows[i]["exptime"] == 1800 and rows[i]["author"] == "Kepler"
+                                 for i in idx)
+
+
+def test_periodogram_finds_period():
+    t = np.arange(0, 27, 2 / 1440)
+    curve = SectorCurve("s", t, 1 + 0.01 * np.sin(2 * np.pi * t / 3.0))
+    period, power = periodogram([curve], 0.1, 30)
+    assert period[np.argmax(power)] == pytest.approx(3.0, rel=0.01)
+
+
+def test_plot_lightcurves_png(tmp_path):
+    rng = np.random.default_rng(1)
+    curves = []
+    for k in range(3):
+        t = np.arange(27 * k, 27 * (k + 1), 10 / 1440)
+        curves.append(SectorCurve(f"Sector {k + 1} (SPOC)", t,
+                                  1 + 0.001 * rng.standard_normal(t.size)))
+    cfg = load_config(cwd=tmp_path)
+    out = plot_lightcurves(curves, [("b", 3.0), ("far", 500.0)], cfg, tmp_path / "lc.png")
+    assert out.read_bytes().startswith(PNG)
+
+
+def test_lightcurve_timeout_note(tmp_path, monkeypatch):
+    import time
+
+    from star_report.plots import lightcurve
+
+    monkeypatch.setattr(lightcurve, "fetch_lightcurves", lambda i, c: time.sleep(2))
+    cfg = load_config(cwd=tmp_path)
+    cfg.plots.lightcurve_timeout_s = 0.05
+    path, note = lightcurve.plot_stage(make_report(), tmp_path / "lc.png", cfg)
+    assert path is None and note == "Light-curve download timed out after 0 s."
