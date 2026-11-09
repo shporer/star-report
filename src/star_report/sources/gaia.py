@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import requests
@@ -249,16 +250,18 @@ class GaiaVari(Source):
             return {"summary": None}
         summary = {k: v for k, v in rows[0].items() if k.startswith("in_vari_")}
         summary["source_id"] = _id(rows[0].get("source_id"))
-        classifier = tap_rows(
-            TAP_URL,
-            "SELECT classifier_name, best_class_name, best_class_score "
-            f"FROM gaiadr3.vari_classifier_result WHERE source_id = {sid}", ctx.session)
-        periods = {}
-        for flag, (table, col, _) in _VARI_PERIODS.items():
-            if summary.get(f"in_vari_{flag}") is True:
-                periods[flag] = tap_rows(
-                    TAP_URL, f"SELECT {col} FROM gaiadr3.{table} WHERE source_id = {sid}",
-                    ctx.session)
+        classifier_adql = ("SELECT classifier_name, best_class_name, best_class_score "
+                           f"FROM gaiadr3.vari_classifier_result WHERE source_id = {sid}")
+        flags = [f for f in _VARI_PERIODS if summary.get(f"in_vari_{f}") is True]
+        period_adql = {f: f"SELECT {_VARI_PERIODS[f][1]} FROM gaiadr3.{_VARI_PERIODS[f][0]} "
+                          f"WHERE source_id = {sid}" for f in flags}
+        # Independent queries run concurrently; any failure propagates (nothing partial is cached).
+        with ThreadPoolExecutor(max_workers=len(flags) + 1) as pool:
+            f_class = pool.submit(tap_rows, TAP_URL, classifier_adql, ctx.session)
+            f_periods = {f: pool.submit(tap_rows, TAP_URL, a, ctx.session)
+                         for f, a in period_adql.items()}
+            classifier = f_class.result()
+            periods = {f: fut.result() for f, fut in f_periods.items()}
         return {"summary": summary, "classifier": classifier, "periods": periods}
 
     def parse(self, raw: Any, ctx: SourceContext) -> dict:

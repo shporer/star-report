@@ -130,3 +130,48 @@ def test_vari_fetch_queries_per_true_flag(monkeypatch):
     assert any("vari_classifier_result" in c for c in calls)
     assert any("vari_rrlyrae" in c for c in calls)
     assert not any("vari_cepheid" in c for c in calls)
+
+
+_FLAGS = ["rrlyrae", "cepheid", "eclipsing_binary", "rotation_modulation"]
+
+
+def _vari_fake(delay=0.0, fail_on=None):
+    import time
+
+    def fake(url, adql, session):
+        if "vari_summary" in adql:
+            return [{"source_id": 5, **{f"in_vari_{f}": True for f in _FLAGS}}]
+        if "vari_classifier_result" in adql:
+            return [{"classifier_name": "c", "best_class_name": "X", "best_class_score": 1.0}]
+        time.sleep(delay)
+        if fail_on and fail_on in adql:
+            raise RuntimeError("boom")
+        return [{"pf": 0.5, "frequency": 0.25, "best_rotation_period": 7.0}]
+    return fake
+
+
+def test_vari_period_queries_run_concurrently(monkeypatch):
+    import time
+    monkeypatch.setattr(gaia, "tap_rows", _vari_fake(delay=0.3))
+    t0 = time.monotonic()
+    raw = GaiaVari().fetch(make_ctx())
+    assert time.monotonic() - t0 < 1.0  # sequential would take >= 1.2 s
+    assert sorted(raw["periods"]) == sorted(_FLAGS)
+
+
+def test_vari_failing_period_query_raises(monkeypatch):
+    monkeypatch.setattr(gaia, "tap_rows", _vari_fake(fail_on="vari_cepheid"))
+    with pytest.raises(RuntimeError, match="boom"):
+        GaiaVari().fetch(make_ctx())
+
+
+def test_vari_concurrent_output_matches_sequential(monkeypatch):
+    fake = _vari_fake()
+    monkeypatch.setattr(gaia, "tap_rows", fake)
+    raw = GaiaVari().fetch(make_ctx())
+    expected = {
+        "summary": {"source_id": "5", **{f"in_vari_{f}": True for f in _FLAGS}},
+        "classifier": fake(None, "vari_classifier_result", None),
+        "periods": {f: fake(None, f"vari_{f}", None) for f in _FLAGS},
+    }
+    assert raw == expected
