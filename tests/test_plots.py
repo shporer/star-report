@@ -345,3 +345,86 @@ def test_sky_plotter_draws_no_image_chart_when_cutout_fails(tmp_path, monkeypatc
     path, note = plots._plot_sky(make_report(), tmp_path / "sky.png", cfg, None, None)
     assert path.read_bytes().startswith(PNG)
     assert "STScI down" in note
+
+
+def test_select_neighbors_by_target_id():
+    from star_report.plots.sky import select_neighbors
+
+    rows = [{"source_id": "T", "delta_g": None}, {"source_id": "N", "delta_g": 0.0},
+            {"source_id": "M", "delta_g": 2.0}]
+    assert [r["source_id"] for r in select_neighbors(rows, 6, target_id="T")] == ["N", "M"]
+    assert [r["source_id"] for r in select_neighbors(rows, 6)] == ["M"]
+
+
+def test_sky_plotter_notes_missing_magnitudes(tmp_path, monkeypatch):
+    from star_report.plots import sky
+
+    monkeypatch.setattr(sky, "fetch_cutout", lambda *a: (_ for _ in ()).throw(ValueError("x")))
+    rows = [{"source_id": "T", "ra": 1.0, "dec": 2.0, "delta_g": None},
+            {"source_id": "N", "ra": 1.0, "dec": 2.0, "delta_g": None}]
+    report = make_report()
+    report.results["gaia_neighbors"] = SourceResult(source="gaia_neighbors", status="ok", data=rows)
+    _, note = plots._plot_sky(report, tmp_path / "s.png", load_config(cwd=tmp_path), None, None)
+    assert "Gaia neighbors have no G magnitudes; none shown." in note
+
+
+def _fake_hips(monkeypatch, behavior):
+    from astroquery.hips2fits import hips2fitsClass
+
+    calls = []
+
+    def query(self, **kw):
+        calls.append((self.timeout, kw))
+        return behavior()
+
+    monkeypatch.setattr(hips2fitsClass, "query", query)
+    return calls
+
+
+def test_fetch_cutout_uses_hips2fits_when_reachable(tmp_path, monkeypatch):
+    import io
+
+    from astropy.io import fits
+
+    from star_report.plots import sky
+
+    monkeypatch.setattr(sky, "is_reachable", lambda host: True)
+    calls = _fake_hips(monkeypatch, lambda: fits.open(io.BytesIO(_fits_bytes())))
+    cfg = load_config(cwd=tmp_path)
+    image, wcs, label = sky.fetch_cutout(10.0, 20.0, cfg, _Session(b""))
+    assert label == "DSS2 red (CDS hips2fits)" and image.shape == (20, 20)
+    timeout, kw = calls[0]
+    assert timeout == cfg.sources.timeout_s
+    assert kw["hips"] == cfg.plots.sky_survey and kw["projection"] == "TAN"
+    assert kw["width"] == kw["height"] == 300
+    assert kw["fov"].to("arcmin").value == cfg.plots.cutout_arcmin
+
+
+def test_fetch_cutout_hips2fits_failure_falls_back(tmp_path, monkeypatch):
+    from star_report.plots import sky
+
+    monkeypatch.setattr(sky, "is_reachable", lambda host: True)
+
+    def boom():
+        raise ConnectionError("hips down")
+
+    _fake_hips(monkeypatch, boom)
+    session = _Session(_fits_bytes())
+    _, _, label = sky.fetch_cutout(10.0, 20.0, load_config(cwd=tmp_path), session)
+    assert "STScI" in label and len(session.calls) == 1
+
+
+def test_fetch_cutout_both_fail_propagates_and_plotter_draws_fallback(tmp_path, monkeypatch):
+    from star_report.plots import sky
+
+    monkeypatch.setattr(sky, "is_reachable", lambda host: True)
+
+    def boom():
+        raise ConnectionError("hips down")
+
+    _fake_hips(monkeypatch, boom)
+    cfg = load_config(cwd=tmp_path)
+    with pytest.raises(ValueError, match="not return a FITS"):
+        sky.fetch_cutout(10.0, 20.0, cfg, _Session(b"<html>"))
+    path, note = plots._plot_sky(make_report(), tmp_path / "s.png", cfg, None, _Session(b"<html>"))
+    assert path.read_bytes().startswith(PNG) and "Sky image unavailable" in note

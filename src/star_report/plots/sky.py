@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,6 +14,8 @@ from astropy.wcs import WCS
 
 from star_report.config import Config
 from star_report.sources.base import is_reachable
+
+log = logging.getLogger("star_report.plots")
 
 CDS_HOST = "alasky.cds.unistra.fr"
 STSCI_URL = "https://archive.stsci.edu/cgi-bin/dss_search"
@@ -27,19 +30,29 @@ def _from_hdul(hdul) -> tuple[np.ndarray, WCS]:
     return np.asarray(hdu.data, dtype=float).squeeze(), WCS(hdu.header, naxis=2)
 
 
+def _fetch_hips2fits(ra: float, dec: float, arcmin: float,
+                     cfg: Config) -> tuple[np.ndarray, WCS, str]:
+    import astropy.units as u
+    from astroquery.hips2fits import hips2fitsClass
+
+    client = hips2fitsClass()  # own instance: the module singleton's timeout is global
+    client.timeout = float(cfg.sources.timeout_s)
+    npix = int(round(arcmin * 60))  # about 1 arcsec per pixel
+    hdul = client.query(hips=cfg.plots.sky_survey, width=npix, height=npix,
+                        projection="TAN", ra=ra * u.deg, dec=dec * u.deg,
+                        fov=arcmin * u.arcmin, format="fits")
+    image, wcs = _from_hdul(hdul)
+    return image, wcs, "DSS2 red (CDS hips2fits)"
+
+
 def fetch_cutout(ra: float, dec: float, cfg: Config, session) -> tuple[np.ndarray, WCS, str]:
     ra, dec = float(ra), float(dec)
     arcmin = float(cfg.plots.cutout_arcmin)
     if is_reachable(CDS_HOST):
-        import astropy.units as u
-        from astroquery.hips2fits import hips2fits
-
-        npix = int(round(arcmin * 60))  # about 1 arcsec per pixel
-        hdul = hips2fits.query(hips=cfg.plots.sky_survey, width=npix, height=npix,
-                               projection="TAN", ra=ra * u.deg, dec=dec * u.deg,
-                               fov=arcmin * u.arcmin, format="fits")
-        image, wcs = _from_hdul(hdul)
-        return image, wcs, "DSS2 red (CDS hips2fits)"
+        try:
+            return _fetch_hips2fits(ra, dec, arcmin, cfg)
+        except Exception as e:  # noqa: BLE001 - CDS reachable but failing: try STScI
+            log.warning("hips2fits failed (%s: %s); falling back to STScI", type(e).__name__, e)
     params = {"v": cfg.plots.sky_fallback_survey, "r": ra, "d": dec, "e": "J2000",
               "h": arcmin, "w": arcmin, "f": "fits", "c": "none"}
     resp = session.get(STSCI_URL, params=params, timeout=cfg.sources.timeout_s)
@@ -52,14 +65,24 @@ def fetch_cutout(ra: float, dec: float, cfg: Config, session) -> tuple[np.ndarra
     return image, wcs, "DSS2 red (STScI)"
 
 
-def select_neighbors(neighbors: list[dict], max_delta_g: float) -> list[dict]:
-    """Non-target rows (the target has delta_g == 0) no more than max_delta_g fainter."""
+def select_neighbors(neighbors: list[dict], max_delta_g: float,
+                     target_id: str | None = None) -> list[dict]:
+    """Rows no more than max_delta_g fainter than the target, excluding the target.
+
+    The target is excluded by `source_id`; only without a `target_id` does the
+    `delta_g == 0` sentinel stand in for it.
+    """
     out = []
     for n in neighbors:
         if not isinstance(n, dict):
             continue
+        if target_id is not None:
+            if str(n.get("source_id")) == str(target_id):
+                continue
+        elif n.get("delta_g") == 0:
+            continue
         dg = n.get("delta_g")
-        if not isinstance(dg, int | float) or dg == 0:
+        if isinstance(dg, bool) or not isinstance(dg, int | float):
             continue
         if dg <= max_delta_g:
             out.append(n)

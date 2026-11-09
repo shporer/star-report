@@ -41,7 +41,11 @@ def _plot_sky(report, path, cfg, cache, session):
     note = None
     neighbors: list[dict] = []
     if res is not None and res.status == "ok" and isinstance(res.data, list):
-        neighbors = sky.select_neighbors(res.data, cfg.plots.neighbor_max_delta_g)
+        neighbors = sky.select_neighbors(res.data, cfg.plots.neighbor_max_delta_g,
+                                         target_id=report.identity.gaia_dr3_id)
+        if res.data and not any(isinstance(n, dict) and isinstance(n.get("delta_g"), int | float)
+                                for n in res.data):
+            note = "Gaia neighbors have no G magnitudes; none shown."
     else:
         note = "Gaia neighbors unavailable; only the target is marked."
     try:
