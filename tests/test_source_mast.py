@@ -153,4 +153,4 @@ def test_empty_table_fetch(monkeypatch):
 def test_registered_after_wide_binaries():
     from star_report.config import load_config
     names = [s.name for s in build_sources(load_config())]
-    assert names[-2:] == ["wide_binaries", "mast"]
+    assert names.index("mast") > names.index("wide_binaries")

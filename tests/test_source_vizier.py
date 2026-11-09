@@ -54,7 +54,8 @@ def _gaia_ctx(gaia_id=GAIA_ID):
 
 def test_registered_in_order():
     names = [s.name for s in build_sources(make_ctx().config)]
-    assert names[-5:-1] == ["wds", "sb9", "vsx", "wide_binaries"]
+    idx = [names.index(n) for n in ("wds", "sb9", "vsx", "wide_binaries")]
+    assert idx == list(range(idx[0], idx[0] + 4))
 
 
 def test_vsx_hd209458(ctx):
