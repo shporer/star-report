@@ -352,6 +352,11 @@ def _closest(rows: list[dict]) -> dict | None:
     return min(rows, key=distance, default=None)
 
 
+def _reference(*candidates: tuple[str, float | None]) -> tuple[str, float] | None:
+    """The first (band, magnitude) whose magnitude is known."""
+    return next(((band, mag) for band, mag in candidates if mag is not None), None)
+
+
 def _id_text(value: Any) -> str:
     if isinstance(value, float) and value.is_integer():
         value = int(value)
@@ -529,8 +534,7 @@ class _Resolution:
                 if self.gaia is not None:
                     self.dr2 = tic_dr2
         if self.gaia is None:
-            rows = self._cone_here("gaia_cone", _GAIA_EPOCH)
-            self.gaia = rows[0] if rows else None
+            self.gaia = self._positional_gaia()
 
     def _find_dr2(self) -> None:
         if self.dr2 is None:
@@ -550,8 +554,47 @@ class _Resolution:
             rows = self._ask("tic_by_gaia_dr2", dr2_id=self.dr2)
             self.tic = min(rows, key=lambda r: r.get("disposition") is not None, default=None)
         if self.tic is None:
-            rows = self._cone_here("tic_cone", _J2000)
-            self.tic = rows[0] if rows else None
+            self.tic = self._positional_tic()
+
+    # The positional fallbacks run mostly for stars Gaia DR3 lacks, typically very bright ones,
+    # whose nearest catalog source is often a companion. So the nearest source is used only if
+    # its brightness agrees with the first known reference magnitude.
+
+    def _positional_gaia(self) -> dict | None:
+        """The nearest Gaia DR3 source, unless its G disagrees with the TIC or SIMBAD."""
+        rows = self._cone_here("gaia_cone", _GAIA_EPOCH)
+        if not rows:
+            return None
+        g = rows[0].get("phot_g_mean_mag")
+        tic, simbad = self.tic or {}, self.simbad or {}
+        ref = _reference(("TIC G", tic.get("GAIAmag")), ("Tmag", tic.get("Tmag")),
+                         ("V", simbad.get("V")))
+        if not self._disagrees(g, ref):
+            return rows[0]
+        r, (band, m) = self.cfg.match_radius_arcsec, ref
+        self.warnings.append(f"Nearest Gaia DR3 source within {r:g}″ has G = {g:.1f}, "
+                             f"inconsistent with {band} = {m:.1f}; no Gaia match used.")
+        return None
+
+    def _positional_tic(self) -> dict | None:
+        """The nearest TIC entry, unless its Tmag disagrees with Gaia or SIMBAD."""
+        rows = self._cone_here("tic_cone", _J2000)
+        if not rows:
+            return None
+        t = rows[0].get("Tmag")
+        gaia, simbad = self.gaia or {}, self.simbad or {}
+        ref = _reference(("Gaia G", gaia.get("phot_g_mean_mag")), ("V", simbad.get("V")))
+        if not self._disagrees(t, ref):
+            return rows[0]
+        r, (band, m) = self.cfg.match_radius_arcsec, ref
+        self.warnings.append(f"Nearest TIC entry within {r:g}″ has Tmag = {t:.1f}, "
+                             f"inconsistent with {band} = {m:.1f}; no TIC match used.")
+        return None
+
+    def _disagrees(self, mag: float | None, ref: tuple[str, float] | None) -> bool:
+        """Both magnitudes are known and differ by more than max_mag_mismatch."""
+        return (mag is not None and ref is not None
+                and abs(mag - ref[1]) > self.cfg.max_mag_mismatch)
 
     def _cone_here(self, method: str, epoch: float) -> list[dict]:
         """A match_radius cone at the best position so far, propagated to `epoch`."""

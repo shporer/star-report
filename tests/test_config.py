@@ -12,6 +12,7 @@ def test_defaults(tmp_path):
     assert cfg.cache.expiry_days["cmd_background"] is None and cfg.cache.expiry_days["simbad"] == 30
     assert (cfg.literature.most_cited, cfg.literature.most_recent) == (15, 10)
     assert cfg.servers.simbad == ["simbad.cds.unistra.fr", "simbad.harvard.edu"]
+    assert cfg.resolve.max_mag_mismatch == 3.0
     assert "~" not in str(cfg.cache.dir)
 
 

@@ -271,6 +271,79 @@ def test_without_simbad_names_and_ids_come_from_tic(rcfg):
     assert ident.gaia_dr3_id == "11" and ident.gaia_dr2_id == "10"
 
 
+# ---- positional fallbacks must agree in brightness ----
+
+
+@pytest.mark.parametrize("g,dr3,source,warnings", [
+    (12.0, None, "simbad", ["Nearest Gaia DR3 source within 5″ has G = 12.0, inconsistent with "
+                            "V = 0.5; no Gaia match used."]),
+    (1.0, "31", "gaia_dr3", []),
+], ids=["G=12-rejected", "G=1-accepted"])
+def test_gaia_fallback_must_agree_in_brightness(g, dr3, source, warnings, rcfg):
+    sky = FakeLookup(simbad_objects=[simbad_obj("Bright", V=0.5)],
+                     gaia_rows={"31": gaia_row("31", RA, DEC + 3 / 3600, g=g)})
+    ident = resolve(parse_target("Bright"), sky, rcfg)
+    assert ident.gaia_dr3_id == dr3 and ident.position.source == source
+    assert ident.warnings == warnings
+
+
+@pytest.mark.parametrize("tic_mags,warning", [
+    ({"GAIAmag": 1.0, "Tmag": 0.6}, "Nearest Gaia DR3 source within 5″ has G = 12.0, "
+                                    "inconsistent with TIC G = 1.0; no Gaia match used."),
+    ({"Tmag": 0.6}, "Nearest Gaia DR3 source within 5″ has G = 12.0, inconsistent with "
+                    "Tmag = 0.6; no Gaia match used."),
+], ids=["TIC-G", "Tmag"])
+def test_gaia_fallback_compares_tic_magnitudes_before_v(tic_mags, warning, rcfg):
+    sky = FakeLookup(simbad_objects=[simbad_obj("Bright", ids=["TIC 1"], V=11.5)],  # V agrees
+                     tic_rows={1: tic_row(1, **tic_mags)},
+                     gaia_rows={"31": gaia_row("31", RA, DEC + 3 / 3600, g=12.0)})
+    ident = resolve(parse_target("TIC 1"), sky, rcfg)
+    assert ident.gaia_dr3_id is None and ident.position.source == "simbad"
+    assert ident.warnings == [warning]
+
+
+def test_rejected_gaia_match_leaves_tic_position(rcfg):
+    sky = FakeLookup(tic_rows={1: tic_row(1, Tmag=0.6)},
+                     gaia_rows={"31": gaia_row("31", RA, DEC + 3 / 3600, g=12.0)})
+    ident = resolve(parse_target("TIC 1"), sky, rcfg)
+    assert ident.gaia_dr3_id is None and ident.position.source == "tic"
+    assert ident.warnings == ["Nearest Gaia DR3 source within 5″ has G = 12.0, inconsistent with "
+                              "Tmag = 0.6; no Gaia match used."]
+
+
+@pytest.mark.parametrize("simbad_ids,gaia_rows,source,warning", [
+    (["Gaia DR3 31"], {"31": gaia_row("31", g=1.0)}, "gaia_dr3",
+     "Nearest TIC entry within 5″ has Tmag = 13.0, inconsistent with Gaia G = 1.0; "
+     "no TIC match used."),
+    ([], {}, "simbad",
+     "Nearest TIC entry within 5″ has Tmag = 13.0, inconsistent with V = 0.5; "
+     "no TIC match used."),
+], ids=["vs-Gaia-G", "vs-V"])
+def test_tic_fallback_must_agree_in_brightness(simbad_ids, gaia_rows, source, warning, rcfg):
+    sky = FakeLookup(simbad_objects=[simbad_obj("Bright", ids=simbad_ids, V=0.5)],
+                     gaia_rows=gaia_rows,
+                     tic_rows={41: tic_row(41, RA, DEC + 2 / 3600, Tmag=13.0)})
+    ident = resolve(parse_target("Bright"), sky, rcfg)
+    assert ident.tic_id is None and ident.position.source == source
+    assert ident.warnings == [warning]
+
+
+@pytest.mark.parametrize("v,g", [(None, 12.0), (0.5, None)])
+def test_gaia_fallback_without_comparable_magnitudes_takes_nearest(v, g, rcfg):
+    sky = FakeLookup(simbad_objects=[simbad_obj("Bright", V=v)],
+                     gaia_rows={"31": gaia_row("31", RA, DEC + 3 / 3600, g=g)})
+    ident = resolve(parse_target("Bright"), sky, rcfg)
+    assert ident.gaia_dr3_id == "31" and ident.warnings == []
+
+
+@pytest.mark.parametrize("v,tmag", [(None, 13.0), (0.5, None)])
+def test_tic_fallback_without_comparable_magnitudes_takes_nearest(v, tmag, rcfg):
+    sky = FakeLookup(simbad_objects=[simbad_obj("Bright", V=v)],
+                     tic_rows={41: tic_row(41, RA, DEC + 2 / 3600, Tmag=tmag)})
+    ident = resolve(parse_target("Bright"), sky, rcfg)
+    assert ident.tic_id == 41 and ident.warnings == []
+
+
 # ---- warnings ----
 
 

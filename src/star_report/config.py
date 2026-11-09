@@ -54,6 +54,7 @@ class ResolveConfig(_Section):
     coord_search_arcsec: float
     pair_radius_arcsec: float
     pair_max_delta_g: float
+    max_mag_mismatch: float
 
 
 class ParametersConfig(_Section):

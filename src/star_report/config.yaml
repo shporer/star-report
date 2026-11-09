@@ -39,6 +39,7 @@ resolve:
   coord_search_arcsec: 200     # candidate cone for coordinate input (covers J2000 positions of high-PM stars)
   pair_radius_arcsec: 2
   pair_max_delta_g: 3
+  max_mag_mismatch: 3.0        # positional fallbacks must agree in brightness
 parameters:
   disagreement_sigma: 3
   disagreement_fraction: 0.10
