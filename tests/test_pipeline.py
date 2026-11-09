@@ -10,6 +10,7 @@ from rich.console import Console
 
 from star_report.cache import Cache
 from star_report.config import load_config
+from star_report.models import LLMBlock
 from star_report.pipeline import PipelineDeps, RunOptions, run_target
 from star_report.sources.base import Source
 
@@ -36,7 +37,8 @@ def _deps():
     )
     return PipelineDeps(lookup=lambda cache, session, cfg: sky,
                         sources=lambda cfg: [_Fake("fake_a"), _Fake("fake_b")],
-                        plots=lambda *a: ({}, {}))
+                        plots=lambda *a: ({}, {}),
+                        writer=lambda r, c, k: LLMBlock(status="skipped", reason="test"))
 
 
 @pytest.fixture

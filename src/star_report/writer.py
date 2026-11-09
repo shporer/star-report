@@ -300,7 +300,7 @@ def call_claude(client, llm: LLMConfig, system: str, user: str) -> ClaudeReply:
         params |= dict(betas=["server-side-fallback-2026-07-01"], fallbacks="default")
     with client.beta.messages.stream(**params) as stream:   # streaming: long input, adaptive thinking
         msg = stream.get_final_message()
-    text = next((b.text for b in msg.content if b.type == "text"), None)
+    text = "".join(b.text for b in msg.content if getattr(b, "type", None) == "text") or None
     return ClaudeReply(msg.stop_reason, text, msg.model)     # msg.model = model that served it (fallback-aware)
 
 
@@ -344,11 +344,7 @@ def _papers_and_note(report: Report) -> tuple[list[Paper], str | None]:
 def write_sections(report: Report, cfg: Config, cache: Cache,
                    client_factory: Callable[[], Any] = anthropic.Anthropic) -> LLMBlock:
     llm = cfg.llm
-    facts = build_fact_sheet(report)
-    papers, note = _papers_and_note(report)
-    sent = [p.bibcode for p in papers]
-    key = {"facts": facts, "bibcodes": sent, "model": llm.model, "effort": llm.effort,
-           "server_fallback": llm.server_fallback, "prompt_version": PROMPT_VERSION}
+    sent: list[str] = []
 
     def producer() -> dict:
         try:
@@ -368,11 +364,16 @@ def write_sections(report: Report, cfg: Config, cache: Cache,
                         generated=datetime.now(timezone.utc), bibcodes_sent=sent).model_dump(mode="json")
 
     try:
+        facts = build_fact_sheet(report)
+        papers, note = _papers_and_note(report)
+        sent = [p.bibcode for p in papers]
+        key = {"facts": facts, "bibcodes": sent, "model": llm.model, "effort": llm.effort,
+               "server_fallback": llm.server_fallback, "prompt_version": PROMPT_VERSION}
         entry = cache.fetch("llm", "writer", key, producer)
+        block = LLMBlock.model_validate(entry.payload)
+        return block.model_copy(update={"from_cache": entry.from_cache})
     except WriterFailure as e:
         return LLMBlock(status="failed", reason=e.reason, bibcodes_sent=sent)
     except Exception as e:  # the report must still render; nothing is cached on failure
         return LLMBlock(status="failed", reason=f"LLM writer error: {type(e).__name__}: {e}"[:200],
                         bibcodes_sent=sent)
-    block = LLMBlock.model_validate(entry.payload)
-    return block.model_copy(update={"from_cache": entry.from_cache})

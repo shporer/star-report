@@ -301,3 +301,22 @@ def test_literature_note(tmp_path, status, note):
                                                     "cited_bibcodes": []}))], report=report)
     assert block.status == "ok" and block.bibcodes_sent == []
     assert note in fake.calls[0]["messages"][0]["content"]
+
+
+def test_setup_errors_become_failed_block(tmp_path, monkeypatch):
+    def boom(report):
+        raise RuntimeError("bad facts")
+    monkeypatch.setattr(writer, "build_fact_sheet", boom)
+    block, fake = _run(tmp_path, [])
+    assert block.status == "failed" and block.reason.startswith("LLM writer error:") and fake.calls == []
+
+
+def test_text_blocks_are_joined_across_fallback(tmp_path):
+    half = json.loads(good_json)
+    full = json.dumps(half)
+    cut = full.index("star") + 2
+    r = SimpleNamespace(stop_reason="end_turn", model="claude-fallback-x", content=[
+        SimpleNamespace(type="text", text=full[:cut]), SimpleNamespace(type="fallback"),
+        SimpleNamespace(type="text", text=full[cut:])])
+    block, _ = _run(tmp_path, [r])
+    assert block.status == "ok" and block.overview == "A star."
