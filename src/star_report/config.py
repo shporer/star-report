@@ -98,6 +98,8 @@ class LLMConfig(_Section):
     effort: str
     max_tokens: int
     server_fallback: bool
+    timeout_s: float
+    max_retries: int
 
 
 class Config(_Section):

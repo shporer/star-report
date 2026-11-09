@@ -8,6 +8,7 @@ from star_report.config import ConfigError, ads_token, load_config
 def test_defaults(tmp_path):
     cfg = load_config(cwd=tmp_path)
     assert (cfg.llm.model, cfg.llm.effort) == ("claude-opus-5-5", "high")
+    assert (cfg.llm.timeout_s, cfg.llm.max_retries) == (300, 1)
     assert (cfg.sources.max_workers, cfg.sources.timeout_s) == (8, 30)
     assert cfg.sources.timeout_overrides == {"mast": 90}
     assert cfg.cache.expiry_days["cmd_background"] is None and cfg.cache.expiry_days["simbad"] == 30

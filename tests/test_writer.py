@@ -47,6 +47,18 @@ def test_fact_sheet_basics():
     assert "None" not in json.dumps(facts)
 
 
+def test_fact_sheet_kois_read_the_parsed_keys():
+    report = make_report("Kepler-10")
+    assert build_fact_sheet(report)["kois"] == ["Kepler-10 b (CONFIRMED)", "Kepler-10 c (CONFIRMED)"]
+    arch = report.results["exoplanet_archive"]
+    kois = [{"koi": "K00072.03", "name": None, "disposition": "CANDIDATE"},
+            {"koi": "K00072.04", "name": None, "disposition": None},
+            {"kepoi_name": "K00072.05", "disposition": "CANDIDATE"}]  # not a key parse emits
+    arch = arch.model_copy(update={"data": {**arch.data, "kois": kois}})
+    report = report.model_copy(update={"results": {**report.results, "exoplanet_archive": arch}})
+    assert build_fact_sheet(report)["kois"] == ["K00072.03 (CANDIDATE)", "K00072.04"]
+
+
 def test_fact_sheet_ads_and_malformed():
     report = make_report()
     ads = SourceResult(source="ads", status="ok",
@@ -175,6 +187,27 @@ def test_request_shape(tmp_path):
     assert "thinking" not in kw and "temperature" not in kw
     assert block.bibcodes_sent == [A, B] and block.effort == "high" and block.generated is not None
     assert block.cited_bibcodes == [A] and block.from_cache is False
+
+
+@pytest.mark.parametrize("timeout_s,max_retries", [(None, None), (12.5, 0)])
+def test_default_client_gets_configured_timeout_and_retries(tmp_path, monkeypatch, timeout_s,
+                                                            max_retries):
+    made = []
+
+    class FakeAnthropic(FakeClient):
+        def __init__(self, **kwargs):
+            made.append(kwargs)
+            super().__init__([reply(good_json)])
+
+    monkeypatch.setattr(writer.anthropic, "Anthropic", FakeAnthropic)
+    cfg = load_config(cwd=tmp_path)
+    if timeout_s is not None:
+        cfg.llm.timeout_s, cfg.llm.max_retries = timeout_s, max_retries
+    block = write_sections(report_with_papers(), cfg, Cache(tmp_path / "cache", EXPIRY))
+    assert block.status == "ok"
+    assert made == [{"timeout": cfg.llm.timeout_s, "max_retries": cfg.llm.max_retries}]
+    if timeout_s is None:
+        assert made == [{"timeout": 300, "max_retries": 1}]
 
 
 def test_no_server_fallback(tmp_path):

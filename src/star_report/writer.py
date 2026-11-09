@@ -107,7 +107,7 @@ def _planets(report: Report) -> list[dict]:
 def _kois(report: Report) -> list[str]:
     out = []
     for k in _dicts(_data(report, "exoplanet_archive").get("kois")):
-        ident = k.get("kepoi_name") or k.get("name") or k.get("koi")
+        ident = k.get("name") or k.get("koi")
         disp = k.get("disposition")
         if ident:
             out.append(f"{ident} ({disp})" if disp else str(ident))
@@ -341,14 +341,19 @@ def _papers_and_note(report: Report) -> tuple[list[Paper], str | None]:
                                      "ADS search failed.")
 
 
+def default_client(llm: LLMConfig) -> anthropic.Anthropic:
+    """The SDK client with the configured per-request timeout and retry count."""
+    return anthropic.Anthropic(timeout=llm.timeout_s, max_retries=llm.max_retries)
+
+
 def write_sections(report: Report, cfg: Config, cache: Cache,
-                   client_factory: Callable[[], Any] = anthropic.Anthropic) -> LLMBlock:
+                   client_factory: Callable[[], Any] | None = None) -> LLMBlock:
     llm = cfg.llm
     sent: list[str] = []
 
     def producer() -> dict:
         try:
-            client = client_factory()
+            client = client_factory() if client_factory is not None else default_client(llm)
         except anthropic.CredentialsError as e:
             raise WriterFailure(_NO_CREDENTIALS) from e
         reply, out = _ask(client, llm, build_user_message(facts, papers, note))

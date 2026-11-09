@@ -75,3 +75,5 @@ llm:
   effort: high
   max_tokens: 16000
   server_fallback: true
+  timeout_s: 300               # per request (SDK default 600)
+  max_retries: 1               # SDK retries on connection errors, 408, 409, 429 and 5xx (SDK default 2)
