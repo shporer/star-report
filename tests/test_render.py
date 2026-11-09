@@ -3,6 +3,8 @@ import re
 
 from rich.console import Console
 
+from star_report import derive
+from star_report.config import load_config
 from star_report.models import Position, Report
 from star_report.render.html import link_citations, render_html, write_outputs
 from star_report.render.terminal import print_summary
@@ -124,3 +126,36 @@ def test_terminal_planets_line(tmp_path):
     console = Console(record=True, width=110)
     print_summary(make_report("TOI-700"), tmp_path / "report.html", console)
     assert "Planets:" in console.export_text()
+
+
+def _with(report, **updates):
+    results = dict(report.results)
+    for k, v in updates.items():
+        results[k] = results[k].model_copy(update=v)
+    return report.model_copy(update={"results": results})
+
+
+def test_toi_rule_archive_ok_but_empty(tmp_path):
+    base = make_report("TOI-700")
+    arch = dict(base.results["exoplanet_archive"].data, tois=[])
+    report = _with(base, exoplanet_archive={"data": arch})
+    html = render_html(report, tmp_path)
+    assert "(ExoFOP)" not in html and "TFOP disposition" not in html
+    assert '<p class="muted">none</p>' in html
+    assert not any(f.startswith("TOIs:") for f in derive.flags(
+        report.identity, report.results, load_config(cwd=tmp_path).flags))
+    console = Console(record=True, width=110)
+    print_summary(report, tmp_path / "r.html", console)
+    assert "TOIs:" not in console.export_text().split("Planets:")[1].splitlines()[0]
+
+
+def test_toi_rule_archive_error_falls_back_to_exofop(tmp_path):
+    base = make_report("TOI-700")
+    report = _with(base, exoplanet_archive={"status": "error", "data": None, "error": "x"})
+    html = render_html(report, tmp_path)
+    assert "TFOP disposition" in html and "700.01" in html
+    flags = derive.flags(report.identity, report.results, load_config(cwd=tmp_path).flags)
+    assert any(f.startswith("TOIs: 700.01") for f in flags)
+    console = Console(record=True, width=110)
+    print_summary(report, tmp_path / "r.html", console)
+    assert "TOIs: 700.01" in console.export_text()

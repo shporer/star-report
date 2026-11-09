@@ -174,6 +174,25 @@ def _tagged(items: list[tuple[Any, Any]]) -> list[str]:
     return [f"{ident} ({disp})" if disp else str(ident) for ident, disp in items if ident]
 
 
+def toi_source(results: Mapping[str, SourceResult]) -> str | None:
+    """The one source whose TOIs are shown: the archive when ok, else ExoFOP when ok."""
+    if _ok_data(results, "exoplanet_archive") is not None:
+        return "exoplanet_archive"
+    if _ok_data(results, "exofop") is not None:
+        return "exofop"
+    return None
+
+
+def toi_entries(results: Mapping[str, SourceResult]) -> list[tuple[Any, Any]]:
+    """(toi, disposition) pairs from toi_source(); an ok archive with no TOIs gives []."""
+    source = toi_source(results)
+    if source is None:
+        return []
+    data = _ok_data(results, source) or {}
+    key = "disposition" if source == "exoplanet_archive" else "disp_tfop"
+    return [(t.get("toi"), t.get(key)) for t in _dict_rows(data.get("tois"))]
+
+
 def _companion_flags(results: Mapping[str, SourceResult]) -> list[str]:
     out: list[str] = []
     archive = _ok_data(results, "exoplanet_archive")
@@ -183,12 +202,7 @@ def _companion_flags(results: Mapping[str, SourceResult]) -> list[str]:
     if planets:
         n = len(planets)
         out.append(f"{n} confirmed planet{'s' if n != 1 else ''}")
-    if archive is not None:
-        tois = _tagged([(t.get("toi"), t.get("disposition")) for t in _dict_rows(archive.get("tois"))])
-    elif exofop is not None:
-        tois = _tagged([(t.get("toi"), t.get("disp_tfop")) for t in _dict_rows(exofop.get("tois"))])
-    else:
-        tois = []
+    tois = _tagged(toi_entries(results))
     if tois:
         out.append("TOIs: " + ", ".join(tois))
     kois = _tagged([(k.get("koi"), k.get("disposition"))

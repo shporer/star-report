@@ -9,7 +9,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from star_report.derive import description_line, display_name
+from star_report.derive import description_line, display_name, toi_entries, toi_source
 from star_report.models import Report
 from star_report.render.html import STATUS_LABELS
 
@@ -28,11 +28,13 @@ def _cell(c, decimals: int) -> str:
 
 def _planets_line(report: Report) -> str:
     arch = report.results.get("exoplanet_archive")
-    if arch is None or arch.status != "ok" or not isinstance(arch.data, dict):
+    if toi_source(report.results) is None:
         return ""
-    planets = [p for p in arch.data.get("planets") or [] if isinstance(p, dict)]
-    tois = [str(t["toi"]) for t in arch.data.get("tois") or [] if isinstance(t, dict) and t.get("toi")]
-    text = f"Planets: {len(planets)} confirmed"
+    count = 0
+    if arch is not None and arch.status == "ok" and isinstance(arch.data, dict):
+        count = len([p for p in arch.data.get("planets") or [] if isinstance(p, dict)])
+    tois = [str(t) for t, _ in toi_entries(report.results) if t]
+    text = f"Planets: {count} confirmed"
     if tois:
         text += f"; TOIs: {', '.join(tois)}"
     return text

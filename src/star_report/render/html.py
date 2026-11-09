@@ -10,7 +10,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 from markupsafe import Markup, escape
 
-from star_report.derive import description_line, display_name
+from star_report.derive import description_line, display_name, toi_source
 from star_report.models import BIBCODE_RE, Report
 
 STATUS_LABELS = {
@@ -115,6 +115,7 @@ def render_html(report: Report, base_dir: Path) -> str:
     ra_s, dec_s = sexagesimal(ident.position.ra, ident.position.dec)
     return _env.get_template("report.html.j2").render(
         report=report,
+        toi_source=toi_source(report.results),
         name=display_name(ident.main_name),
         ids=ids,
         ra_s=ra_s,

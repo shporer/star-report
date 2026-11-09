@@ -31,18 +31,19 @@
 </tbody>
 </table>
 {% endif %}
-{% set toi_rows = arch.data.tois if arch_ok else [] %}
-{% if toi_rows %}
+{% if toi_source == "exoplanet_archive" %}
 <h3>TESS Objects of Interest</h3>
+{% if not arch.data.tois %}<p class="muted">none</p>{% else %}
 <table>
 <thead><tr><th>TOI</th><th>Disposition</th><th>Period (d)</th><th>Depth (ppm)</th><th>Radius (R&oplus;)</th></tr></thead>
 <tbody>
-{% for t in toi_rows %}
+{% for t in arch.data.tois %}
 <tr><td>{{ t.toi }}</td><td>{{ t.disposition or "" }}</td><td class="num">{{ "%.4f"|format(t.period_d) if t.period_d is not none else "" }}</td><td class="num">{{ "%.0f"|format(t.depth_ppm) if t.depth_ppm is not none else "" }}</td><td class="num">{{ "%.2f"|format(t.radius_re) if t.radius_re is not none else "" }}</td></tr>
 {% endfor %}
 </tbody>
 </table>
-{% elif fop_ok and fop.data.tois %}
+{% endif %}
+{% elif toi_source == "exofop" %}
 <h3>TESS Objects of Interest (ExoFOP)</h3>
 <table>
 <thead><tr><th>TOI</th><th>TESS disposition</th><th>TFOP disposition</th><th>Notes</th></tr></thead>
