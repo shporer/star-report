@@ -36,24 +36,35 @@ def sector_dates() -> dict[int, tuple[datetime, datetime]]:
 
 
 def classify(on_silicon: list[dict], released: list[int] | None,
-             dates: dict[int, tuple[datetime, datetime]], now: datetime) -> dict:
-    """Sort on-silicon sectors into observed / in_progress / pending / upcoming. Pure."""
+             dates: dict[int, tuple[datetime, datetime]], now: datetime,
+             released_cameras: dict[int, str] | None = None) -> dict:
+    """Sort sectors into observed / in_progress / pending / upcoming. Pure.
+
+    Every released sector is observed, even one tess-point misses; its cam/ccd then
+    comes from `released_cameras` (TESScut). The other buckets use on-silicon sectors only.
+    """
     released_set = set(released or [])
     unknown = released is None
     out: dict[str, Any] = {"observed": [], "in_progress": [], "pending": [], "upcoming": [],
                            "cameras": {}}
     if unknown:
         out["release_unknown"] = True
+    on_sectors = {e["sector"] for e in on_silicon}
+    extra = sorted(released_set - on_sectors)
+    out["observed"].extend(extra)
+    for sector in extra:
+        cam = (released_cameras or {}).get(sector)
+        if cam:
+            out["cameras"][sector] = cam
     for entry in sorted(on_silicon, key=lambda e: e["sector"]):
         sector = entry["sector"]
         out["cameras"][sector] = f"{entry.get('camera')}/{entry.get('ccd')}"
         window = dates.get(sector)
         if window is None:  # beyond the date table
-            bucket = "observed" if sector in released_set else "upcoming"
-            if bucket == "upcoming":
-                out["upcoming"].append({"sector": sector, "start": None})
-            else:
+            if sector in released_set:
                 out["observed"].append(sector)
+            else:
+                out["upcoming"].append({"sector": sector, "start": None})
             continue
         start, end = window
         if sector in released_set or (unknown and end < now):
@@ -64,6 +75,8 @@ def classify(on_silicon: list[dict], released: list[int] | None,
             out["pending"].append(sector)
         else:
             out["in_progress"].append(sector)
+    out["observed"].sort()
+    out["cameras"] = dict(sorted(out["cameras"].items()))
     return out
 
 
@@ -89,6 +102,7 @@ class TessSectors(Source):
         on_silicon = [{"sector": int(s), "camera": int(c), "ccd": int(d)}
                       for s, c, d in zip(sectors, cameras, ccds)]
         released: list[int] | None = None
+        released_cameras: list[dict] = []
         error: str | None = None
         try:
             resp = ctx.session.get(TESSCUT_URL.format(ra=ra, dec=dec),
@@ -98,11 +112,18 @@ class TessSectors(Source):
             results = payload.get("results") if isinstance(payload, dict) else None
             if not isinstance(results, list):
                 raise ValueError("unexpected TESScut payload")
-            released = sorted({s for r in results if isinstance(r, dict)
-                               and (s := _int(r.get("sector"))) is not None})
+            found: dict[int, dict] = {}
+            for r in results:
+                sector = _int(r.get("sector")) if isinstance(r, dict) else None
+                if sector is not None:
+                    found.setdefault(sector, {"sector": sector, "camera": _int(r.get("camera")),
+                                              "ccd": _int(r.get("ccd"))})
+            released = sorted(found)
+            released_cameras = [found[s] for s in released]
         except Exception as e:  # noqa: BLE001 - TESScut failure must not fail the source
             error = f"{type(e).__name__}: {e}"
-        return {"on_silicon": on_silicon, "released": released, "released_error": error}
+        return {"on_silicon": on_silicon, "released": released,
+                "released_cameras": released_cameras, "released_error": error}
 
     def parse(self, raw: Any, ctx: SourceContext) -> dict:
         raw = raw if isinstance(raw, dict) else {}
@@ -113,13 +134,19 @@ class TessSectors(Source):
             if sector is not None:
                 on_silicon.setdefault(sector, {"sector": sector, "camera": _int(e.get("camera")),
                                                "ccd": _int(e.get("ccd"))})
-        if not on_silicon:
-            return {}
         released_raw = raw.get("released")
         released = None
         if isinstance(released_raw, list):
             released = sorted({s for v in released_raw if (s := _int(v)) is not None})
-        out = classify(list(on_silicon.values()), released, sector_dates(), ctx.now())
+        cams: dict[int, str] = {}
+        cam_raw = raw.get("released_cameras")
+        for e in cam_raw if isinstance(cam_raw, list) else []:
+            sector = _int(e.get("sector")) if isinstance(e, dict) else None
+            if sector is not None:
+                cams[sector] = f"{_int(e.get('camera'))}/{_int(e.get('ccd'))}"
+        out = classify(list(on_silicon.values()), released, sector_dates(), ctx.now(), cams)
+        if not (out["observed"] or out["in_progress"] or out["pending"] or out["upcoming"]):
+            return {}
         error = raw.get("released_error")
         if released is None:
             out["released_error"] = error if isinstance(error, str) else None

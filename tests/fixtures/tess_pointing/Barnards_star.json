@@ -19,5 +19,12 @@
  "released": [
   80
  ],
+ "released_cameras": [
+  {
+   "camera": 1,
+   "ccd": 2,
+   "sector": 80
+  }
+ ],
  "released_error": null
 }

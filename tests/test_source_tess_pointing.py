@@ -33,6 +33,20 @@ def test_classify_buckets():
     assert "release_unknown" not in out
 
 
+def test_classify_released_not_on_silicon_is_observed():
+    on = [{"sector": 1, "camera": 1, "ccd": 1}, {"sector": 2, "camera": 1, "ccd": 2}]
+    out = classify(on, [1, 2, 3], DATES, NOW, {3: "2/4"})
+    assert out["observed"] == [1, 2, 3]
+    assert out["cameras"][3] == "2/4" and out["cameras"][1] == "1/1"
+
+
+def test_parse_released_extra_uses_tesscut_camera():
+    raw = {"on_silicon": [{"sector": 1, "camera": 1, "ccd": 1}], "released": [1, 2],
+           "released_cameras": [{"sector": 2, "camera": 3, "ccd": 4}], "released_error": None}
+    out = TessSectors().parse(raw, make_ctx(now=NOW))
+    assert out["observed"] == [1, 2] and out["cameras"][2] == "3/4"
+
+
 def test_classify_released_in_progress_is_observed():
     out = classify(ON, [1, 3], DATES, NOW)
     assert out["observed"] == [1, 3]
@@ -65,7 +79,7 @@ def test_hd209458_fixture():
 
 def test_toi700_fixture():
     out = parse("TOI-700")
-    assert len(out["observed"]) >= 30
+    assert len(out["observed"]) >= 40
 
 
 def test_sector_dates_utc():
@@ -130,5 +144,6 @@ def test_fetch_parses_tesscut(monkeypatch):
     monkeypatch.setattr(ctx.session, "get", get)
     out = TessSectors().fetch(ctx)
     assert out["released"] == [56] and out["released_error"] is None
+    assert out["released_cameras"] == [{"sector": 56, "camera": 1, "ccd": 2}]
     assert calls[0][0].startswith("https://mast.stsci.edu/tesscut/api/v0.1/sector")
     assert calls[0][1]["timeout"] == ctx.config.sources.timeout_s
