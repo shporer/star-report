@@ -1,0 +1,68 @@
+[
+ {
+  "first": "1997-06-05",
+  "frames": 14,
+  "instrument": "hires",
+  "last": "2000-06-09",
+  "nights": 13,
+  "programs": [
+   "ENG",
+   "N06H",
+   "N14H",
+   "N15H",
+   "N19H",
+   "N31H",
+   "U10H",
+   "U12H",
+   "U66H"
+  ]
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "kpf",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nirspec",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "esi",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nirc2",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nires",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "mosfire",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ }
+]

@@ -1,0 +1,58 @@
+[
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "hires",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "kpf",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nirspec",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "esi",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nirc2",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nires",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "mosfire",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ }
+]

@@ -1,0 +1,1707 @@
+[
+ {
+  "dp_id": "ADP.2026-11-06T14:18:28.502",
+  "instrument_name": "CORALIE",
+  "t_min": 51408.23513888
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:31.197",
+  "instrument_name": "CORALIE",
+  "t_min": 51440.14805555
+ },
+ {
+  "dp_id": "ADP.2021-08-29T16:28:21.142",
+  "instrument_name": "UVES",
+  "t_min": 52539.0673131
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.807",
+  "instrument_name": "CORALIE",
+  "t_min": 51367.36642361
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.178",
+  "instrument_name": "CORALIE",
+  "t_min": 51432.1927662
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.678",
+  "instrument_name": "CORALIE",
+  "t_min": 51385.27953703
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.400",
+  "instrument_name": "CORALIE",
+  "t_min": 51464.04879629
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.068",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.17831018
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.628",
+  "instrument_name": "UVES",
+  "t_min": 53961.2696879
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.775",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.163452
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:36.871",
+  "instrument_name": "CORALIE",
+  "t_min": 51497.09018518
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:23.888",
+  "instrument_name": "CORALIE",
+  "t_min": 51381.27444444
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.624",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.26734826
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.289",
+  "instrument_name": "UVES",
+  "t_min": 53961.30084246
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.286",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.18351851
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.483",
+  "instrument_name": "CORALIE",
+  "t_min": 51384.28482638
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.669",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.2262312
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.570",
+  "instrument_name": "CORALIE",
+  "t_min": 51396.27768518
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.481",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.20438892
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:17:28.958",
+  "instrument_name": "UVES",
+  "t_min": 52485.28671171
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.300",
+  "instrument_name": "CORALIE",
+  "t_min": 51416.21188657
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.710",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.32758164
+ },
+ {
+  "dp_id": "ADP.2021-04-27T12:13:06.701",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58696.24985404
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.846",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.24816167
+ },
+ {
+  "dp_id": "ADP.2021-08-28T15:50:29.709",
+  "instrument_name": "UVES",
+  "t_min": 52501.19849215
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.679",
+  "instrument_name": "CORALIE",
+  "t_min": 51863.00775462
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.276",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.22346064
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.273",
+  "instrument_name": "CORALIE",
+  "t_min": 51383.27844907
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.436",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.22074234
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.740",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.16070814
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.826",
+  "instrument_name": "UVES",
+  "t_min": 53961.11218555
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.307",
+  "instrument_name": "CORALIE",
+  "t_min": 51364.32873842
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.192",
+  "instrument_name": "CORALIE",
+  "t_min": 51388.25415509
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.594",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.30569075
+ },
+ {
+  "dp_id": "ADP.2026-10-05T15:15:47.648",
+  "instrument_name": "CRIRES",
+  "t_min": 60122.27456209
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.043",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.04368055
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.555",
+  "instrument_name": "CORALIE",
+  "t_min": 51465.10533564
+ },
+ {
+  "dp_id": "ADP.2020-09-14T20:18:03.531",
+  "instrument_name": "UVES",
+  "t_min": 51712.26062625
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.917",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.37135379
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:27.887",
+  "instrument_name": "CORALIE",
+  "t_min": 51403.23600694
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:31.697",
+  "instrument_name": "CORALIE",
+  "t_min": 51443.14907407
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.426",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.2728089
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.856",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.19889942
+ },
+ {
+  "dp_id": "ADP.2021-08-29T16:28:20.885",
+  "instrument_name": "UVES",
+  "t_min": 52539.10809045
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.558",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.26460436
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:12:06.278",
+  "instrument_name": "UVES",
+  "t_min": 52484.17454375
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.175",
+  "instrument_name": "CORALIE",
+  "t_min": 51463.05689814
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:28.507",
+  "instrument_name": "CORALIE",
+  "t_min": 51408.24719907
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.520",
+  "instrument_name": "CORALIE",
+  "t_min": 51395.3005787
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.406",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.25911528
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.281",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.23520833
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:32.533",
+  "instrument_name": "CORALIE",
+  "t_min": 51447.15122685
+ },
+ {
+  "dp_id": "ADP.2014-10-01T10:22:36.070",
+  "instrument_name": "HARPS",
+  "t_min": 53305.11008953
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.537",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.31118074
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.486",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.27829813
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.433",
+  "instrument_name": "CORALIE",
+  "t_min": 51486.05688657
+ },
+ {
+  "dp_id": "ADP.2020-08-10T17:14:12.682",
+  "instrument_name": "UVES",
+  "t_min": 52498.24430867
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.446",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.19069099
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.735",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.29745784
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:31.702",
+  "instrument_name": "CORALIE",
+  "t_min": 51443.16074074
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.684",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.2536509
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.699",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.22348663
+ },
+ {
+  "dp_id": "ADP.2021-08-28T15:41:34.042",
+  "instrument_name": "UVES",
+  "t_min": 52491.21358714
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.579",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.28925037
+ },
+ {
+  "dp_id": "ADP.2021-09-06T11:59:49.351",
+  "instrument_name": "UVES",
+  "t_min": 51710.40045583
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.321",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.27049768
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.542",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.15798812
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.882",
+  "instrument_name": "CORALIE",
+  "t_min": 51386.2787037
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.649",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.36312047
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:23.705",
+  "instrument_name": "CORALIE",
+  "t_min": 51380.31030092
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.236",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.13655092
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.619",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.37407121
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.985",
+  "instrument_name": "CORALIE",
+  "t_min": 51784.16601851
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.266",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.19527777
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.668",
+  "instrument_name": "CORALIE",
+  "t_min": 51488.00828703
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.750",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.23169416
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.013",
+  "instrument_name": "CORALIE",
+  "t_min": 51817.9968287
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.298",
+  "instrument_name": "CORALIE",
+  "t_min": 51434.23547453
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.516",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.32211909
+ },
+ {
+  "dp_id": "ADP.2020-08-10T17:10:43.204",
+  "instrument_name": "UVES",
+  "t_min": 52497.14310388
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:36.856",
+  "instrument_name": "CORALIE",
+  "t_min": 51497.06694444
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.584",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.3904528
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.497",
+  "instrument_name": "CORALIE",
+  "t_min": 51365.32601851
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.604",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.20713327
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.358",
+  "instrument_name": "CORALIE",
+  "t_min": 51435.10385416
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:33.396",
+  "instrument_name": "CORALIE",
+  "t_min": 51455.09004629
+ },
+ {
+  "dp_id": "ADP.2021-08-28T15:50:29.687",
+  "instrument_name": "UVES",
+  "t_min": 52501.30781819
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.241",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.1717824
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.798",
+  "instrument_name": "CORALIE",
+  "t_min": 51438.16658564
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.805",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.2810434
+ },
+ {
+  "dp_id": "ADP.2014-10-01T10:23:24.267",
+  "instrument_name": "HARPS",
+  "t_min": 53305.10139585
+ },
+ {
+  "dp_id": "ADP.2021-08-29T15:51:28.592",
+  "instrument_name": "UVES",
+  "t_min": 52537.06903892
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:05.951",
+  "instrument_name": "CORALIE",
+  "t_min": 51794.18689814
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.802",
+  "instrument_name": "CORALIE",
+  "t_min": 51367.35435185
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.326",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.30556712
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.441",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.3959419
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.496",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.25637008
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.328",
+  "instrument_name": "CORALIE",
+  "t_min": 51870.00438657
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.720",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.30294634
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.553",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.30020193
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:04.393",
+  "instrument_name": "CORALIE",
+  "t_min": 51786.19420138
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.938",
+  "instrument_name": "CORALIE",
+  "t_min": 51865.03197916
+ },
+ {
+  "dp_id": "ADP.2021-09-06T11:59:49.367",
+  "instrument_name": "UVES",
+  "t_min": 51710.25925687
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.275",
+  "instrument_name": "CORALIE",
+  "t_min": 51416.19978009
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.501",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.33301271
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.675",
+  "instrument_name": "CORALIE",
+  "t_min": 51782.27050925
+ },
+ {
+  "dp_id": "ADP.2021-12-23T12:01:16.883",
+  "instrument_name": "UVES",
+  "t_min": 51707.24561139
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.008",
+  "instrument_name": "CORALIE",
+  "t_min": 51482.02758101
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.261",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.16005787
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.028",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.07885416
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.110",
+  "instrument_name": "CORALIE",
+  "t_min": 51868.01917824
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.163",
+  "instrument_name": "CORALIE",
+  "t_min": 51431.20336805
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.858",
+  "instrument_name": "CORALIE",
+  "t_min": 51864.00561342
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.614",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.30843593
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.256",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.14829861
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.058",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.143125
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.197",
+  "instrument_name": "CORALIE",
+  "t_min": 51388.24203703
+ },
+ {
+  "dp_id": "ADP.2021-08-29T14:38:00.171",
+  "instrument_name": "UVES",
+  "t_min": 52530.06042562
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.624",
+  "instrument_name": "CORALIE",
+  "t_min": 51861.99936342
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.745",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.31662995
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:12:06.041",
+  "instrument_name": "UVES",
+  "t_min": 52484.27764376
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.461",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.22897535
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.715",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.23443838
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:31.202",
+  "instrument_name": "CORALIE",
+  "t_min": 51440.16013888
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.780",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.23992741
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.800",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.33847321
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:17:29.057",
+  "instrument_name": "UVES",
+  "t_min": 52485.24092379
+ },
+ {
+  "dp_id": "ADP.2021-08-28T15:41:33.996",
+  "instrument_name": "UVES",
+  "t_min": 52491.25375679
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.105",
+  "instrument_name": "CORALIE",
+  "t_min": 51868.00741898
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:33.736",
+  "instrument_name": "CORALIE",
+  "t_min": 51459.14422453
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.861",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.18523349
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.217",
+  "instrument_name": "CORALIE",
+  "t_min": 51363.36921296
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.912",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.17977316
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.793",
+  "instrument_name": "CORALIE",
+  "t_min": 51438.15447916
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:21.902",
+  "instrument_name": "CORALIE",
+  "t_min": 51355.34855324
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.928",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.21528213
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.291",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.24697916
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.535",
+  "instrument_name": "CORALIE",
+  "t_min": 51781.25072916
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.552",
+  "instrument_name": "CORALIE",
+  "t_min": 51390.24828703
+ },
+ {
+  "dp_id": "ADP.2026-10-05T15:15:47.654",
+  "instrument_name": "CRIRES",
+  "t_min": 60122.33189422
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:36.905",
+  "instrument_name": "CORALIE",
+  "t_min": 51497.02203703
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.609",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.3931979
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.100",
+  "instrument_name": "CORALIE",
+  "t_min": 51393.26375
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:04.175",
+  "instrument_name": "CORALIE",
+  "t_min": 51785.10144675
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.501",
+  "instrument_name": "CORALIE",
+  "t_min": 51861.01315972
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.905",
+  "instrument_name": "CORALIE",
+  "t_min": 51392.24751157
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.390",
+  "instrument_name": "CORALIE",
+  "t_min": 51780.11293981
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.810",
+  "instrument_name": "CORALIE",
+  "t_min": 51481.01989583
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.717",
+  "instrument_name": "CORALIE",
+  "t_min": 51391.24696759
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.305",
+  "instrument_name": "CORALIE",
+  "t_min": 51416.22399305
+ },
+ {
+  "dp_id": "ADP.2020-08-10T17:14:12.739",
+  "instrument_name": "UVES",
+  "t_min": 52498.28752612
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.563",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.1961793
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:23.893",
+  "instrument_name": "CORALIE",
+  "t_min": 51381.28653935
+ },
+ {
+  "dp_id": "ADP.2020-08-10T17:10:43.131",
+  "instrument_name": "UVES",
+  "t_min": 52497.09979259
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.999",
+  "instrument_name": "UVES",
+  "t_min": 53961.14944613
+ },
+ {
+  "dp_id": "ADP.2026-10-05T15:15:47.645",
+  "instrument_name": "CRIRES",
+  "t_min": 60122.22035107
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:27.558",
+  "instrument_name": "CORALIE",
+  "t_min": 51401.24216435
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.710",
+  "instrument_name": "CORALIE",
+  "t_min": 51418.25148148
+ },
+ {
+  "dp_id": "ADP.2021-12-23T12:01:16.865",
+  "instrument_name": "UVES",
+  "t_min": 51707.24562573
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.478",
+  "instrument_name": "CORALIE",
+  "t_min": 51384.27274305
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.639",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.26185958
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.785",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.34945082
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:04.180",
+  "instrument_name": "CORALIE",
+  "t_min": 51785.11317129
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.810",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.37678514
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.033",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.09055555
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:36.861",
+  "instrument_name": "CORALIE",
+  "t_min": 51497.07856481
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.180",
+  "instrument_name": "CORALIE",
+  "t_min": 51463.06854166
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.530",
+  "instrument_name": "CORALIE",
+  "t_min": 51781.23887731
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.158",
+  "instrument_name": "CORALIE",
+  "t_min": 51484.08078703
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.466",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.21256533
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.296",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.25873842
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.723",
+  "instrument_name": "CORALIE",
+  "t_min": 51385.26739583
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.902",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.16888504
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.063",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.16659722
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:05.381",
+  "instrument_name": "CORALIE",
+  "t_min": 51791.12856481
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:36.846",
+  "instrument_name": "CORALIE",
+  "t_min": 51497.03364583
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.862",
+  "instrument_name": "CORALIE",
+  "t_min": 51386.26660879
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.563",
+  "instrument_name": "CORALIE",
+  "t_min": 51487.01479166
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.785",
+  "instrument_name": "CORALIE",
+  "t_min": 51783.11223379
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.659",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.24541614
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.694",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.25090583
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:28.262",
+  "instrument_name": "CORALIE",
+  "t_min": 51406.28427083
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.638",
+  "instrument_name": "CORALIE",
+  "t_min": 51437.12582175
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.568",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.36586448
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.499",
+  "instrument_name": "CORALIE",
+  "t_min": 51872.02863425
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:15:56.585",
+  "instrument_name": "CORALIE",
+  "t_min": 51643.42305555
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.705",
+  "instrument_name": "CORALIE",
+  "t_min": 51418.23931712
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:27.143",
+  "instrument_name": "CORALIE",
+  "t_min": 51399.27872685
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.411",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.1743135
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.303",
+  "instrument_name": "CORALIE",
+  "t_min": 51433.15547453
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.825",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.17702981
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.051",
+  "instrument_name": "CORALIE",
+  "t_min": 51843.10936342
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.494",
+  "instrument_name": "CORALIE",
+  "t_min": 51872.01675925
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.795",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.18251834
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.890",
+  "instrument_name": "UVES",
+  "t_min": 53961.33621032
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:27.408",
+  "instrument_name": "CORALIE",
+  "t_min": 51400.2983449
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.456",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.36037528
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.515",
+  "instrument_name": "CORALIE",
+  "t_min": 51395.28854166
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:36.851",
+  "instrument_name": "CORALIE",
+  "t_min": 51497.0553125
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.634",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.24267196
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:12:06.228",
+  "instrument_name": "UVES",
+  "t_min": 52484.30161946
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.073",
+  "instrument_name": "CORALIE",
+  "t_min": 51382.3037037
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.589",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.3439615
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.013",
+  "instrument_name": "CORALIE",
+  "t_min": 51482.03924768
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.486",
+  "instrument_name": "UVES",
+  "t_min": 53961.18764752
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.278",
+  "instrument_name": "CORALIE",
+  "t_min": 51383.29050925
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:24.063",
+  "instrument_name": "CORALIE",
+  "t_min": 51382.29159722
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.730",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.34670636
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.038",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.03197916
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.550",
+  "instrument_name": "UVES",
+  "t_min": 53961.33622076
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.520",
+  "instrument_name": "CORALIE",
+  "t_min": 51417.20659722
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.515",
+  "instrument_name": "CORALIE",
+  "t_min": 51417.19447916
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.765",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.21802591
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.851",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.27006502
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.301",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.28216435
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:29.270",
+  "instrument_name": "CORALIE",
+  "t_min": 51416.18767361
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.401",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.20164387
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.491",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.35765867
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.670",
+  "instrument_name": "CORALIE",
+  "t_min": 51782.25863425
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.076",
+  "instrument_name": "CORALIE",
+  "t_min": 51843.12112268
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.336",
+  "instrument_name": "CORALIE",
+  "t_min": 51870.01613425
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.095",
+  "instrument_name": "CORALIE",
+  "t_min": 51393.25168981
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.583",
+  "instrument_name": "UVES",
+  "t_min": 53961.07458312
+ },
+ {
+  "dp_id": "ADP.2021-08-29T16:28:20.980",
+  "instrument_name": "UVES",
+  "t_min": 52539.14927742
+ },
+ {
+  "dp_id": "ADP.2020-06-12T04:40:35.970",
+  "instrument_name": "UVES",
+  "t_min": 55889.03767139
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.622",
+  "instrument_name": "CORALIE",
+  "t_min": 51366.34445601
+ },
+ {
+  "dp_id": "ADP.2020-09-14T20:18:03.623",
+  "instrument_name": "UVES",
+  "t_min": 51712.26056387
+ },
+ {
+  "dp_id": "ADP.2020-06-15T07:06:30.116",
+  "instrument_name": "UVES",
+  "t_min": 55784.13639677
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:36.441",
+  "instrument_name": "CORALIE",
+  "t_min": 51494.03619212
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.568",
+  "instrument_name": "CORALIE",
+  "t_min": 51487.02641203
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.654",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.36860956
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.421",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.31388665
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.053",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.13137731
+ },
+ {
+  "dp_id": "ADP.2021-04-27T14:52:38.419",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58737.02446253
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.271",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.20702546
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.684",
+  "instrument_name": "CORALIE",
+  "t_min": 51863.01947916
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.900",
+  "instrument_name": "CORALIE",
+  "t_min": 51392.23547453
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.023",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.06715277
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.073",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.15486111
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.617",
+  "instrument_name": "CORALIE",
+  "t_min": 51366.33241898
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.599",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.35219616
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:27.703",
+  "instrument_name": "CORALIE",
+  "t_min": 51402.3158912
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:33.401",
+  "instrument_name": "CORALIE",
+  "t_min": 51455.10167824
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.755",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.20984891
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.820",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.31937455
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.803",
+  "instrument_name": "UVES",
+  "t_min": 53961.26967715
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:23.570",
+  "instrument_name": "CORALIE",
+  "t_min": 51376.30291666
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.329",
+  "instrument_name": "UVES",
+  "t_min": 53961.11216795
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.679",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.18797837
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.760",
+  "instrument_name": "CORALIE",
+  "t_min": 51480.0821412
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.790",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.16617133
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.390",
+  "instrument_name": "UVES",
+  "t_min": 53961.14949631
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.760",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.35491357
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:04.968",
+  "instrument_name": "CORALIE",
+  "t_min": 51789.20141203
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.760",
+  "instrument_name": "CORALIE",
+  "t_min": 51397.31096064
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.073",
+  "instrument_name": "CORALIE",
+  "t_min": 51424.24471064
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.444",
+  "instrument_name": "CORALIE",
+  "t_min": 51871.02265046
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:31.072",
+  "instrument_name": "CORALIE",
+  "t_min": 51439.17438657
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.395",
+  "instrument_name": "CORALIE",
+  "t_min": 51464.03719907
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.830",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.32486419
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.722",
+  "instrument_name": "CORALIE",
+  "t_min": 51391.25908564
+ },
+ {
+  "dp_id": "ADP.2021-08-28T08:46:34.661",
+  "instrument_name": "UVES",
+  "t_min": 52466.21110711
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:12:06.302",
+  "instrument_name": "UVES",
+  "t_min": 52484.25294679
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:03.306",
+  "instrument_name": "CORALIE",
+  "t_min": 51779.29386574
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.322",
+  "instrument_name": "CORALIE",
+  "t_min": 51389.2746412
+ },
+ {
+  "dp_id": "ADP.2021-08-29T14:38:00.324",
+  "instrument_name": "UVES",
+  "t_min": 52530.02196373
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.557",
+  "instrument_name": "CORALIE",
+  "t_min": 51390.26043981
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:33.731",
+  "instrument_name": "CORALIE",
+  "t_min": 51459.13260416
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.674",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.33572946
+ },
+ {
+  "dp_id": "ADP.2014-10-01T10:20:57.773",
+  "instrument_name": "HARPS",
+  "t_min": 53305.09270483
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:30.503",
+  "instrument_name": "CORALIE",
+  "t_min": 51436.20473379
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.952",
+  "instrument_name": "UVES",
+  "t_min": 53961.0745938
+ },
+ {
+  "dp_id": "ADP.2021-08-28T15:50:29.817",
+  "instrument_name": "UVES",
+  "t_min": 52501.28517798
+ },
+ {
+  "dp_id": "ADP.2021-08-29T15:51:28.706",
+  "instrument_name": "UVES",
+  "t_min": 52537.11037032
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.380",
+  "instrument_name": "CORALIE",
+  "t_min": 51394.25730324
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.502",
+  "instrument_name": "CORALIE",
+  "t_min": 51365.33810185
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:07.988",
+  "instrument_name": "CORALIE",
+  "t_min": 51817.98508101
+ },
+ {
+  "dp_id": "ADP.2021-09-06T11:59:49.448",
+  "instrument_name": "UVES",
+  "t_min": 51710.25919743
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:27.023",
+  "instrument_name": "CORALIE",
+  "t_min": 51398.3174074
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.835",
+  "instrument_name": "CORALIE",
+  "t_min": 51864.01743055
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.689",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.23718396
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:23.700",
+  "instrument_name": "CORALIE",
+  "t_min": 51380.29822916
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:05.746",
+  "instrument_name": "CORALIE",
+  "t_min": 51793.12785879
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.527",
+  "instrument_name": "UVES",
+  "t_min": 53961.18763675
+ },
+ {
+  "dp_id": "ADP.2021-08-28T15:41:34.194",
+  "instrument_name": "UVES",
+  "t_min": 52491.29336271
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:05.148",
+  "instrument_name": "CORALIE",
+  "t_min": 51790.13581018
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:07.998",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.02028935
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.312",
+  "instrument_name": "CORALIE",
+  "t_min": 51364.34077546
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.673",
+  "instrument_name": "CORALIE",
+  "t_min": 51488.01989583
+ },
+ {
+  "dp_id": "ADP.2021-08-28T15:50:29.635",
+  "instrument_name": "UVES",
+  "t_min": 52501.24091595
+ },
+ {
+  "dp_id": "ADP.2021-08-29T15:51:28.684",
+  "instrument_name": "UVES",
+  "t_min": 52537.02722827
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:28.452",
+  "instrument_name": "CORALIE",
+  "t_min": 51408.25925925
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:12:06.174",
+  "instrument_name": "UVES",
+  "t_min": 52484.21371596
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.375",
+  "instrument_name": "CORALIE",
+  "t_min": 51394.24524305
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:21.388",
+  "instrument_name": "CORALIE",
+  "t_min": 51352.42001157
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:34.560",
+  "instrument_name": "CORALIE",
+  "t_min": 51465.11695601
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.867",
+  "instrument_name": "UVES",
+  "t_min": 53961.227871
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.644",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.34121782
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:10.390",
+  "instrument_name": "CORALIE",
+  "t_min": 51871.03598379
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:21.897",
+  "instrument_name": "CORALIE",
+  "t_min": 51355.33648148
+ },
+ {
+  "dp_id": "ADP.2014-10-01T10:22:53.140",
+  "instrument_name": "HARPS",
+  "t_min": 53306.0630251
+ },
+ {
+  "dp_id": "ADP.2026-10-05T15:15:47.651",
+  "instrument_name": "CRIRES",
+  "t_min": 60122.29880908
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.725",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.33029606
+ },
+ {
+  "dp_id": "ADP.2021-08-28T08:46:34.911",
+  "instrument_name": "UVES",
+  "t_min": 52466.25189533
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:06.096",
+  "instrument_name": "CORALIE",
+  "t_min": 51795.08741898
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.575",
+  "instrument_name": "CORALIE",
+  "t_min": 51396.28966435
+ },
+ {
+  "dp_id": "ADP.2020-08-10T16:17:28.976",
+  "instrument_name": "UVES",
+  "t_min": 52485.24618972
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:31.067",
+  "instrument_name": "CORALIE",
+  "t_min": 51439.1412037
+ },
+ {
+  "dp_id": "ADP.2020-08-14T10:02:34.098",
+  "instrument_name": "UVES",
+  "t_min": 52068.3789921
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.773",
+  "instrument_name": "UVES",
+  "t_min": 53961.30085298
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.770",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.27555398
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.048",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.1225
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.611",
+  "instrument_name": "CORALIE",
+  "t_min": 51862.01118055
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.163",
+  "instrument_name": "CORALIE",
+  "t_min": 51484.09239583
+ },
+ {
+  "dp_id": "ADP.2020-11-12T05:58:29.704",
+  "instrument_name": "UVES",
+  "t_min": 53961.22788142
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:25.327",
+  "instrument_name": "CORALIE",
+  "t_min": 51389.28679398
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:26.765",
+  "instrument_name": "CORALIE",
+  "t_min": 51397.32395833
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:35.388",
+  "instrument_name": "CORALIE",
+  "t_min": 51486.04524305
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.815",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.19343541
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:04.388",
+  "instrument_name": "CORALIE",
+  "t_min": 51786.1825
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.532",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.29473892
+ },
+ {
+  "dp_id": "ADP.2020-06-15T07:06:30.094",
+  "instrument_name": "UVES",
+  "t_min": 55784.13644278
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:23.270",
+  "instrument_name": "CORALIE",
+  "t_min": 51374.34895833
+ },
+ {
+  "dp_id": "ADP.2021-04-27T13:58:02.632",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58718.07815686
+ },
+ {
+  "dp_id": "ADP.2021-08-28T08:46:34.710",
+  "instrument_name": "UVES",
+  "t_min": 52466.29281062
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.511",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.29199509
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.907",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.15527038
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:08.018",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.05540509
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:22.222",
+  "instrument_name": "CORALIE",
+  "t_min": 51363.38125
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.416",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.2837882
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.476",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.28650567
+ },
+ {
+  "dp_id": "ADP.2021-08-29T14:38:00.228",
+  "instrument_name": "UVES",
+  "t_min": 52530.10081677
+ },
+ {
+  "dp_id": "ADP.2021-09-06T11:59:49.445",
+  "instrument_name": "UVES",
+  "t_min": 51710.40047268
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:15:56.580",
+  "instrument_name": "CORALIE",
+  "t_min": 51643.41144675
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:07.993",
+  "instrument_name": "CORALIE",
+  "t_min": 51818.00855324
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:16:09.471",
+  "instrument_name": "CORALIE",
+  "t_min": 51861.00140046
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:23.280",
+  "instrument_name": "CORALIE",
+  "t_min": 51374.36105324
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:32.528",
+  "instrument_name": "CORALIE",
+  "t_min": 51447.13954861
+ },
+ {
+  "dp_id": "ADP.2020-08-10T17:10:43.153",
+  "instrument_name": "UVES",
+  "t_min": 52497.18344889
+ },
+ {
+  "dp_id": "ADP.2026-11-06T14:18:21.383",
+  "instrument_name": "CORALIE",
+  "t_min": 51352.40792824
+ },
+ {
+  "dp_id": "ADP.2021-04-27T11:29:25.841",
+  "instrument_name": "ESPRESSO",
+  "t_min": 58684.17160156
+ }
+]

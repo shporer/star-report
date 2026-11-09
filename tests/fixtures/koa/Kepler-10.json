@@ -1,0 +1,100 @@
+[
+ {
+  "first": "2009-08-30",
+  "frames": 75,
+  "instrument": "hires",
+  "last": "2021-08-25",
+  "nights": 56,
+  "programs": [
+   "A092Hr",
+   "C143",
+   "C176Hr",
+   "C191Hr",
+   "C195Hr",
+   "C236Hr",
+   "C248Hr",
+   "C338Hr",
+   "H016",
+   "H226Hr",
+   "H229",
+   "H234Hr",
+   "H280",
+   "N016Hr",
+   "N041Hr",
+   "N061Hr",
+   "N111Hr",
+   "N112Hr",
+   "N132Hr",
+   "N135Hr",
+   "N136Hr",
+   "N160",
+   "N164Hr",
+   "N204Hr",
+   "N288Hr",
+   "N323Hr",
+   "U021Hr",
+   "U042Hr",
+   "U046Hr",
+   "U088Hr",
+   "U090Hr",
+   "U092Hr",
+   "U114",
+   "U126Hr",
+   "U162Hr"
+  ]
+ },
+ {
+  "first": "2023-06-10",
+  "frames": 16,
+  "instrument": "kpf",
+  "last": "2023-07-31",
+  "nights": 3,
+  "programs": [
+   "H223",
+   "H242",
+   "U170"
+  ]
+ },
+ {
+  "first": "2012-06-12",
+  "frames": 4,
+  "instrument": "nirspec",
+  "last": "2012-06-13",
+  "nights": 2,
+  "programs": [
+   "U081NS"
+  ]
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "esi",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nirc2",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "nires",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ },
+ {
+  "first": null,
+  "frames": 0,
+  "instrument": "mosfire",
+  "last": null,
+  "nights": 0,
+  "programs": []
+ }
+]

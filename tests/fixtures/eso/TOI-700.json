@@ -1,0 +1,447 @@
+[
+ {
+  "dp_id": "ADP.2019-12-24T01:10:25.350",
+  "instrument_name": "HARPS",
+  "t_min": 58840.28156943
+ },
+ {
+  "dp_id": "ADP.2022-01-12T11:49:29.646",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59554.18071706
+ },
+ {
+  "dp_id": "ADP.2021-12-09T16:08:58.175",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59520.20312904
+ },
+ {
+  "dp_id": "ADP.2021-12-09T15:30:41.633",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59530.20689884
+ },
+ {
+  "dp_id": "ADP.2022-03-04T14:43:57.626",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59612.05309211
+ },
+ {
+  "dp_id": "ADP.2023-04-14T09:40:29.398",
+  "instrument_name": "ESPRESSO",
+  "t_min": 60005.06733382
+ },
+ {
+  "dp_id": "ADP.2022-01-12T12:04:08.774",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59560.22073314
+ },
+ {
+  "dp_id": "ADP.2023-02-06T13:26:13.861",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59956.11104467
+ },
+ {
+  "dp_id": "ADP.2023-02-06T13:48:18.291",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59961.06035982
+ },
+ {
+  "dp_id": "ADP.2022-02-07T13:33:58.978",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59610.06398076
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:16:06.924",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59905.18085994
+ },
+ {
+  "dp_id": "ADP.2022-02-07T13:32:36.356",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59609.06442287
+ },
+ {
+  "dp_id": "ADP.2020-03-23T01:02:03.380",
+  "instrument_name": "HARPS",
+  "t_min": 58930.03469929
+ },
+ {
+  "dp_id": "ADP.2022-02-07T13:09:59.082",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59595.14425154
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:11:08.207",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59902.33701685
+ },
+ {
+  "dp_id": "ADP.2023-02-06T13:28:32.961",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59958.11649869
+ },
+ {
+  "dp_id": "ADP.2022-01-12T12:23:42.872",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59575.14692955
+ },
+ {
+  "dp_id": "ADP.2022-11-04T12:14:18.591",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59878.25221704
+ },
+ {
+  "dp_id": "ADP.2023-01-09T15:04:04.013",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59931.22239904
+ },
+ {
+  "dp_id": "ADP.2021-12-10T10:39:56.844",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59546.31933201
+ },
+ {
+  "dp_id": "ADP.2020-01-08T02:10:04.549",
+  "instrument_name": "HARPS",
+  "t_min": 58852.25020739
+ },
+ {
+  "dp_id": "ADP.2023-01-09T14:51:12.482",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59919.26376099
+ },
+ {
+  "dp_id": "ADP.2020-03-21T01:25:56.023",
+  "instrument_name": "HARPS",
+  "t_min": 58928.01531942
+ },
+ {
+  "dp_id": "ADP.2023-03-03T13:23:38.467",
+  "instrument_name": "ESPRESSO",
+  "t_min": 60002.05966316
+ },
+ {
+  "dp_id": "ADP.2022-03-04T14:57:56.172",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59616.06588888
+ },
+ {
+  "dp_id": "ADP.2022-11-04T11:44:57.040",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59869.26298014
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:05:58.630",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59900.30789648
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:24:50.819",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59910.27601274
+ },
+ {
+  "dp_id": "ADP.2023-03-03T13:25:02.172",
+  "instrument_name": "ESPRESSO",
+  "t_min": 60004.03855649
+ },
+ {
+  "dp_id": "ADP.2022-01-12T11:43:16.117",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59551.2214171
+ },
+ {
+  "dp_id": "ADP.2023-03-03T13:13:33.332",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59998.05026924
+ },
+ {
+  "dp_id": "ADP.2022-02-07T12:58:32.254",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59584.04583712
+ },
+ {
+  "dp_id": "ADP.2020-02-23T01:04:33.177",
+  "instrument_name": "HARPS",
+  "t_min": 58901.12439399
+ },
+ {
+  "dp_id": "ADP.2020-02-12T01:01:38.871",
+  "instrument_name": "HARPS",
+  "t_min": 58890.12510679
+ },
+ {
+  "dp_id": "ADP.2022-02-07T13:04:46.327",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59589.059088
+ },
+ {
+  "dp_id": "ADP.2022-01-12T12:15:31.586",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59566.13230576
+ },
+ {
+  "dp_id": "ADP.2020-03-04T01:11:32.031",
+  "instrument_name": "HARPS",
+  "t_min": 58911.0923923
+ },
+ {
+  "dp_id": "ADP.2021-11-04T16:48:33.716",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59500.27822406
+ },
+ {
+  "dp_id": "ADP.2022-03-04T14:54:42.726",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59615.14389055
+ },
+ {
+  "dp_id": "ADP.2022-03-04T15:23:27.426",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59625.08568241
+ },
+ {
+  "dp_id": "ADP.2022-01-12T12:11:33.952",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59564.11316695
+ },
+ {
+  "dp_id": "ADP.2020-03-19T01:22:54.564",
+  "instrument_name": "HARPS",
+  "t_min": 58926.05956018
+ },
+ {
+  "dp_id": "ADP.2020-02-05T01:16:04.886",
+  "instrument_name": "HARPS",
+  "t_min": 58883.14422864
+ },
+ {
+  "dp_id": "ADP.2022-11-04T12:06:53.525",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59875.28373868
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:38:52.553",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59913.20785663
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:13:53.057",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59904.25868519
+ },
+ {
+  "dp_id": "ADP.2023-04-14T09:55:13.876",
+  "instrument_name": "ESPRESSO",
+  "t_min": 60009.03557875
+ },
+ {
+  "dp_id": "ADP.2022-03-04T15:21:48.508",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59624.09959877
+ },
+ {
+  "dp_id": "ADP.2022-11-04T12:31:16.439",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59883.29470669
+ },
+ {
+  "dp_id": "ADP.2022-03-04T15:28:14.780",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59628.08378969
+ },
+ {
+  "dp_id": "ADP.2023-03-03T12:43:18.701",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59978.11462982
+ },
+ {
+  "dp_id": "ADP.2020-01-24T01:04:21.553",
+  "instrument_name": "HARPS",
+  "t_min": 58871.16938755
+ },
+ {
+  "dp_id": "ADP.2022-02-07T12:59:51.197",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59585.05921682
+ },
+ {
+  "dp_id": "ADP.2020-02-19T01:04:18.829",
+  "instrument_name": "HARPS",
+  "t_min": 58897.11506022
+ },
+ {
+  "dp_id": "ADP.2020-01-01T01:09:51.451",
+  "instrument_name": "HARPS",
+  "t_min": 58848.23312033
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:19:39.925",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59907.19317211
+ },
+ {
+  "dp_id": "ADP.2022-11-04T12:28:46.052",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59881.29119091
+ },
+ {
+  "dp_id": "ADP.2023-03-03T13:09:42.771",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59996.08213142
+ },
+ {
+  "dp_id": "ADP.2025-11-24T15:41:37.055",
+  "instrument_name": "CRIRES",
+  "t_min": 60234.33256224
+ },
+ {
+  "dp_id": "ADP.2020-02-08T01:13:10.192",
+  "instrument_name": "HARPS",
+  "t_min": 58886.15758521
+ },
+ {
+  "dp_id": "ADP.2022-01-12T12:13:41.864",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59565.14167153
+ },
+ {
+  "dp_id": "ADP.2023-02-06T13:46:52.549",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59960.13943737
+ },
+ {
+  "dp_id": "ADP.2020-03-22T01:05:03.555",
+  "instrument_name": "HARPS",
+  "t_min": 58929.02781122
+ },
+ {
+  "dp_id": "ADP.2020-03-05T01:03:12.191",
+  "instrument_name": "HARPS",
+  "t_min": 58912.05069676
+ },
+ {
+  "dp_id": "ADP.2020-03-24T10:45:21.834",
+  "instrument_name": "HARPS",
+  "t_min": 58931.05596588
+ },
+ {
+  "dp_id": "ADP.2022-11-04T11:43:08.148",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59868.3278363
+ },
+ {
+  "dp_id": "ADP.2022-01-12T11:47:04.011",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59553.18286155
+ },
+ {
+  "dp_id": "ADP.2023-02-06T14:20:37.388",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59972.0536891
+ },
+ {
+  "dp_id": "ADP.2022-01-12T11:38:18.856",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59550.24767058
+ },
+ {
+  "dp_id": "ADP.2023-03-03T13:17:07.206",
+  "instrument_name": "ESPRESSO",
+  "t_min": 60000.03912682
+ },
+ {
+  "dp_id": "ADP.2023-01-09T15:23:25.862",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59937.25497261
+ },
+ {
+  "dp_id": "ADP.2022-02-07T13:19:18.149",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59598.06790013
+ },
+ {
+  "dp_id": "ADP.2020-02-24T01:01:44.477",
+  "instrument_name": "HARPS",
+  "t_min": 58902.11143125
+ },
+ {
+  "dp_id": "ADP.2023-02-06T14:23:30.895",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59974.09288999
+ },
+ {
+  "dp_id": "ADP.2021-11-04T16:26:19.395",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59491.29529987
+ },
+ {
+  "dp_id": "ADP.2022-11-04T11:34:08.538",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59866.3308009
+ },
+ {
+  "dp_id": "ADP.2022-03-04T15:13:41.601",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59621.07133495
+ },
+ {
+  "dp_id": "ADP.2021-12-10T10:16:34.577",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59542.18814143
+ },
+ {
+  "dp_id": "ADP.2022-01-12T12:06:59.600",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59562.16693411
+ },
+ {
+  "dp_id": "ADP.2023-02-06T14:18:16.882",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59970.10331354
+ },
+ {
+  "dp_id": "ADP.2020-03-11T01:14:41.400",
+  "instrument_name": "HARPS",
+  "t_min": 58918.07469207
+ },
+ {
+  "dp_id": "ADP.2020-03-07T01:56:54.422",
+  "instrument_name": "HARPS",
+  "t_min": 58913.14532388
+ },
+ {
+  "dp_id": "ADP.2022-01-12T11:44:52.527",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59552.22251409
+ },
+ {
+  "dp_id": "ADP.2023-03-03T13:19:46.686",
+  "instrument_name": "ESPRESSO",
+  "t_min": 60001.04752257
+ },
+ {
+  "dp_id": "ADP.2021-12-09T15:10:31.644",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59526.27006639
+ },
+ {
+  "dp_id": "ADP.2022-12-05T12:22:35.791",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59909.19439731
+ },
+ {
+  "dp_id": "ADP.2022-11-04T12:26:46.767",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59880.30134644
+ },
+ {
+  "dp_id": "ADP.2019-08-23T01:02:38.980",
+  "instrument_name": "HARPS",
+  "t_min": 58717.38163002
+ },
+ {
+  "dp_id": "ADP.2021-12-09T15:06:42.292",
+  "instrument_name": "ESPRESSO",
+  "t_min": 59523.29162113
+ }
+]
