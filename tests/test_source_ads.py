@@ -41,28 +41,35 @@ class FakeResponse:
             raise RuntimeError(f"HTTP {self.status_code}")
 
 
+TRANSLATED = '(=abs:"HD 209458" OR simbid:"7" OR nedid:"0") database:astronomy'
+
+
 class FakeSession:
-    def __init__(self, response):
+    def __init__(self, response, objects=None):
         self.response = response
+        self.objects = objects if objects is not None else FakeResponse(200, {"query": TRANSLATED})
         self.calls = []
+        self.posts = []
 
     def get(self, url, **kwargs):
         self.calls.append((url, kwargs))
         return self.response
 
+    def post(self, url, **kwargs):
+        self.posts.append((url, kwargs))
+        if isinstance(self.objects, Exception):
+            raise self.objects
+        return self.objects
 
-def _ctx(tmp_path, response=None, token=TOKEN):
+
+def _ctx(tmp_path, response=None, token=TOKEN, objects=None):
     ctx = make_ctx(cache_dir=tmp_path / "cache")
-    return replace(ctx, ads_token=token, session=FakeSession(response))
+    return replace(ctx, ads_token=token, session=FakeSession(response, objects))
 
 
 def test_query_string():
-    assert query_string("HD 209458", ["article", "eprint"]) == \
-        'object:"HD 209458" doctype:(article OR eprint)'
-
-
-def test_query_string_escapes_quotes():
-    assert query_string('A"B', ["article"]) == 'object:"A\\"B" doctype:(article)'
+    assert query_string('=abs:"HD 209458"', ["article", "eprint"]) == \
+        '(=abs:"HD 209458") doctype:(article OR eprint)'
 
 
 def test_select_papers_order_and_count():
@@ -105,19 +112,43 @@ def test_skipped_without_token():
 def test_query_has_no_token(tmp_path):
     ctx = _ctx(tmp_path)
     q = Ads().query(ctx)
-    assert set(q) == {"q", "rows"} and TOKEN not in json.dumps(q)
-    assert q["q"].startswith('object:"HD 209458"')
+    assert set(q) == {"name", "doctypes", "rows"} and TOKEN not in json.dumps(q)
+    assert q["name"] == "HD 209458" and q["doctypes"] == ["article", "eprint"]
 
 
-def test_fetch_request_shape(tmp_path):
+def test_fetch_translates_then_searches(tmp_path):
     ctx = _ctx(tmp_path, FakeResponse(payload=_raw()))
-    Ads().fetch(ctx)
+    payload = Ads().fetch(ctx)
+    url, kw = ctx.session.posts[0]
+    assert url == "https://api.adsabs.harvard.edu/v1/objects/query"
+    assert kw["json"] == {"query": ['object:"HD 209458"']}
+    assert kw["headers"]["Authorization"] == f"Bearer {TOKEN}"
+    assert kw["headers"]["Content-Type"] == "application/json"
     url, kw = ctx.session.calls[0]
     assert url == "https://api.adsabs.harvard.edu/v1/search/query"
     assert kw["headers"] == {"Authorization": f"Bearer {TOKEN}"}
+    assert kw["params"]["q"] == f"({TRANSLATED}) doctype:(article OR eprint)"
     assert kw["params"]["fl"] == "bibcode,title,year,pubdate,author,citation_count,abstract,doctype"
     assert kw["params"]["sort"] == "citation_count desc"
     assert kw["params"]["rows"] == ctx.config.literature.max_records
+    assert payload["q"] == kw["params"]["q"] and TOKEN not in json.dumps(payload)
+
+
+@pytest.mark.parametrize("objects", [
+    FakeResponse(500), FakeResponse(200, {}), FakeResponse(200, {"query": "  "}),
+    FakeResponse(200, ["x"]), ConnectionError("down")])
+def test_translation_failure_falls_back(tmp_path, objects):
+    ctx = _ctx(tmp_path, FakeResponse(payload=_raw()), objects=objects)
+    Ads().fetch(ctx)
+    assert ctx.session.calls[0][1]["params"]["q"] == \
+        '(=abs:"HD 209458") doctype:(article OR eprint)'
+
+
+def test_translation_rate_limited(tmp_path):
+    objects = FakeResponse(429, headers={"X-RateLimit-Reset": "1788998400"})
+    result = run_source(Ads(), _ctx(tmp_path, FakeResponse(payload=_raw()), objects=objects))
+    assert result.status == "error" and "rate limit" in result.error
+    assert TOKEN not in json.dumps(result.model_dump(mode="json"))
 
 
 def test_parse_synthetic(tmp_path):

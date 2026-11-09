@@ -11,13 +11,18 @@ from star_report.models import Paper
 from star_report.sources.base import Source, SourceContext
 
 URL = "https://api.adsabs.harvard.edu/v1/search/query"
+OBJECTS_URL = "https://api.adsabs.harvard.edu/v1/objects/query"
 FIELDS = "bibcode,title,year,pubdate,author,citation_count,abstract,doctype"
 MAX_AUTHORS = 3
 
 
-def query_string(name: str, doctypes: Sequence[str]) -> str:
-    escaped = name.replace('"', '\\"')
-    return f'object:"{escaped}" doctype:({" OR ".join(doctypes)})'
+def _escape(name: str) -> str:
+    return name.replace('"', '\\"')
+
+
+def query_string(translated: str, doctypes: Sequence[str]) -> str:
+    """The search query: the translated object query restricted to the given doctypes."""
+    return f'({translated}) doctype:({" OR ".join(doctypes)})'
 
 
 def select_papers(papers: list[Paper], most_cited: int, most_recent: int) -> list[Paper]:
@@ -76,29 +81,53 @@ class Ads(Source):
     def skip_reason(self, ctx: SourceContext) -> str | None:
         return "ADS_DEV_KEY not set" if ctx.ads_token is None else None
 
-    def _q(self, ctx: SourceContext) -> str:
-        return query_string(display_name(ctx.identity.main_name), ctx.config.literature.doctypes)
-
     def query(self, ctx: SourceContext) -> dict:
-        return {"q": self._q(ctx), "rows": ctx.config.literature.max_records}
+        lit = ctx.config.literature
+        return {"name": display_name(ctx.identity.main_name), "doctypes": list(lit.doctypes),
+                "rows": lit.max_records}
+
+    @staticmethod
+    def _check_rate_limit(response: Any, payload_ok: bool = False) -> None:
+        remaining = response.headers.get("X-RateLimit-Remaining")
+        if response.status_code == 429 or (
+                str(remaining) == "0" and (response.status_code != 200 or not payload_ok)):
+            reset = _reset_text(response.headers.get("X-RateLimit-Reset"))
+            raise RuntimeError(f"ADS rate limit reached; resets at {reset}")
+
+    def _translate(self, name: str, ctx: SourceContext, headers: dict) -> str:
+        """ADS's own object query for a name; the abstract-phrase search when that fails."""
+        fallback = f'=abs:"{_escape(name)}"'
+        try:
+            response = ctx.session.post(
+                OBJECTS_URL, json={"query": [f'object:"{_escape(name)}"']},
+                timeout=self.timeout_s(ctx.config),
+                headers={**headers, "Content-Type": "application/json"})
+        except Exception:  # noqa: BLE001 - any failure of the helper endpoint falls back
+            return fallback
+        if response.status_code == 429:
+            self._check_rate_limit(response)
+        if response.status_code != 200:
+            return fallback
+        try:
+            translated = response.json()["query"]
+        except (ValueError, KeyError, TypeError):
+            return fallback
+        return translated if isinstance(translated, str) and translated.strip() else fallback
 
     def fetch(self, ctx: SourceContext) -> Any:
-        params = {"q": self._q(ctx), "fl": FIELDS, "rows": ctx.config.literature.max_records,
-                  "sort": "citation_count desc"}
-        response = ctx.session.get(URL, params=params, timeout=self.timeout_s(ctx.config),
-                                   headers={"Authorization": f"Bearer {ctx.ads_token}"})
-        remaining = response.headers.get("X-RateLimit-Remaining")
-        limited = response.status_code == 429 or (
-            str(remaining) == "0" and response.status_code != 200)
-        if limited:
-            reset = _reset_text(response.headers.get("X-RateLimit-Reset"))
-            raise RuntimeError(f"ADS rate limit reached; resets at {reset}")
+        lit = ctx.config.literature
+        headers = {"Authorization": f"Bearer {ctx.ads_token}"}
+        translated = self._translate(display_name(ctx.identity.main_name), ctx, headers)
+        q = query_string(translated, lit.doctypes)
+        response = ctx.session.get(
+            URL, params={"q": q, "fl": FIELDS, "rows": lit.max_records,
+                         "sort": "citation_count desc"},
+            timeout=self.timeout_s(ctx.config), headers=headers)
+        self._check_rate_limit(response, payload_ok=True)
         response.raise_for_status()
         payload = response.json()
-        if str(remaining) == "0" and not self._docs(payload):
-            reset = _reset_text(response.headers.get("X-RateLimit-Reset"))
-            raise RuntimeError(f"ADS rate limit reached; resets at {reset}")
-        return payload
+        self._check_rate_limit(response, payload_ok=bool(self._docs(payload)))
+        return {"q": q, "response": payload.get("response") if isinstance(payload, dict) else None}
 
     @staticmethod
     def _docs(raw: Any) -> list:
