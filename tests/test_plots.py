@@ -103,6 +103,7 @@ def test_html_without_plots_has_no_images(tmp_path):
 
 # ---- light curves ----------------------------------------------------------
 
+import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 from star_report.plots.lightcurve import (  # noqa: E402
@@ -180,6 +181,59 @@ def test_lightcurve_timeout_note(tmp_path, monkeypatch):
 
     monkeypatch.setattr(lightcurve, "fetch_lightcurves", lambda i, c: time.sleep(2))
     cfg = load_config(cwd=tmp_path)
-    cfg.plots.lightcurve_timeout_s = 0.05
+    cfg.plots.lightcurve_timeout_s = 1.0
+    start = time.monotonic()
     path, note = lightcurve.plot_stage(make_report(), tmp_path / "lc.png", cfg)
-    assert path is None and note == "Light-curve download timed out after 0 s."
+    assert time.monotonic() - start < 1.8
+    assert path is None and note == "Light-curve download timed out after 1 s."
+
+
+def test_lightcurve_fetch_error_propagates(tmp_path, monkeypatch):
+    from star_report.plots import lightcurve
+
+    def boom(i, c):
+        raise RuntimeError("mast down")
+
+    monkeypatch.setattr(lightcurve, "fetch_lightcurves", boom)
+    with pytest.raises(RuntimeError, match="mast down"):
+        lightcurve.plot_stage(make_report(), tmp_path / "lc.png", load_config(cwd=tmp_path))
+
+
+def test_choose_skips_rows_without_sequence_or_exptime():
+    rows = [_row("SPOC", 120, None), _row("SPOC", None, 3), _row("SPOC", 120, 4)]
+    idx, _ = choose_products(rows, 10)
+    assert idx == [2]
+
+
+def test_search_rows_tolerates_masked_values():
+    from astropy.table import Table
+
+    from star_report.plots.lightcurve import _search_rows
+
+    class FakeSearch:
+        table = Table({"author": ["SPOC", "SPOC"], "exptime": [120.0, 120.0],
+                       "sequence_number": [5, 6], "mission": ["a", "b"]}, masked=True)
+
+    FakeSearch.table["sequence_number"].mask = [True, False]
+    FakeSearch.table["exptime"][1] = np.nan
+    rows = _search_rows(FakeSearch)
+    assert rows[0]["sequence_number"] is None and rows[1]["exptime"] is None
+    assert choose_products(rows, 10) == ([], None)
+
+
+def test_merge_marks_and_plot_draws_one_line(tmp_path, monkeypatch):
+    from star_report.plots.lightcurve import merge_marks
+
+    marks = [("b", 9.98), ("TOI 1.01", 10.03), ("c", 16.1)]
+    assert merge_marks(marks, 0.1, 30, 0.01) == [("b / TOI 1.01", 9.98), ("c", 16.1)]
+    assert merge_marks([("far", 500.0)], 0.1, 30, 0.01) == []
+    cfg = load_config(cwd=tmp_path)
+    t = np.arange(0, 27, 10 / 1440)
+    curve = SectorCurve("Sector 1 (SPOC)", t, np.ones_like(t))
+    drawn = []
+    real = plt.Axes.axvline
+    monkeypatch.setattr(plt.Axes, "axvline",
+                        lambda self, x=0, *a, **k: (drawn.append(k.get("label")),
+                                                    real(self, x, *a, **k))[1])
+    plot_lightcurves([curve], marks, cfg, tmp_path / "lc.png")
+    assert drawn == ["b / TOI 1.01 (9.98 d)", "c (16.1 d)"]

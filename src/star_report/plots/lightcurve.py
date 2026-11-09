@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import re
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutureTimeout
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -71,11 +70,19 @@ def _label(lc) -> str:
     return "Light curve"
 
 
+def _num(value, cast):
+    """cast(value), or None for masked, NaN or unparsable values."""
+    try:
+        out = cast(value)
+        return None if isinstance(out, float) and np.isnan(out) else out
+    except Exception:  # noqa: BLE001 - MaskError, TypeError, ValueError
+        return None
+
+
 def _search_rows(search) -> list[dict]:
-    table = search.table
-    return [{"author": str(r["author"]), "exptime": float(r["exptime"]),
-             "sequence_number": int(r["sequence_number"]), "mission": str(r["mission"])}
-            for r in table]
+    return [{"author": str(r["author"]), "exptime": _num(r["exptime"], float),
+             "sequence_number": _num(r["sequence_number"], int), "mission": str(r["mission"])}
+            for r in search.table]
 
 
 def _kepler_id(identity: StarIdentity) -> tuple[str, int] | None:
@@ -138,6 +145,18 @@ def periodogram(curves: list[SectorCurve], min_period: float,
     return 1 / freq, power
 
 
+def merge_marks(marks: list[tuple[str, float]], lo: float, hi: float,
+                tolerance: float) -> list[tuple[str, float]]:
+    """In-range marks sorted by period; marks within `tolerance` (relative) become one."""
+    groups: list[list[tuple[str, float]]] = []
+    for name, p in sorted((m for m in marks if lo <= m[1] <= hi), key=lambda m: m[1]):
+        if groups and p - groups[-1][0][1] <= tolerance * groups[-1][0][1]:
+            groups[-1].append((name, p))
+        else:
+            groups.append([(name, p)])
+    return [(" / ".join(n for n, _ in g), g[0][1]) for g in groups]
+
+
 def plot_lightcurves(curves: list[SectorCurve], marks: list[tuple[str, float]],
                      cfg: Config, path: Path) -> Path:
     lo, hi = cfg.plots.periodogram_min_period_d, cfg.plots.periodogram_max_period_d
@@ -158,8 +177,9 @@ def plot_lightcurves(curves: list[SectorCurve], marks: list[tuple[str, float]],
         ax.set_xlim(lo, hi)
         ax.set_xlabel("period (days)")
         ax.set_ylabel("Lomb-Scargle power")
-        for i, (name, p) in enumerate(m for m in marks if lo <= m[1] <= hi):
-            ax.axvline(p, color=f"C{1 + i % 8}", ls="--", lw=1, label=f"{name} ({p:.3g} d)")
+        for i, (label, p) in enumerate(merge_marks(marks, lo, hi,
+                                                   cfg.plots.period_merge_tolerance)):
+            ax.axvline(p, color=f"C{1 + i % 8}", ls="--", lw=1, label=f"{label} ({p:.3g} d)")
         if ax.get_legend_handles_labels()[0]:
             ax.legend(fontsize=7, loc="upper right")
         fig.tight_layout()
@@ -172,14 +192,23 @@ def plot_lightcurves(curves: list[SectorCurve], marks: list[tuple[str, float]],
 
 def plot_stage(report, path: Path, cfg: Config) -> tuple[Path | None, str | None]:
     timeout = float(cfg.plots.lightcurve_timeout_s)
-    executor = ThreadPoolExecutor(max_workers=1)
-    future = executor.submit(fetch_lightcurves, report.identity, cfg)
-    try:
-        curves, note = future.result(timeout=timeout)
-    except FutureTimeout:
+    holder: dict = {}
+
+    def work() -> None:
+        try:
+            holder["result"] = fetch_lightcurves(report.identity, cfg)
+        except BaseException as e:  # noqa: BLE001 - re-raised in the caller's thread
+            holder["error"] = e
+
+    # Daemon thread: a stuck download must not hold the interpreter open at exit.
+    thread = threading.Thread(target=work, name="lightcurve-fetch", daemon=True)
+    thread.start()
+    thread.join(timeout)
+    if thread.is_alive():
         return None, f"Light-curve download timed out after {int(timeout)} s."
-    finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+    if "error" in holder:
+        raise holder["error"]
+    curves, note = holder["result"]
     if not curves:
         return None, note
     marks = exoplanet_archive.known_periods(report.results)

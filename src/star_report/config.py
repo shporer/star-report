@@ -80,6 +80,7 @@ class PlotsConfig(_Section):
     cmd_background_rows: int
     periodogram_min_period_d: float
     periodogram_max_period_d: float
+    period_merge_tolerance: float
 
 
 class LiteratureConfig(_Section):
