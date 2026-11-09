@@ -14,7 +14,7 @@ from star_report.cache import Cache  # noqa: E402
 from star_report.config import Config  # noqa: E402
 from star_report.models import Report  # noqa: E402
 from star_report.plots import cmd, lightcurve, sky  # noqa: E402
-from star_report.sources.base import make_session  # noqa: E402
+from star_report.sources.base import call_with_timeout, make_session  # noqa: E402
 
 log = logging.getLogger("star_report.plots")
 
@@ -23,7 +23,14 @@ Plotter = Callable[[Report, Path, Config, Cache, object], tuple[Path | None, str
 
 
 def _plot_cmd(report, path, cfg, cache, session):
-    background = cmd.fetch_background(cache, cfg, session)
+    timeout = float(cfg.plots.cmd_background_timeout_s)
+    # pyvo's async query can wait up to 600 s; the plotters run one after another.
+    status, background = call_with_timeout(lambda: cmd.fetch_background(cache, cfg, session),
+                                           timeout, name="cmd-background")
+    if status == "timeout":
+        return None, f"Gaia CMD background download timed out after {int(timeout)} s."
+    if status == "error":
+        raise background
     target = cmd.target_point(report.results)
     label = report.identity.main_name
     note = None if target else "No Gaia parallax for the target; only the background is shown."

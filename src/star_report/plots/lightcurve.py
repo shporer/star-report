@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,6 +13,7 @@ from astropy.timeseries import LombScargle
 from star_report.config import Config
 from star_report.models import StarIdentity
 from star_report.sources import exoplanet_archive
+from star_report.sources.base import call_with_timeout
 
 TESS_AUTHORS = ["SPOC", "TESS-SPOC", "QLP"]
 BIN_DAYS = 30 / 1440
@@ -192,23 +192,14 @@ def plot_lightcurves(curves: list[SectorCurve], marks: list[tuple[str, float]],
 
 def plot_stage(report, path: Path, cfg: Config) -> tuple[Path | None, str | None]:
     timeout = float(cfg.plots.lightcurve_timeout_s)
-    holder: dict = {}
-
-    def work() -> None:
-        try:
-            holder["result"] = fetch_lightcurves(report.identity, cfg)
-        except BaseException as e:  # noqa: BLE001 - re-raised in the caller's thread
-            holder["error"] = e
-
     # Daemon thread: a stuck download must not hold the interpreter open at exit.
-    thread = threading.Thread(target=work, name="lightcurve-fetch", daemon=True)
-    thread.start()
-    thread.join(timeout)
-    if thread.is_alive():
+    status, value = call_with_timeout(lambda: fetch_lightcurves(report.identity, cfg), timeout,
+                                      name="lightcurve-fetch")
+    if status == "timeout":
         return None, f"Light-curve download timed out after {int(timeout)} s."
-    if "error" in holder:
-        raise holder["error"]
-    curves, note = holder["result"]
+    if status == "error":
+        raise value
+    curves, note = value
     if not curves:
         return None, note
     marks = exoplanet_archive.known_periods(report.results)

@@ -79,6 +79,7 @@ class PlotsConfig(_Section):
     neighbor_max_delta_g: float
     tess_pixel_arcsec: float
     cmd_background_rows: int
+    cmd_background_timeout_s: float
     periodogram_min_period_d: float
     periodogram_max_period_d: float
     period_merge_tolerance: float

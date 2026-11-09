@@ -14,6 +14,7 @@ def test_defaults(tmp_path):
     assert (cfg.literature.most_cited, cfg.literature.most_recent) == (15, 10)
     assert cfg.servers.simbad == ["simbad.cds.unistra.fr", "simbad.harvard.edu"]
     assert cfg.resolve.max_mag_mismatch == 3.0
+    assert (cfg.plots.lightcurve_timeout_s, cfg.plots.cmd_background_timeout_s) == (120, 120)
     assert "~" not in str(cfg.cache.dir)
 
 

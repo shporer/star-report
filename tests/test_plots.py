@@ -70,6 +70,43 @@ def test_fetch_background_caches_and_drops_none(tmp_path, monkeypatch):
     assert len(calls) == 1 and "TOP 3" in calls[0]
 
 
+def test_cmd_plotter_draws_background_and_target(tmp_path, monkeypatch):
+    monkeypatch.setattr(cmd, "fetch_background", lambda cache, cfg, session: BACKGROUND)
+    path, note = plots._plot_cmd(make_report(), tmp_path / "cmd.png", load_config(cwd=tmp_path),
+                                 None, None)
+    assert path.read_bytes().startswith(PNG) and note is None
+
+
+def test_cmd_plotter_background_error_propagates(tmp_path, monkeypatch):
+    def boom(cache, cfg, session):
+        raise RuntimeError("gaia down")
+
+    monkeypatch.setattr(cmd, "fetch_background", boom)
+    with pytest.raises(RuntimeError, match="gaia down"):
+        plots._plot_cmd(make_report(), tmp_path / "cmd.png", load_config(cwd=tmp_path), None, None)
+
+
+def test_cmd_background_timeout_note(tmp_path, monkeypatch):
+    import threading
+    import time
+
+    release = threading.Event()
+    monkeypatch.setattr(cmd, "fetch_background", lambda cache, cfg, session: release.wait(5))
+    monkeypatch.setitem(plots.PLOTTERS, "lightcurve", lambda *a: (None, None))
+    monkeypatch.setitem(plots.PLOTTERS, "sky", lambda *a: (None, None))
+    cfg = load_config(cwd=tmp_path)
+    cfg.plots.cmd_background_timeout_s = 1.0
+    start = time.monotonic()
+    try:
+        paths, notes = plots.make_plots(make_report(), tmp_path / "plots", cfg, None)
+        assert time.monotonic() - start < 1.8
+    finally:
+        release.set()
+    assert paths == {}
+    assert notes == {"cmd": "Gaia CMD background download timed out after 1 s."}
+    assert not (tmp_path / "plots" / "cmd.png").exists()
+
+
 def test_make_plots_isolates_failures(tmp_path, monkeypatch):
     def ok_cmd(report, path, cfg, cache, session):
         path.write_bytes(PNG + b"x")
