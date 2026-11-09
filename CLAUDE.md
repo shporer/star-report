@@ -58,7 +58,8 @@ keys and is deep-merged over the defaults.
 6. **Python 3.11 compatibility**: no 3.12-only syntax (e.g. nested-quote f-strings).
 7. **Coerce every value interpolated into ADQL or a URL**, and make parsers tolerate malformed payloads.
 8. **Network work that can hang runs in a daemon thread**, never in a ThreadPoolExecutor the
-   interpreter joins at exit.
+   interpreter joins at exit. This applies inside sources too: run concurrent queries with
+   `sources.base.parallel_map`, and a single slow call with `call_with_timeout`.
 9. **The LLM writer must never crash the report.** Failures degrade to a stated reason in the report.
 
 ## Adding a source

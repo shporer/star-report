@@ -17,8 +17,10 @@ from star_report.sources import base
 from star_report.sources.base import (
     Source,
     SourceContext,
+    call_with_timeout,
     is_reachable,
     make_session,
+    parallel_map,
     pick_server,
     records,
     run_sources,
@@ -205,6 +207,64 @@ def test_pick_server(monkeypatch):
     assert pick_server(["a", "b"]) == "b" and len(calls) == n
     down.update({"x", "y"})
     assert pick_server(["x", "y"]) == "x"
+
+
+def test_parallel_map_keeps_input_order_and_isolates_errors():
+    def fn(x):
+        time.sleep(0.05 * (3 - x))  # later items finish first
+        if x == 1:
+            raise ValueError("bad 1")
+        return x * 10
+
+    out = parallel_map(fn, [0, 1, 2], timeout=5)
+    assert [status for status, _ in out] == ["ok", "error", "ok"]
+    assert (out[0][1], out[2][1]) == (0, 20)
+    assert isinstance(out[1][1], ValueError) and str(out[1][1]) == "bad 1"
+
+
+def test_parallel_map_runs_concurrently_in_daemon_threads():
+    daemon = []
+
+    def fn(x):
+        daemon.append(threading.current_thread().daemon)
+        time.sleep(0.3)
+        return x
+
+    t0 = time.monotonic()
+    assert parallel_map(fn, [1, 2, 3, 4], timeout=5) == [("ok", 1), ("ok", 2), ("ok", 3), ("ok", 4)]
+    assert time.monotonic() - t0 < 1.0  # sequential would take 1.2 s
+    assert daemon == [True] * 4
+
+
+def test_parallel_map_slow_item_is_a_timeout_and_returns_at_the_deadline():
+    def fn(x):
+        if x == "slow":
+            RELEASE.wait(5)
+        return x
+
+    t0 = time.monotonic()
+    out = parallel_map(fn, ["fast", "slow", "fast2"], timeout=0.3)
+    elapsed = time.monotonic() - t0
+    RELEASE.set()
+    assert elapsed < 1.0
+    assert out[0] == ("ok", "fast") and out[2] == ("ok", "fast2")
+    status, err = out[1]
+    assert status == "timeout" and isinstance(err, TimeoutError)
+    assert str(err) == "timed out after 0.3 s"
+
+
+def test_parallel_map_no_items():
+    assert parallel_map(lambda x: x, [], timeout=1) == []
+
+
+def test_call_with_timeout():
+    assert call_with_timeout(lambda: 7, 1) == ("ok", 7)
+    status, err = call_with_timeout(lambda: {}["missing"], 1)
+    assert status == "error" and isinstance(err, KeyError)
+    t0 = time.monotonic()
+    status, err = call_with_timeout(lambda: RELEASE.wait(5), 0.2)
+    RELEASE.set()
+    assert status == "timeout" and isinstance(err, TimeoutError) and time.monotonic() - t0 < 1.0
 
 
 def test_tap_rows(monkeypatch):

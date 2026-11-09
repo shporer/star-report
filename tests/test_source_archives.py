@@ -168,6 +168,34 @@ def test_koa_mixed_payload_and_parse_keep_errors(monkeypatch):
     assert out["errors"][0]["instrument"] == "kpf"
 
 
+def test_koa_slow_instrument_times_out_without_sinking_the_rest(monkeypatch):
+    import threading
+    import time
+
+    release = threading.Event()
+    daemon = []
+
+    def fake(url, adql, session):
+        daemon.append(threading.current_thread().daemon)
+        if "koa_kpf" in adql:
+            release.wait(5)
+        return [obj("2010-01-02 00:00:00")]
+
+    monkeypatch.setattr(koa_src, "tap_rows", fake)
+    ctx = make_ctx()
+    ctx.config.sources.koa_instruments[:] = ["hires", "kpf"]
+    ctx.config.sources.timeout_s = 0.3
+    t0 = time.monotonic()
+    try:
+        raw = KeckKoa().fetch(ctx)
+        assert time.monotonic() - t0 < 1.5
+    finally:
+        release.set()
+    assert raw[0]["instrument"] == "hires" and raw[0]["frames"] == 1
+    assert raw[1] == {"instrument": "kpf", "error": "TimeoutError: timed out after 0.3 s"}
+    assert daemon == [True, True]
+
+
 def test_koa_no_valid_instruments_returns_empty(monkeypatch):
     monkeypatch.setattr(koa_src, "tap_rows", lambda *a: pytest.fail("no query expected"))
     ctx = make_ctx()

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import requests
 
-from star_report.sources.base import Source, SourceContext, tap_rows
+from star_report.sources.base import Source, SourceContext, parallel_map, tap_rows
 
 TAP_URL = "https://gea.esac.esa.int/tap-server/tap"
 
@@ -255,14 +254,18 @@ class GaiaVari(Source):
         flags = [f for f in _VARI_PERIODS if summary.get(f"in_vari_{f}") is True]
         period_adql = {f: f"SELECT {_VARI_PERIODS[f][1]} FROM gaiadr3.{_VARI_PERIODS[f][0]} "
                           f"WHERE source_id = {sid}" for f in flags}
-        # Independent queries run concurrently; any failure propagates (nothing partial is cached).
-        with ThreadPoolExecutor(max_workers=len(flags) + 1) as pool:
-            f_class = pool.submit(tap_rows, TAP_URL, classifier_adql, ctx.session)
-            f_periods = {f: pool.submit(tap_rows, TAP_URL, a, ctx.session)
-                         for f, a in period_adql.items()}
-            classifier = f_class.result()
-            periods = {f: fut.result() for f, fut in f_periods.items()}
-        return {"summary": summary, "classifier": classifier, "periods": periods}
+        # Independent queries run concurrently in daemon threads; any failure or timeout
+        # propagates (nothing partial is cached).
+        outcomes = parallel_map(lambda adql: tap_rows(TAP_URL, adql, ctx.session),
+                                [classifier_adql, *period_adql.values()],
+                                self.timeout_s(ctx.config), name="gaia_vari")
+        rows = []
+        for status, value in outcomes:
+            if status != "ok":
+                raise value
+            rows.append(value)
+        return {"summary": summary, "classifier": rows[0],
+                "periods": dict(zip(period_adql, rows[1:], strict=True))}
 
     def parse(self, raw: Any, ctx: SourceContext) -> dict:
         if not isinstance(raw, dict) or not isinstance(raw.get("summary"), dict):

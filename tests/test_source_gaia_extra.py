@@ -165,6 +165,47 @@ def test_vari_failing_period_query_raises(monkeypatch):
         GaiaVari().fetch(make_ctx())
 
 
+def test_vari_queries_run_in_daemon_threads(monkeypatch):
+    import threading
+
+    daemon = []
+    fake = _vari_fake()
+
+    def spy(url, adql, session):
+        if "vari_summary" not in adql:
+            daemon.append(threading.current_thread().daemon)
+        return fake(url, adql, session)
+
+    monkeypatch.setattr(gaia, "tap_rows", spy)
+    GaiaVari().fetch(make_ctx())
+    assert daemon == [True] * (len(_FLAGS) + 1)  # classifier + one per flag
+
+
+def test_vari_slow_query_times_out_at_the_source_deadline(monkeypatch):
+    import threading
+    import time
+
+    release = threading.Event()
+
+    def fake(url, adql, session):
+        if "vari_summary" in adql:
+            return [{"source_id": 5, "in_vari_rrlyrae": True}]
+        if "vari_rrlyrae" in adql:
+            release.wait(5)
+        return []
+
+    monkeypatch.setattr(gaia, "tap_rows", fake)
+    ctx = make_ctx()
+    ctx.config.sources.timeout_s = 0.3
+    t0 = time.monotonic()
+    try:
+        with pytest.raises(TimeoutError, match=r"timed out after 0\.3 s"):
+            GaiaVari().fetch(ctx)
+        assert time.monotonic() - t0 < 1.5
+    finally:
+        release.set()
+
+
 def test_vari_concurrent_output_matches_sequential(monkeypatch):
     fake = _vari_fake()
     monkeypatch.setattr(gaia, "tap_rows", fake)

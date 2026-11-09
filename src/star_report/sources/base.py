@@ -1,4 +1,4 @@
-"""Source interface, the parallel runner, and shared HTTP/table helpers."""
+"""Source interface, the parallel runner, and shared HTTP/table/thread helpers."""
 
 from __future__ import annotations
 
@@ -97,6 +97,40 @@ def pick_server(hosts: Sequence[str]) -> str:
         if is_reachable(host):
             return host
     return hosts[0]
+
+
+def parallel_map(fn: Callable[[Any], Any], items: Sequence[Any], timeout: float,
+                 name: str = "parallel") -> list[tuple[str, Any]]:
+    """Call fn(item) for every item at once, each in its own daemon thread; wait `timeout` s in all.
+
+    Returns one outcome per item, in input order: ("ok", result), ("error", exception), or
+    ("timeout", TimeoutError) for a call still running at the deadline. Daemon threads never hold
+    the interpreter open at exit, as a ThreadPoolExecutor's workers do. A timed-out call keeps
+    running in the background, so fn must still pass its own timeout to the library it calls.
+    """
+    outcomes: list[tuple[str, Any] | None] = [None] * len(items)
+
+    def work(i: int, item: Any) -> None:
+        try:
+            outcomes[i] = ("ok", fn(item))
+        except BaseException as e:  # noqa: BLE001 - every failure becomes that item's outcome
+            outcomes[i] = ("error", e)
+
+    threads = [threading.Thread(target=work, args=(i, item), daemon=True, name=f"{name}-{i}")
+               for i, item in enumerate(items)]
+    for thread in threads:
+        thread.start()
+    deadline = time.monotonic() + timeout
+    for thread in threads:
+        thread.join(max(0.0, deadline - time.monotonic()))
+    return [o if o is not None else ("timeout", TimeoutError(f"timed out after {timeout:g} s"))
+            for o in outcomes]
+
+
+def call_with_timeout(fn: Callable[[], Any], timeout: float,
+                      name: str = "call") -> tuple[str, Any]:
+    """fn() in a daemon thread: the one outcome parallel_map would give for it."""
+    return parallel_map(lambda f: f(), [fn], timeout, name=name)[0]
 
 
 def _utc_now() -> datetime:
