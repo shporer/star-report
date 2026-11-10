@@ -35,9 +35,28 @@ class OutputConfig(_Section):
     open_single: bool
 
 
+# Hosts and probe paths go into https:// URLs as they are, so only plain names and paths are accepted.
+Host = Annotated[str, Field(pattern=r"^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?(?::[0-9]{1,5})?$")]
+UrlPath = Annotated[str, Field(pattern=r"^/[A-Za-z0-9._~/-]*$")]
+
+
+class ServerProbe(_Section):
+    """One small GET per host; a host is used only if it answers 200 with one of content_types."""
+    path: UrlPath
+    params: dict[str, str | int]
+    content_types: Annotated[list[str], Field(min_length=1)]
+
+
+class ServerProbes(_Section):
+    simbad: ServerProbe
+    vizier: ServerProbe
+
+
 class ServersConfig(_Section):
-    simbad: list[str]
-    vizier: list[str]
+    simbad: list[Host]
+    vizier: list[Host]
+    probe_timeout_s: Seconds
+    probes: ServerProbes
 
 
 class CacheConfig(_Section):

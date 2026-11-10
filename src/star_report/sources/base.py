@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import json
+import logging
 import math
 import socket
 import threading
@@ -22,10 +23,11 @@ from requests.adapters import HTTPAdapter
 
 from star_report import __version__
 from star_report.cache import Cache
-from star_report.config import Config
+from star_report.config import Config, ServerProbe
 from star_report.models import Provenance, SourceResult, StarIdentity
 
 USER_AGENT = f"star-report/{__version__}"
+log = logging.getLogger("star_report.sources")
 
 _NEEDS_REASONS = {
     "tic_id": "no TIC ID",
@@ -92,13 +94,6 @@ def is_reachable(host: str, timeout: float = 3.0) -> bool:
     return True
 
 
-def pick_server(hosts: Sequence[str]) -> str:
-    for host in hosts:
-        if is_reachable(host):
-            return host
-    return hosts[0]
-
-
 def parallel_map(fn: Callable[[Any], Any], items: Sequence[Any], timeout: float,
                  name: str = "parallel") -> list[tuple[str, Any]]:
     """Call fn(item) for every item at once, each in its own daemon thread; wait `timeout` s in all.
@@ -131,6 +126,65 @@ def call_with_timeout(fn: Callable[[], Any], timeout: float,
                       name: str = "call") -> tuple[str, Any]:
     """fn() in a daemon thread: the one outcome parallel_map would give for it."""
     return parallel_map(lambda f: f(), [fn], timeout, name=name)[0]
+
+
+def probe_server(host: str, probe: ServerProbe, timeout_s: float) -> str | None:
+    """None when `host` serves the probe's query, else why it does not.
+
+    One GET, headers only and no redirects, in a daemon thread with timeout_s in all. The host
+    serves the query when it answers HTTP 200 with one of probe.content_types.
+    """
+    def get() -> tuple[int, str]:
+        with make_session(timeout_s) as session:
+            with session.get(f"https://{host}{probe.path}", params=probe.params, timeout=timeout_s,
+                             allow_redirects=False, stream=True) as resp:
+                return resp.status_code, resp.headers.get("Content-Type", "")
+
+    status, outcome = call_with_timeout(get, timeout_s, name=f"probe-{host}")
+    if status != "ok":
+        return _error_text(outcome)
+    code, content_type = outcome
+    media_type = content_type.split(";")[0].strip().lower()
+    if code == 200 and media_type in {t.lower() for t in probe.content_types}:
+        return None
+    return f"HTTP {code} {media_type or 'without a content type'}"
+
+
+@dataclass
+class _Selection:
+    lock: threading.Lock = field(default_factory=threading.Lock)
+    host: str | None = None
+
+
+_selections: dict[tuple, _Selection] = {}
+_selections_lock = threading.Lock()
+
+
+def pick_server(hosts: Sequence[str], probe: ServerProbe, timeout_s: float) -> str:
+    """The first of `hosts` that serves the probe's query (see probe_server), else hosts[0].
+
+    Checked once per run: the choice is kept for the process, and callers that arrive while the
+    hosts are being probed wait for that answer instead of probing again. Each host is asked at most
+    once, in list order, so a selection takes at most len(hosts) * timeout_s.
+    """
+    key = (tuple(hosts), probe.path, tuple(probe.params.items()), tuple(probe.content_types),
+           timeout_s)
+    with _selections_lock:
+        selection = _selections.setdefault(key, _Selection())
+    with selection.lock:
+        if selection.host is None:
+            selection.host = _first_serving(hosts, probe, timeout_s)
+    return selection.host
+
+
+def _first_serving(hosts: Sequence[str], probe: ServerProbe, timeout_s: float) -> str:
+    for host in hosts:
+        reason = probe_server(host, probe, timeout_s)
+        if reason is None:
+            return host
+        log.info("server %s skipped: %s", host, reason)
+    log.warning("no server answered its probe (%s); using %s", ", ".join(hosts), hosts[0])
+    return hosts[0]
 
 
 def _utc_now() -> datetime:

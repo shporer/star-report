@@ -100,8 +100,10 @@ invalid value is a configuration error (exit code 2).
 ## Mirrors and known service issues
 
 - SIMBAD and VizieR: `servers.simbad` and `servers.vizier` list CDS first and the Harvard mirrors
-  second. The first host that accepts a TCP connection is used (checked once per run), so the Harvard
-  mirrors take over automatically when CDS is unreachable.
+  second. Once per run, each host in turn gets one small query (`servers.probes`), and the first
+  that answers HTTP 200 with a VOTable within `servers.probe_timeout_s` (5 s) is used. The Harvard
+  mirrors take over when CDS is unreachable, and also when it accepts connections but serves error
+  pages, as on 2026-11-10. If no host answers, the first one is used.
 - Sky image: CDS hips2fits when alasky is reachable; otherwise, or if hips2fits fails, the STScI DSS
   cutout service. If both fail, the report shows a Gaia-only neighbor chart.
 - The Harvard VizieR mirror sometimes silently returns empty tables, and for the wide-binary catalog
