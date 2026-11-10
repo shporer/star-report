@@ -89,7 +89,8 @@ sources:
 
 Everything tunable is there: enabled sources, search radii, VizieR catalog IDs, cache expiry, timeouts,
 resolver tolerances, flag thresholds, plot settings, literature limits and the LLM settings.
-A local `config.yaml` is git-ignored.
+A local `config.yaml` is git-ignored. Every timeout and `sources.max_workers` must be positive; an
+invalid value is a configuration error (exit code 2).
 
 ## Mirrors and known service issues
 
@@ -103,21 +104,30 @@ A local `config.yaml` is git-ignored.
   `cache.empty_expiry_days` (1 day), whatever their group's expiry.
 - ADS: the search API does not accept the `object:` field, so the name is first translated through
   ADS's `/v1/objects/query` endpoint and then searched with `doctype:(article OR eprint)`. If the
-  translation fails, it searches for the exact phrase in abstracts. While CDS is down, ADS's own SIMBAD
-  lookup fails too, so matching falls back to abstract text and finds fewer papers.
+  translation fails, it searches for the exact phrase in abstracts. Each star gets two search
+  requests: one sorted by citation count (up to `literature.max_records` records) for the most cited
+  papers and the record count, and one sorted by date (`most_cited + most_recent` records) for the
+  most recent papers.
+- While CDS is down, ADS's own SIMBAD lookup fails too, so ADS matches papers by abstract text only
+  and finds fewer. Those results stay cached for 7 days (`cache.expiry_days.ads`): after a CDS
+  outage, rerun the affected stars with `--refresh`.
 - KOA is queried through its public TAP service with pyvo (not pykoa).
 - Timeouts: `sources.timeout_s` (30 s) by default; `sources.timeout_overrides` raises it per source.
   MAST is 90 s because its observation query can take about 45 s for stars in TESS's continuous
   viewing zone. Light-curve downloads use `plots.lightcurve_timeout_s` (120 s).
-- The CMD background (50k Gaia stars) is fetched once and cached indefinitely.
+- The CMD background (50k Gaia stars) is fetched once and cached indefinitely. Its download is limited
+  to `plots.cmd_background_timeout_s` (120 s); on a timeout the report leaves out the CMD with a note.
 
 ## LLM cost
 
 About $0.10-0.25 per report. The model, effort and token limit are under `llm:` in the config
-(defaults: `claude-opus-5-5`, `high`, server-side refusal fallback on). The output is cached and never
-expires, so re-rendering is free; `--refresh` regenerates it. Note: the LLM call has not yet been run
-live during development (no Anthropic credentials were available), so the first real run is also its
-first live test.
+(defaults: `claude-opus-5-5`, `high`, server-side refusal fallback on), as are the client's
+per-request timeout `llm.timeout_s` (300 s) and retry count `llm.max_retries` (1). The output is
+cached and never expires, so re-rendering is free; `--refresh` regenerates it. Note: the LLM call has
+not yet been run live during development (no Anthropic credentials were available), so the first real
+run is also its first live test. Structured outputs (`output_config.format`) are sent without a beta
+header. If that first call fails with a `BadRequestError` about the output format (the report shows it
+where the overview would be), please report it.
 
 ## Tests
 
@@ -128,7 +138,9 @@ first live test.
 
 Unit tests never touch the network; they run against recorded fixtures in `tests/fixtures/`. The live
 suite (reference stars in `tests/reference_stars.yaml`) needs `ADS_DEV_KEY` and `ANTHROPIC_API_KEY`
-set, and can fail when ESA Gaia, MAST or the VizieR mirror time out: re-run before debugging.
+set, and can fail when ESA Gaia, MAST or the VizieR mirror time out: re-run before debugging. The live
+LLM tests (`test_llm_end_to_end` and `test_cold_run_time_with_llm`) skip when `ANTHROPIC_API_KEY` or
+`ADS_DEV_KEY` isn't set; an `ant auth login` profile alone doesn't enable them.
 
 Re-record fixtures from the live services:
 
