@@ -2,9 +2,19 @@
 output:
   dir: reports
   open_single: true            # open the HTML report when there is exactly one target
-servers:                       # the first host that accepts a TCP connection on 443 is used (checked once per run)
+servers:                       # the first host that answers its probe is used (checked once per run)
   simbad: [simbad.cds.unistra.fr, simbad.harvard.edu]
   vizier: [vizier.cds.unistra.fr, vizier.cfa.harvard.edu]
+  probe_timeout_s: 5           # per host; a host that has not answered by then is skipped
+  probes:                      # one small GET per host; it must answer HTTP 200 with one of content_types
+    simbad:
+      path: /simbad/sim-tap/sync
+      params: {REQUEST: doQuery, LANG: ADQL, QUERY: SELECT TOP 1 main_id FROM basic}
+      content_types: [application/x-votable+xml, text/xml]
+    vizier:
+      path: /viz-bin/votable   # the endpoint astroquery's query_region and query_constraints use
+      params: {-source: I/239/hip_main, -out: HIP, -out.max: 1}
+      content_types: [application/x-votable+xml, text/xml]
 cache:
   dir: ~/.cache/star-report
   empty_expiry_days: 1         # an empty result is rechecked after 1 day, whatever its group

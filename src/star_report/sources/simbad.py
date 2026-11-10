@@ -23,7 +23,9 @@ def adql(name: str) -> str:
 
 
 def _url(cfg: Config) -> str:
-    return f"https://{pick_server(cfg.servers.simbad)}/simbad/sim-tap"
+    servers = cfg.servers
+    host = pick_server(servers.simbad, servers.probes.simbad, servers.probe_timeout_s)
+    return f"https://{host}/simbad/sim-tap"
 
 
 def _fetch(name: str, session: requests.Session, cfg: Config) -> list[dict]:

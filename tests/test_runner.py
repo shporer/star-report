@@ -21,7 +21,6 @@ from star_report.sources.base import (
     is_reachable,
     make_session,
     parallel_map,
-    pick_server,
     records,
     run_sources,
     tap_rows,
@@ -187,7 +186,7 @@ def test_session_default_timeout(monkeypatch):
     assert seen == [30.0, 5]
 
 
-def test_pick_server(monkeypatch):
+def test_is_reachable_checks_tcp_443_once_per_host(monkeypatch):
     calls = []
 
     class Sock:
@@ -195,18 +194,15 @@ def test_pick_server(monkeypatch):
             pass
 
     def create(addr, timeout=None):
-        calls.append(addr[0])
-        if addr[0] in down:
+        calls.append(addr)
+        if addr[0] == "down.test":
             raise OSError("down")
         return Sock()
 
-    down = {"a"}
     monkeypatch.setattr(socket, "create_connection", create)
-    assert pick_server(["a", "b"]) == "b"
-    n = len(calls)
-    assert pick_server(["a", "b"]) == "b" and len(calls) == n
-    down.update({"x", "y"})
-    assert pick_server(["x", "y"]) == "x"
+    assert (is_reachable("down.test"), is_reachable("up.test")) == (False, True)
+    assert (is_reachable("down.test"), is_reachable("up.test")) == (False, True)
+    assert calls == [("down.test", 443), ("up.test", 443)]
 
 
 def test_parallel_map_keeps_input_order_and_isolates_errors():

@@ -20,6 +20,7 @@ from star_report.cache import Cache
 from star_report.cli import main
 from star_report.config import load_config
 from star_report.resolve import LiveLookup, parse_target, resolve
+from star_report.sources import base
 from star_report.sources.base import make_session
 
 pytestmark = pytest.mark.live
@@ -113,6 +114,16 @@ def test_spellings_resolve(slug, spelling, lookup):
     ident = resolve(parse_target(spelling), live, cfg.resolve)
     assert ident.tic_id == star["tic"]
     assert ident.gaia_dr3_id == star["gaia_dr3"]
+
+
+@pytest.mark.parametrize("service", ["simbad", "vizier"])
+def test_a_configured_host_passes_the_probe(service):
+    """A probe that no host passes keeps selection on the first host: the fallback silently stops."""
+    servers = load_config().servers
+    probe = getattr(servers.probes, service)
+    reasons = {host: base.probe_server(host, probe, servers.probe_timeout_s)
+               for host in getattr(servers, service)}
+    assert None in reasons.values(), reasons
 
 
 @pytest.mark.parametrize("slug", list(STARS))

@@ -41,8 +41,10 @@ class VizierSpec:
 
 def vizier_client(cfg: Config, columns: Sequence[str], row_limit: int = 200,
                   timeout: float | None = None) -> Vizier:
-    """A client on the first reachable VizieR host. The catalog goes to each query call."""
-    return Vizier(vizier_server=pick_server(cfg.servers.vizier), columns=list(columns),
+    """A client on the first VizieR host that answers its probe. The catalog goes to each query call."""
+    servers = cfg.servers
+    host = pick_server(servers.vizier, servers.probes.vizier, servers.probe_timeout_s)
+    return Vizier(vizier_server=host, columns=list(columns),
                   row_limit=row_limit, timeout=cfg.sources.timeout_s if timeout is None else timeout)
 
 
