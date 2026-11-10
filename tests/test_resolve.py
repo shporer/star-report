@@ -172,6 +172,37 @@ def test_other_ids_from_simbad(rcfg):
         "HAT-P": "HAT-P-5", "KELT": "KELT-6"}
 
 
+@pytest.mark.parametrize("text", ["TIC 1", "TOI-700"])
+def test_tic_input_retries_simbad_by_gaia_id(text, rcfg):
+    sky = foo_sky()
+    sky.simbad_objects = [simbad_obj("Foo", ids=["Gaia DR3 11", "HD 5", "HIP 7"])]  # no "TIC 1"
+    recorder = RecordingLookup(sky)
+    ident = resolve(parse_target(text), recorder, rcfg)
+    assert (ident.simbad_id, ident.main_name) == ("Foo", "Foo")
+    assert ident.other_ids == {"HD": "HD 5", "HIP": "HIP 7"}
+    assert (ident.tic_id, ident.gaia_dr3_id, ident.gaia_dr2_id) == (1, "11", "10")
+    assert [k for k in recorder.calls if k.startswith("simbad:")] == [
+        'simbad:{"name": "TIC 1"}', 'simbad:{"name": "Gaia DR3 11"}']
+    assert sky.calls.count("simbad") == 2 and ident.warnings == []
+
+
+@pytest.mark.parametrize("text", ["Gaia DR3 11", "150.0 20.0", "TIC 1"])
+def test_simbad_is_asked_once_per_name(text, rcfg):
+    sky = foo_sky()
+    sky.simbad_objects = []
+    ident = resolve(parse_target(text), sky, rcfg)
+    asked = {"Gaia DR3 11": 1, "150.0 20.0": 1, "TIC 1": 2}[text]  # TIC: "TIC 1", then Gaia
+    assert sky.calls.count("simbad") == asked and ident.simbad_id is None
+
+
+def test_simbad_retry_respects_the_down_memo(rcfg):
+    sky = foo_sky()
+    sky.errors["simbad"] = TimeoutError("t")
+    ident = resolve(parse_target("TIC 1"), sky, rcfg)
+    assert sky.calls.count("simbad") == 1
+    assert ident.warnings == ["SIMBAD unavailable (TimeoutError: t); identifiers may be incomplete."]
+
+
 def test_without_simbad_names_and_ids_come_from_tic(rcfg):
     sky = foo_sky()
     sky.simbad_objects = []

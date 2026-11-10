@@ -372,6 +372,7 @@ class _Resolution:
         self.cfg = cfg
         self.warnings: list[str] = []
         self.down: set[str] = set()  # services that failed once; they are not asked again
+        self.simbad_asked: set[str] = set()  # cross-match names already looked up in SIMBAD
         self.simbad: dict | None = None
         self.gaia: dict | None = None
         self.tic: dict | None = None
@@ -384,6 +385,7 @@ class _Resolution:
         self._query_owner()
         self._find_simbad()
         self._find_gaia()
+        self._find_simbad()  # once more by Gaia DR3 ID, if Gaia was found through the TIC
         self._find_dr2()
         self._find_tic()
         position = self._position()
@@ -507,6 +509,7 @@ class _Resolution:
     # -- 2-5. cross-matching --
 
     def _find_simbad(self) -> None:
+        """SIMBAD by Gaia DR3 ID, then by TIC ID; each name is looked up at most once."""
         if self.simbad is not None:
             return
         names = []
@@ -515,6 +518,9 @@ class _Resolution:
         if self.tic is not None:
             names.append(f"TIC {self._tic_id}")
         for name in names:
+            if name in self.simbad_asked:
+                continue
+            self.simbad_asked.add(name)
             records = self._ask("simbad", name=name)
             if records:
                 self.simbad = self._pick_simbad(name, records)
