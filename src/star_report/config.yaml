@@ -71,9 +71,14 @@ literature:
   most_recent: 10
 llm:
   enabled: true
+  backend: api                 # api: Anthropic API (ANTHROPIC_API_KEY or `ant auth login`)
+                               # claude-code: `claude -p` on your Claude Code login; no API key
   model: claude-opus-5-5
   effort: high
-  max_tokens: 16000
-  server_fallback: true
-  timeout_s: 300               # per request (SDK default 600)
-  max_retries: 1               # SDK retries on connection errors, 408, 409, 429 and 5xx (SDK default 2)
+  max_tokens: 16000            # api only; Claude Code sets its own output limit
+  server_fallback: true        # api only
+  timeout_s: 300               # api only: per request (SDK default 600)
+  max_retries: 1               # api only: SDK retries on connection errors, 408, 409, 429 and 5xx (SDK default 2)
+  claude_code:
+    command: claude            # a name on PATH or a full path
+    timeout_s: 600             # the whole call; claude is stopped at the deadline

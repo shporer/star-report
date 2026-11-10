@@ -2,6 +2,7 @@
 
     python scripts/record_fixtures.py [--source NAME]... [--star SLUG]...
     python scripts/record_fixtures.py --lookups [--star SLUG]...
+    python scripts/record_fixtures.py --claude-code
 """
 
 from __future__ import annotations
@@ -28,6 +29,13 @@ from star_report.resolve import (  # noqa: E402
 )
 from star_report.sources.base import make_session  # noqa: E402
 from star_report.sources.registry import build_sources  # noqa: E402
+from star_report.writer import (  # noqa: E402
+    SYSTEM_PROMPT,
+    WriterFailure,
+    build_user_message,
+    parse_claude_code_output,
+    run_claude_code,
+)
 
 
 def write_fixture(source: str, slug: str, payload) -> Path:
@@ -96,6 +104,32 @@ def record_lookups(slugs: list[str]) -> int:
     return failures
 
 
+def record_claude_code() -> int:
+    """Send one short writer request through `claude -p` (the user's Claude Code login).
+
+    Writes the raw result to tests/fixtures/claude_code/success.json. No papers are sent.
+    """
+    cfg = load_config()
+    facts = {"name": "HD 209458", "description": "G0 V star, V = 7.65, host of the transiting "
+             "hot Jupiter HD 209458 b (period 3.52475 d)"}
+    user = build_user_message(facts, [], "no papers were searched for this recording")
+    try:
+        rc, out, err = run_claude_code(cfg.llm, SYSTEM_PROMPT, user)
+        parse_claude_code_output(rc, out, err, default_model=cfg.llm.model)
+        payload = json.loads(out)
+    except WriterFailure as e:
+        print(f"ERROR    claude_code/success: {e.reason}")
+        return 1
+    except ValueError:
+        print("ERROR    claude_code/success: claude printed more than one JSON object")
+        return 1
+    if isinstance(payload, dict) and "credential_expires_at" in payload:
+        payload["credential_expires_at"] = None   # account detail, not needed by the parser
+    path = write_fixture("claude_code", "success", payload)
+    print(f"recorded claude_code/success -> {path.relative_to(ROOT)}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--star", action="append", default=[], metavar="SLUG",
@@ -104,7 +138,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="source name (repeatable; default: all)")
     parser.add_argument("--lookups", action="store_true",
                         help="record resolver lookups for every spelling, not source payloads")
+    parser.add_argument("--claude-code", action="store_true",
+                        help="record one `claude -p` writer reply (uses your Claude Code login)")
     args = parser.parse_args(argv)
+    if args.claude_code:
+        if args.source or args.lookups or args.star:
+            parser.error("--claude-code takes no other options")
+        return record_claude_code()
 
     known = [s["slug"] for s in all_ref_stars()]
     unknown = [s for s in args.star if s not in known]

@@ -7,6 +7,13 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.enable_socket)
 
 
+@pytest.fixture(autouse=True)
+def _no_local_config(request, tmp_path_factory, monkeypatch):
+    """Offline tests run in an empty directory, so a developer's ./config.yaml never applies."""
+    if not request.node.get_closest_marker("live"):
+        monkeypatch.chdir(tmp_path_factory.mktemp("cwd"))
+
+
 # ---- shared helpers for source tests and the fixture recorder ----
 import json  # noqa: E402
 import tempfile  # noqa: E402

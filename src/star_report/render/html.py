@@ -11,7 +11,7 @@ from jinja2 import Environment, PackageLoader
 from markupsafe import Markup, escape
 
 from star_report.derive import display_name, header_line, toi_source
-from star_report.models import BIBCODE_RE, Report
+from star_report.models import BIBCODE_PART_RE, CITATION_RE, Report
 
 STATUS_LABELS = {
     "ok": "ok",
@@ -25,14 +25,23 @@ _ADS_URL = "https://ui.adsabs.harvard.edu/abs/{bibcode}/abstract"
 
 
 def link_citations(text: str) -> Markup:
-    """Escape text and turn each [bibcode] into an ADS link."""
+    """Escape text and turn each cited bibcode into an ADS link, dropping the brackets.
+
+    A bracket may hold one bibcode or several separated by commas or semicolons; the separators
+    stay between the links.
+    """
     out: list[str] = []
     pos = 0
-    for m in BIBCODE_RE.finditer(text):
-        out.append(str(escape(text[pos:m.start()])))
-        code = m.group(1)
-        out.append(f'<a href="{_ADS_URL.format(bibcode=escape(code))}">{escape(code)}</a>')
-        pos = m.end()
+    for group in CITATION_RE.finditer(text):
+        out.append(str(escape(text[pos:group.start()])))
+        prev_end = None
+        for m in BIBCODE_PART_RE.finditer(text, group.start(), group.end()):
+            if prev_end is not None:
+                out.append(str(escape(text[prev_end:m.start()])))
+            code = m.group(0)
+            out.append(f'<a href="{_ADS_URL.format(bibcode=escape(code))}">{escape(code)}</a>')
+            prev_end = m.end()
+        pos = group.end()
     out.append(str(escape(text[pos:])))
     return Markup("".join(out))
 

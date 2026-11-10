@@ -1,10 +1,17 @@
-"""LLM writer inputs: fact sheet, system prompt, output schema and citation check."""
+"""LLM writer: fact sheet, system prompt, output schema, citation check, and the Claude call.
+
+The call goes to the Anthropic API (llm.backend: api) or to Claude Code's print mode on the user's
+Claude Code login (llm.backend: claude-code), which needs no API key.
+"""
 
 from __future__ import annotations
 
 import json
 import math
-from collections.abc import Callable
+import os
+import subprocess
+import tempfile
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
@@ -15,23 +22,27 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from star_report.cache import Cache
 from star_report.config import Config, LLMConfig
 from star_report.derive import description_line, display_name, toi_entries
-from star_report.models import BIBCODE_RE, LLMBlock, Paper, ParamCell, Report
+from star_report.models import BIBCODE_PART_RE, CITATION_RE, LLMBlock, Paper, ParamCell, Report
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 4
 
 SYSTEM_PROMPT = """\
 You write short, factual summaries of stars for professional astronomers.
+They open an HTML report whose tables, plots and paper list already hold the full details, so a summary picks out what matters most instead of repeating every value.
 You receive a fact sheet compiled from astronomical catalogs and archives, and a list of papers from NASA ADS with their abstracts.
 
 Rules:
-- Use only the material provided. Do not add facts from memory.
-- Never state a number that does not appear in the fact sheet or in a paper abstract.
+- Use only the material provided. Do not add facts from memory. That includes historical context, such as which result was the first of its kind, unless a paper's abstract says so.
+- Quote catalog codes and classes as given (for example a variability class); do not expand or interpret them unless the material explains them.
+- Name instruments, telescopes, surveys and catalogs as the material does; do not abbreviate or substitute names yourself.
+- Never state a number that does not appear in the fact sheet or in a paper abstract, and keep the qualifiers that come with it: an upper limit stays an upper limit, and an approximate value stays approximate.
 - When the literature is sparse or missing, say so plainly.
 - Keep a neutral, factual tone. No hype and no speculation.
+- Write plain prose, with no Markdown, headings, bold, italics or lists. The report prints the text exactly as written, so any markup would show as literal symbols.
 
 Write:
-- overview: 3 to 5 sentences on what the star is, its key parameters, any planets, binarity or variability, and what data exist.
-- literature_summary: 1 to 3 short paragraphs on what the papers report. Cite papers inline as [bibcode], using only bibcodes from the paper list.
+- overview: 3 to 5 sentences (never more than 5), about 100 words in total, on what the star is and its key parameters, any planets, binarity or variability, and what data exist. Combine related facts in one sentence and choose the most important ones; the report's tables carry the rest.
+- literature_summary: 1 to 3 paragraphs separated by a blank line, about 250 words in total, on what the papers report. Group related papers instead of summarizing each in turn. Cite papers inline as [bibcode], using only bibcodes from the paper list; you need not cite every paper.
 - cited_bibcodes: every bibcode you cited.
 If no papers are provided, the literature_summary says that and cites nothing.
 """
@@ -258,7 +269,9 @@ def build_user_message(facts: dict, papers: list[Paper], literature_note: str | 
 
 
 def find_citations(text: str) -> list[str]:
-    return BIBCODE_RE.findall(text)
+    """Every bibcode cited in brackets, alone or grouped: [A], [A, B] or [A; B]."""
+    return [code for group in CITATION_RE.finditer(text)
+            for code in BIBCODE_PART_RE.findall(group.group(0))]
 
 
 def check_citations(out: WriterOutput, allowed: set[str]) -> list[str]:
@@ -276,6 +289,7 @@ _LITERATURE_NOTES = {
     "empty": "ADS found no papers for this object.",
 }
 _NO_CREDENTIALS = "No Anthropic credentials found (set ANTHROPIC_API_KEY or run `ant auth login`)."
+_FORMAT_FAILURE = "Claude's output did not match the expected format."
 
 
 @dataclass
@@ -304,17 +318,8 @@ def call_claude(client, llm: LLMConfig, system: str, user: str) -> ClaudeReply:
     return ClaudeReply(msg.stop_reason, text, msg.model)     # msg.model = model that served it (fallback-aware)
 
 
-def _ask(client, llm: LLMConfig, user: str) -> tuple[ClaudeReply, WriterOutput]:
-    try:
-        reply = call_claude(client, llm, SYSTEM_PROMPT, user)
-    except (anthropic.CredentialsError, TypeError) as e:
-        if isinstance(e, TypeError) and "Could not resolve authentication method" not in str(e):
-            raise
-        raise WriterFailure(_NO_CREDENTIALS) from e
-    except anthropic.AuthenticationError as e:
-        raise WriterFailure("Anthropic API rejected the credentials.") from e
-    except anthropic.APIError as e:
-        raise WriterFailure(f"Claude API error: {type(e).__name__}: {e}"[:200]) from e
+def _check(reply: ClaudeReply) -> WriterOutput:
+    """The stop-reason and format checks both backends share."""
     if reply.stop_reason == "refusal":
         raise WriterFailure("Claude declined to write this summary (refusal).")
     if reply.stop_reason == "max_tokens":
@@ -322,9 +327,32 @@ def _ask(client, llm: LLMConfig, user: str) -> tuple[ClaudeReply, WriterOutput]:
     try:
         if not reply.text:
             raise ValueError("no text")
-        return reply, WriterOutput.model_validate_json(reply.text)
+        return WriterOutput.model_validate_json(reply.text)
     except ValueError as e:   # includes pydantic ValidationError
-        raise WriterFailure("Claude's output did not match the expected format.") from e
+        raise WriterFailure(_FORMAT_FAILURE) from e
+
+
+def _api_caller(llm: LLMConfig,
+                client_factory: Callable[[], Any] | None) -> Callable[[str], ClaudeReply]:
+    """The API backend: one SDK client; API errors become stated reasons."""
+    try:
+        client = client_factory() if client_factory is not None else default_client(llm)
+    except anthropic.CredentialsError as e:
+        raise WriterFailure(_NO_CREDENTIALS) from e
+
+    def call(user: str) -> ClaudeReply:
+        try:
+            return call_claude(client, llm, SYSTEM_PROMPT, user)
+        except (anthropic.CredentialsError, TypeError) as e:
+            if isinstance(e, TypeError) and "Could not resolve authentication method" not in str(e):
+                raise
+            raise WriterFailure(_NO_CREDENTIALS) from e
+        except anthropic.AuthenticationError as e:
+            raise WriterFailure("Anthropic API rejected the credentials.") from e
+        except anthropic.APIError as e:
+            raise WriterFailure(f"Claude API error: {type(e).__name__}: {e}"[:200]) from e
+
+    return call
 
 
 def _papers_and_note(report: Report) -> tuple[list[Paper], str | None]:
@@ -346,22 +374,153 @@ def default_client(llm: LLMConfig) -> anthropic.Anthropic:
     return anthropic.Anthropic(timeout=llm.timeout_s, max_retries=llm.max_retries)
 
 
+# ---- Claude Code backend: `claude -p` on the user's Claude Code login, no API key ----
+
+_CC_NOT_FOUND = "Claude Code (`claude`) was not found; install it or set llm.claude_code.command."
+_CC_NOT_LOGGED_IN = "Claude Code is not logged in (run `claude auth login`)."
+_CC_LOGIN_HINTS = ("authenticate", "not logged in", "/login", "oauth")
+_CC_API_CREDENTIALS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_PROFILE",
+                       "ANTHROPIC_CONFIG_DIR")
+_CC_SESSION_PREFIXES = ("CLAUDE", "ANTHROPIC_")
+_CC_KEEP = ("CLAUDE_CONFIG_DIR",)
+
+
+def claude_code_env(environ: Mapping[str, str], empty_dir: str) -> dict[str, str]:
+    """The environment for claude: its own login only, never Anthropic API credentials.
+
+    Exported API keys are dropped, and ANTHROPIC_CONFIG_DIR points at the empty `empty_dir`: with no
+    login of its own, claude would otherwise fall back to an `ant auth login` profile and bill that
+    API organization. From inside a Claude Code session (CLAUDECODE set), that session's CLAUDE*
+    and ANTHROPIC_* variables are dropped too, so claude runs as it would from a terminal.
+    """
+    nested = bool(environ.get("CLAUDECODE"))
+    env = {k: v for k, v in environ.items()
+           if k not in _CC_API_CREDENTIALS
+           and not (nested and k.startswith(_CC_SESSION_PREFIXES) and k not in _CC_KEEP)}
+    env["ANTHROPIC_CONFIG_DIR"] = empty_dir
+    return env
+
+
+def claude_code_argv(llm: LLMConfig, system: str) -> list[str]:
+    """Print mode with structured output; no tools, settings, plugins, MCP servers or saved session."""
+    return [llm.claude_code.command, "-p", "--output-format", "json",
+            "--json-schema", json.dumps(WRITER_SCHEMA), "--system-prompt", system,
+            "--model", llm.model, "--effort", llm.effort,
+            "--tools", "", "--setting-sources", "", "--strict-mcp-config",
+            "--no-session-persistence"]
+
+
+def run_claude_code(llm: LLMConfig, system: str, user: str) -> tuple[int, str, str]:
+    """Run claude once in an empty temporary directory, the user message on stdin.
+
+    Returns (exit code, stdout, stderr). claude is killed at llm.claude_code.timeout_s, so the call
+    cannot hang; it stays in star-report's process group, so Ctrl-C stops it too.
+    """
+    timeout = llm.claude_code.timeout_s
+    with tempfile.TemporaryDirectory(prefix="star-report-claude-", ignore_cleanup_errors=True) as tmp:
+        cwd, no_profiles = os.path.join(tmp, "work"), os.path.join(tmp, "no-profiles")
+        os.mkdir(cwd)
+        os.mkdir(no_profiles)
+        try:
+            proc = subprocess.Popen(
+                claude_code_argv(llm, system), cwd=cwd, env=claude_code_env(os.environ, no_profiles),
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, encoding="utf-8", errors="replace")
+        except FileNotFoundError as e:
+            raise WriterFailure(_CC_NOT_FOUND) from e
+        except OSError as e:
+            raise WriterFailure(f"Claude Code could not be started: {e}"[:200]) from e
+        try:
+            out, err = proc.communicate(user, timeout=timeout)
+        except subprocess.TimeoutExpired as e:
+            proc.kill()
+            try:
+                proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+            raise WriterFailure(f"Claude Code did not finish within {timeout:g} s.") from e
+    return proc.returncode, out, err
+
+
+def _json_object(text: str) -> dict | None:
+    """The JSON object claude printed: the whole output, else its last line that parses."""
+    for candidate in [text, *(ln for ln in reversed(text.splitlines()) if ln.lstrip().startswith("{"))]:
+        try:
+            value = json.loads(candidate)
+        except ValueError:
+            continue
+        if isinstance(value, dict):
+            return value
+    return None
+
+
+def _served_model(usage: Any, default: str) -> str:
+    """The model that wrote the most output tokens, from claude's modelUsage."""
+    best, best_tokens = default, -1
+    for name, stats in usage.items() if isinstance(usage, dict) else ():
+        tokens = stats.get("outputTokens") if isinstance(stats, dict) else None
+        tokens = tokens if isinstance(tokens, int) and not isinstance(tokens, bool) else 0
+        if isinstance(name, str) and name and tokens > best_tokens:
+            best, best_tokens = name, tokens
+    return best
+
+
+def _exit_reason(returncode: int, stderr: str) -> str:
+    last = next((ln.strip() for ln in reversed(stderr.splitlines()) if ln.strip()), "")
+    return (f"Claude Code failed (exit {returncode}): {last}" if last
+            else f"Claude Code failed (exit {returncode}).")[:200]
+
+
+def parse_claude_code_output(returncode: int, stdout: str, stderr: str, *,
+                             default_model: str) -> ClaudeReply:
+    """claude's `--output-format json` result as a ClaudeReply; failures raise WriterFailure."""
+    data = _json_object(stdout)
+    if data is None:
+        raise WriterFailure(_exit_reason(returncode, stderr) if returncode
+                            else "Claude Code's reply could not be read.")
+    message = data.get("result") if isinstance(data.get("result"), str) else ""
+    subtype = data.get("subtype") if isinstance(data.get("subtype"), str) else ""
+    if subtype == "error_max_structured_output_retries":
+        raise WriterFailure(_FORMAT_FAILURE)
+    if data.get("is_error") is True or subtype.startswith("error"):
+        if any(hint in message.lower() for hint in _CC_LOGIN_HINTS):
+            raise WriterFailure(_CC_NOT_LOGGED_IN)
+        raise WriterFailure(f"Claude Code error: {message or subtype or 'unknown'}"[:200])
+    if returncode:
+        raise WriterFailure(_exit_reason(returncode, stderr))
+    structured = data.get("structured_output")
+    text = json.dumps(structured) if isinstance(structured, dict) else (message or None)
+    stop = data.get("stop_reason")
+    return ClaudeReply(stop if isinstance(stop, str) else None, text,
+                       _served_model(data.get("modelUsage"), default_model))
+
+
+def call_claude_code(llm: LLMConfig, system: str, user: str) -> ClaudeReply:
+    rc, out, err = run_claude_code(llm, system, user)
+    return parse_claude_code_output(rc, out, err, default_model=llm.model)
+
+
 def write_sections(report: Report, cfg: Config, cache: Cache,
                    client_factory: Callable[[], Any] | None = None) -> LLMBlock:
     llm = cfg.llm
     sent: list[str] = []
 
     def producer() -> dict:
-        try:
-            client = client_factory() if client_factory is not None else default_client(llm)
-        except anthropic.CredentialsError as e:
-            raise WriterFailure(_NO_CREDENTIALS) from e
-        reply, out = _ask(client, llm, build_user_message(facts, papers, note))
+        if llm.backend == "claude-code":
+            def call(user: str) -> ClaudeReply:
+                return call_claude_code(llm, SYSTEM_PROMPT, user)
+        else:
+            call = _api_caller(llm, client_factory)
+
+        def ask(correction: str | None = None) -> tuple[ClaudeReply, WriterOutput]:
+            reply = call(build_user_message(facts, papers, note, correction))
+            return reply, _check(reply)
+
+        reply, out = ask()
         bad = check_citations(out, set(sent))
         if bad:
-            correction = (f"Your previous answer cited bibcodes that are not in the paper list: "
-                          f"{', '.join(bad)}. Cite only bibcodes from the list, written as [bibcode].")
-            reply, out = _ask(client, llm, build_user_message(facts, papers, note, correction))
+            reply, out = ask(f"Your previous answer cited bibcodes that are not in the paper list: "
+                             f"{', '.join(bad)}. Cite only bibcodes from the list, written as [bibcode].")
             if check_citations(out, set(sent)):
                 raise WriterFailure("LLM summary failed citation check")
         return LLMBlock(status="ok", overview=out.overview, literature_summary=out.literature_summary,
@@ -372,8 +531,9 @@ def write_sections(report: Report, cfg: Config, cache: Cache,
         facts = build_fact_sheet(report)
         papers, note = _papers_and_note(report)
         sent = [p.bibcode for p in papers]
-        key = {"facts": facts, "bibcodes": sent, "model": llm.model, "effort": llm.effort,
-               "server_fallback": llm.server_fallback, "prompt_version": PROMPT_VERSION}
+        key = {"facts": facts, "bibcodes": sent, "backend": llm.backend, "model": llm.model,
+               "effort": llm.effort, "server_fallback": llm.server_fallback,
+               "prompt_version": PROMPT_VERSION}
         entry = cache.fetch("llm", "writer", key, producer)
         block = LLMBlock.model_validate(entry.payload)
         return block.model_copy(update={"from_cache": entry.from_cache})

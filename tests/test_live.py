@@ -9,6 +9,9 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -21,6 +24,7 @@ from star_report.cli import main
 from star_report.config import load_config
 from star_report.resolve import LiveLookup, parse_target, resolve
 from star_report.sources.base import make_session
+from star_report.writer import claude_code_env
 
 pytestmark = pytest.mark.live
 
@@ -181,6 +185,35 @@ def test_cold_run_time_with_llm(tmp_path, capsys):
                     reason="needs ANTHROPIC_API_KEY and ADS_DEV_KEY")
 def test_llm_end_to_end(tmp_path, live_config):
     rc, data = run_report(_target(MAIN), tmp_path, live_config)
+    assert rc == 0
+    llm = data["llm"]
+    assert llm["status"] == "ok", llm.get("reason")
+    assert set(llm["cited_bibcodes"]) <= set(llm["bibcodes_sent"])
+    assert 3 <= count_sentences(llm["overview"]) <= 5, llm["overview"]
+
+
+def _claude_code_logged_in() -> bool:
+    """`claude auth status`, run the way star-report runs claude (see writer.claude_code_env)."""
+    exe = shutil.which("claude")
+    if exe is None:
+        return False
+    try:
+        with tempfile.TemporaryDirectory() as empty:
+            done = subprocess.run([exe, "auth", "status"], capture_output=True, text=True,
+                                  timeout=30, env=claude_code_env(os.environ, empty))
+        return json.loads(done.stdout).get("loggedIn") is True
+    except (OSError, subprocess.SubprocessError, ValueError, AttributeError):
+        return False
+
+
+def test_llm_end_to_end_claude_code(tmp_path, live_cache):
+    """The writer through `claude -p` on the Claude Code login (llm.backend: claude-code)."""
+    if not (os.environ.get("ADS_DEV_KEY") and _claude_code_logged_in()):
+        pytest.skip("needs ADS_DEV_KEY and a logged-in Claude Code (`claude auth login`)")
+    config = tmp_path / "claude-code.yaml"
+    config.write_text(yaml.safe_dump({"cache": {"dir": str(live_cache)},
+                                      "llm": {"backend": "claude-code"}}))
+    rc, data = run_report(_target(MAIN), tmp_path / "out", config)
     assert rc == 0
     llm = data["llm"]
     assert llm["status"] == "ok", llm.get("reason")

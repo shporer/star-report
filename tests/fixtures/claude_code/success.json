@@ -1,0 +1,107 @@
+{
+ "api_error_status": null,
+ "credential_expires_at": null,
+ "duration_api_ms": 3865,
+ "duration_ms": 4010,
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "fast_mode_state": "off",
+ "first_content_frame_ms": 1261,
+ "is_error": false,
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "cacheCreationEphemeral1hInputTokens": 1537,
+   "cacheCreationEphemeral5mInputTokens": 0,
+   "cacheCreationInputTokens": 1537,
+   "cacheReadInputTokens": 0,
+   "canonicalModel": "claude-opus-5-5",
+   "contextWindow": 1000000,
+   "costBasis": "list",
+   "costUSD": 0.018804,
+   "inputTokens": 2,
+   "maxOutputTokens": 128000,
+   "outputTokens": 325,
+   "provider": "firstParty",
+   "thinkingTokens": 28,
+   "webSearchRequests": 0
+  }
+ },
+ "num_turns": 2,
+ "permission_denials": [],
+ "queued_turn_count": 0,
+ "result": "{\"overview\":\"HD 209458 is a G0 V star with a visual magnitude of V = 7.65. It hosts the transiting hot Jupiter HD 209458 b, which has an orbital period of 3.52475 d. The fact sheet gives no other stellar parameters, such as effective temperature, mass, radius, distance or age. It also has no information on binarity, stellar variability or the archival data that exist for this star.\",\"literature_summary\":\"No papers were provided for this summary because no literature search was run, so there is nothing to report from the literature. The only information available is the spectral type, V magnitude and planet period listed in the fact sheet.\",\"cited_bibcodes\":[]}",
+ "result_index": 0,
+ "safety_stops": 0,
+ "session_id": "009bdc66-336a-4e92-9898-941194ea9d20",
+ "stop_reason": "tool_use",
+ "structured_output": {
+  "cited_bibcodes": [],
+  "literature_summary": "No papers were provided for this summary because no literature search was run, so there is nothing to report from the literature. The only information available is the spectral type, V magnitude and planet period listed in the fact sheet.",
+  "overview": "HD 209458 is a G0 V star with a visual magnitude of V = 7.65. It hosts the transiting hot Jupiter HD 209458 b, which has an orbital period of 3.52475 d. The fact sheet gives no other stellar parameters, such as effective temperature, mass, radius, distance or age. It also has no information on binarity, stellar variability or the archival data that exist for this star."
+ },
+ "subagent_stats": {
+  "by_type": {},
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "system": 0,
+   "user": 0
+  },
+  "max_depth": 0,
+  "refused": {
+   "budget": 0,
+   "concurrency_limit": 0,
+   "depth_limit": 0
+  },
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "spawned": 0,
+  "spawned_by_subagents": 0,
+  "started_in_background": 0
+ },
+ "subtype": "success",
+ "terminal_reason": "completed",
+ "time_to_request_ms": 145,
+ "total_cost_usd": 0.018804,
+ "ttft_ms": 1867,
+ "ttft_stream_ms": 1261,
+ "type": "result",
+ "usage": {
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1537,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "cache_creation_input_tokens": 1537,
+  "cache_read_input_tokens": 0,
+  "fallback_credit": null,
+  "inference_geo": "global",
+  "input_tokens": 2,
+  "iterations": [
+   {
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 1537,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 1537,
+    "cache_read_input_tokens": 0,
+    "input_tokens": 2,
+    "output_tokens": 325,
+    "type": "message"
+   }
+  ],
+  "output_tokens": 325,
+  "output_tokens_details": {
+   "thinking_tokens": 28
+  },
+  "server_tool_use": {
+   "web_fetch_requests": 0,
+   "web_search_requests": 0
+  },
+  "service_tier": "standard",
+  "speed": "standard"
+ },
+ "uuid": "730f90f7-5870-4b46-9f14-92038b022a37"
+}

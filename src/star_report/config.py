@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from importlib.resources import files
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import yaml
 from pydantic import (
@@ -103,14 +103,26 @@ class LiteratureConfig(_Section):
     most_recent: int
 
 
+class ClaudeCodeConfig(_Section):
+    command: Annotated[str, Field(min_length=1)]
+    timeout_s: Seconds
+
+    @field_validator("command")
+    @classmethod
+    def _expand_home(cls, v: str) -> str:
+        return os.path.expanduser(v)
+
+
 class LLMConfig(_Section):
     enabled: bool
+    backend: Literal["api", "claude-code"]
     model: str
     effort: str
     max_tokens: int
     server_fallback: bool
     timeout_s: Seconds
     max_retries: NonNegativeInt
+    claude_code: ClaudeCodeConfig
 
 
 class Config(_Section):

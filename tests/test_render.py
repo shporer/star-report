@@ -100,6 +100,14 @@ def test_html_escaping(tmp_path):
     assert "&lt;script&gt;" in html
 
 
+def test_link_citations_grouped():
+    out = str(link_citations(
+        "depth [2001ApJ...548..466B, 2002A&A...385..156G; 2003A&A...402..701B]. Not [2001 a]."))
+    assert out.count('<a href="https://ui.adsabs.harvard.edu/abs/') == 3
+    assert "466B</a>, <a" in out and "156G</a>; <a" in out
+    assert out.startswith("depth <a") and out.endswith("402..701B</a>. Not [2001 a].")
+
+
 def test_link_citations_escapes_html():
     out = str(link_citations("<b>bold</b> [2000ApJ...529L..45C]"))
     assert "<b>" not in out and "&lt;b&gt;" in out

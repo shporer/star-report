@@ -1,4 +1,5 @@
 import socket
+from pathlib import Path
 
 import pytest
 
@@ -50,6 +51,9 @@ def test_unknown_key_is_config_error(tmp_path):
     ("plots: {cmd_background_timeout_s: -1}", "plots.cmd_background_timeout_s"),
     ("llm: {timeout_s: -300}", "llm.timeout_s"),
     ("llm: {max_retries: -1}", "llm.max_retries"),
+    ("llm: {claude_code: {timeout_s: 0}}", "llm.claude_code.timeout_s"),
+    ("llm: {claude_code: {command: ''}}", "llm.claude_code.command"),
+    ("llm: {backend: openai}", "llm.backend"),
 ])
 def test_non_positive_workers_and_timeouts_are_config_errors(tmp_path, override, key):
     (tmp_path / "config.yaml").write_text(override + "\n")
@@ -63,6 +67,17 @@ def test_positive_timeouts_and_zero_retries_are_valid(tmp_path):
         "llm: {max_retries: 0}\n")
     cfg = load_config(cwd=tmp_path)
     assert (cfg.sources.max_workers, cfg.sources.timeout_s, cfg.llm.max_retries) == (1, 0.5, 0)
+
+
+def test_llm_backend_defaults_and_override(tmp_path):
+    cfg = load_config(cwd=tmp_path)
+    assert (cfg.llm.backend, cfg.llm.claude_code.command, cfg.llm.claude_code.timeout_s) == \
+        ("api", "claude", 600)
+    (tmp_path / "config.yaml").write_text(
+        "llm: {backend: claude-code, claude_code: {command: ~/bin/claude}}\n")
+    cfg = load_config(cwd=tmp_path)
+    assert cfg.llm.backend == "claude-code"
+    assert cfg.llm.claude_code.command == str(Path.home() / "bin" / "claude")
 
 
 def test_bad_yaml_is_config_error(tmp_path):

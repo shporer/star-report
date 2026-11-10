@@ -32,11 +32,16 @@ The `star-report` command is then at `.venv/bin/star-report`.
 
 ## Credentials
 
-Both live in the environment only.
+Keys live in the environment only.
 
 - `ADS_DEV_KEY`: needed for the literature section (the same variable arxiv-agent uses).
-- `ANTHROPIC_API_KEY`, or a profile from `ant auth login`: needed for the LLM sections. Without
-  credentials the report still renders and states why those sections are missing.
+- The LLM sections need one of:
+  - `ANTHROPIC_API_KEY`, or a profile from `ant auth login` (the default, `llm.backend: api`),
+    billed to an Anthropic API organization;
+  - a logged-in Claude Code with `llm.backend: claude-code`: no API key, and the requests count
+    against your Claude plan's usage. See "Claude Code backend" below.
+
+  Without them the report still renders and states why those sections are missing.
 
 ## Usage
 
@@ -118,16 +123,48 @@ invalid value is a configuration error (exit code 2).
 - The CMD background (50k Gaia stars) is fetched once and cached indefinitely. Its download is limited
   to `plots.cmd_background_timeout_s` (120 s); on a timeout the report leaves out the CMD with a note.
 
+## Claude Code backend (no API key)
+
+With `llm.backend: claude-code`, the two LLM sections are written by Claude Code's print mode
+(`claude -p`) on your Claude Code login, so no API key or API credit is needed. Setup:
+
+1. Install Claude Code, then log in once from a terminal: `claude auth login`, choosing the account
+   whose plan should be used. `claude-opus-5-5` needs Claude Code 2.1.280 or newer (`claude update`);
+   an older version is refused with an error that names the version.
+2. Put this in a local `config.yaml`:
+
+   ```yaml
+   llm:
+     backend: claude-code
+   ```
+
+claude gets the report's own system prompt and output schema, and the configured model and effort.
+It runs with no tools, settings, plugins or MCP servers, saves no session, and runs in an empty
+temporary directory. Anthropic API credentials are kept from it: `ANTHROPIC_API_KEY` and
+`ANTHROPIC_AUTH_TOKEN` are not passed, and `ant auth login` profiles are hidden. Without a login of
+its own, claude would otherwise use such a profile and bill that API organization. When star-report
+itself runs inside a Claude Code session, that session's own `CLAUDE*` and `ANTHROPIC_*` variables
+are left out too.
+
+`llm.claude_code.timeout_s` (600 s) limits each call; claude is stopped at the deadline.
+`llm.claude_code.command` names the executable (default `claude`). A missing or logged-out Claude
+Code, a usage limit or a timeout appears in the report as the reason the sections are missing.
+Failures are not cached, so a later run fills them in. Each star is one large request (two if the
+first answer cites a paper outside the list), so a long batch can reach the plan's usage limit
+partway through.
+
 ## LLM cost
 
-About $0.10-0.25 per report. The model, effort and token limit are under `llm:` in the config
-(defaults: `claude-opus-5-5`, `high`, server-side refusal fallback on), as are the client's
-per-request timeout `llm.timeout_s` (300 s) and retry count `llm.max_retries` (1). The output is
-cached and never expires, so re-rendering is free; `--refresh` regenerates it. Note: the LLM call has
-not yet been run live during development (no Anthropic credentials were available), so the first real
-run is also its first live test. Structured outputs (`output_config.format`) are sent without a beta
-header. If that first call fails with a `BadRequestError` about the output format (the report shows it
-where the overview would be), please report it.
+With the API backend, about $0.10-0.25 per report; the Claude Code backend counts against your
+plan's usage instead. The model and effort are under `llm:` in the config (defaults:
+`claude-opus-5-5`, `high`). For the API backend only, so are the token limit, the server-side
+refusal fallback (on), the client's per-request timeout `llm.timeout_s` (300 s) and its retry count
+`llm.max_retries` (1). The output is cached and never expires, so re-rendering is free;
+`--refresh` regenerates it. The Claude Code backend has been run live; the API backend has not
+(no API credit was available), so its first real run is also its first live test. Structured
+outputs (`output_config.format`) are sent without a beta header. If that first API call fails with a
+`BadRequestError` about the output format (the report shows it where the overview would be), please
+report it.
 
 ## Tests
 
@@ -141,10 +178,13 @@ suite (reference stars in `tests/reference_stars.yaml`) needs `ADS_DEV_KEY` and 
 set, and can fail when ESA Gaia, MAST or the VizieR mirror time out: re-run before debugging. The live
 LLM tests (`test_llm_end_to_end` and `test_cold_run_time_with_llm`) skip when `ANTHROPIC_API_KEY` or
 `ADS_DEV_KEY` isn't set; an `ant auth login` profile alone doesn't enable them.
+`test_llm_end_to_end_claude_code` runs the writer through Claude Code instead; it skips unless
+`ADS_DEV_KEY` is set and `claude auth status` reports a login.
 
 Re-record fixtures from the live services:
 
 ```
 python scripts/record_fixtures.py --source NAME [--star SLUG]
 python scripts/record_fixtures.py --lookups [--star SLUG]
+python scripts/record_fixtures.py --claude-code   # one writer reply via your Claude Code login
 ```

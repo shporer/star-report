@@ -38,6 +38,7 @@ star-report/
 - `.venv/bin/pytest -m live`: real services; slow; needs `ADS_DEV_KEY` and `ANTHROPIC_API_KEY`.
   Timeouts from Gaia, MAST or the VizieR mirror are transient: re-run first.
 - `python scripts/record_fixtures.py --source NAME [--star SLUG]` or `--lookups`: re-record fixtures.
+  `--claude-code` records one `claude -p` writer reply.
 
 ## Configuration
 
@@ -75,7 +76,8 @@ keys and is deep-merged over the defaults.
 
 - Radii, timeouts, enabled sources, cache expiry, thresholds, plot settings, literature limits:
   edit `config.yaml`.
-- LLM model, effort or token limit: `llm:` in `config.yaml`. Prompt and output handling: `writer.py`.
+- LLM backend, model, effort or token limit: `llm:` in `config.yaml`. Prompt and output handling:
+  `writer.py`.
 - Server mirrors: `servers:` in `config.yaml`.
 - New data product: add a source (above). New report section: a template partial in `render/templates/`.
 - Changing flag or disagreement logic: `derive.py`, with thresholds from config.
@@ -85,13 +87,31 @@ keys and is deep-merged over the defaults.
 - CDS hosts (SIMBAD, VizieR, alasky) were unreachable on 2026-11-09. Config lists the Harvard mirrors
   second; the first host accepting a TCP connection is used. The sky image falls back from hips2fits
   to STScI DSS, then to a Gaia-only neighbor chart.
+- On 2026-11-10, CDS accepted TCP connections but answered SIMBAD TAP and VizieR queries with a 404
+  "Page unavailable" HTML page. `pick_server` checks TCP only, so it chose CDS and cold runs could
+  not resolve names (cached stars still worked); listing the Harvard hosts first in a local
+  `config.yaml` works around it.
 - The Harvard VizieR mirror can silently return empty tables, and the wide-binary catalog depends on
   row_limit. Empty results are rechecked after `cache.empty_expiry_days`.
 - ADS search rejects `object:`. The name is translated via `/v1/objects/query` first, with an
   abstract-phrase fallback.
 - KOA goes through its TAP service with pyvo, not pykoa.
 - MAST needs a 90 s timeout for TESS continuous viewing zone stars (`sources.timeout_overrides`).
-- The LLM call was never run live during development (no Anthropic credentials). The first real run
-  is unverified; expect to fix surprises there. LLM output is cached forever; `--refresh` regenerates.
+- LLM backends: `llm.backend: api` (Anthropic SDK) or `claude-code` (`claude -p` on the user's
+  Claude Code login, no API key). The claude-code path never passes `ANTHROPIC_API_KEY` or
+  `ANTHROPIC_AUTH_TOKEN`, and it points `ANTHROPIC_CONFIG_DIR` at an empty directory (dropping
+  `ANTHROPIC_PROFILE`): without its own login, claude falls back to an `ant auth login` profile and
+  bills that API org. Inside a Claude Code session it also drops every `CLAUDE*`/`ANTHROPIC_*`
+  variable (`CLAUDE_CONFIG_DIR` excepted): the desktop app's session variables make a nested
+  claude fail to authenticate. `--bare` is not an option, because it never reads the OAuth login.
+  Inside a session, `claude auth status` reports the host session's account, not the CLI's own
+  login; check it with those variables stripped.
+- The writer first ran live on 2026-11-10, through the Claude Code backend. Prompt v1's text was
+  accurate but too long (a 10-sentence overview, 4 literature paragraphs with Markdown headings that
+  the HTML printed literally). Prompt v4 adds plain-text, length and source-naming rules; HD 209458
+  then came out at 5 sentences and 3 paragraphs, every claim backed by its abstract. The model
+  groups citations as `[A, B]` or `[A; B]`: `models.CITATION_RE` covers those in the citation check
+  and the links. The API path has still never run live (no API credit). Claude Code needs 2.1.280
+  or newer for `claude-opus-5-5`. LLM output is cached forever; `--refresh` regenerates.
 - Cost is about $0.10-0.25 per report with the default model and effort.
 - The CMD background (50k Gaia stars) is cached indefinitely.

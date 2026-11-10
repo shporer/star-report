@@ -11,7 +11,11 @@ from pydantic import BaseModel
 Status = Literal["ok", "empty", "error", "timeout", "skipped"]
 
 # "[bibcode]" citation marker (19-char bibcode)
-BIBCODE_RE = re.compile(r"\[([0-9]{4}[A-Za-z0-9&.]{14}[A-Za-z.])\]")
+_BIBCODE = r"[0-9]{4}[A-Za-z0-9&.]{14}[A-Za-z.]"
+BIBCODE_RE = re.compile(rf"\[({_BIBCODE})\]")
+# A citation bracket: one bibcode, or several separated by commas or semicolons ([A], [A, B], [A; B]).
+CITATION_RE = re.compile(rf"\[\s*{_BIBCODE}(?:\s*[,;]\s*{_BIBCODE})*\s*\]")
+BIBCODE_PART_RE = re.compile(_BIBCODE)   # picks the bibcodes out of a CITATION_RE match
 
 
 class Position(BaseModel):
