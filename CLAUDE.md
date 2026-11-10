@@ -84,13 +84,12 @@ keys and is deep-merged over the defaults.
 
 ## Things to remember
 
-- CDS hosts (SIMBAD, VizieR, alasky) were unreachable on 2026-11-09. Config lists the Harvard mirrors
-  second; the first host accepting a TCP connection is used. The sky image falls back from hips2fits
-  to STScI DSS, then to a Gaia-only neighbor chart.
-- On 2026-11-10, CDS accepted TCP connections but answered SIMBAD TAP and VizieR queries with a 404
-  "Page unavailable" HTML page. `pick_server` checks TCP only, so it chose CDS and cold runs could
-  not resolve names (cached stars still worked); listing the Harvard hosts first in a local
-  `config.yaml` works around it.
+- CDS hosts (SIMBAD, VizieR, alasky) were unreachable on 2026-11-09; on 2026-11-10 they accepted TCP
+  connections but answered SIMBAD TAP and VizieR queries with 404 "Page unavailable" pages. Config
+  lists the Harvard mirrors second, and `pick_server` uses the first host whose small HTTP probe
+  (`servers.probes`) answers 200 with a VOTable, so both kinds of outage fall back to Harvard. The
+  sky image still checks alasky by TCP (`is_reachable`) and falls back from hips2fits to STScI DSS,
+  then to a Gaia-only neighbor chart.
 - The Harvard VizieR mirror can silently return empty tables, and the wide-binary catalog depends on
   row_limit. Empty results are rechecked after `cache.empty_expiry_days`.
 - ADS search rejects `object:`. The name is translated via `/v1/objects/query` first, with an
