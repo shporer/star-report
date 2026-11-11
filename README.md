@@ -1,5 +1,7 @@
 # star-report
 
+[![tests](https://github.com/shporer/star-report/actions/workflows/tests.yml/badge.svg)](https://github.com/shporer/star-report/actions/workflows/tests.yml)
+
 Give it a star name, a catalog ID, or coordinates. It resolves the star, gathers catalog, archive,
 light-curve and literature data from public services, and writes a self-contained HTML report, a
 `data.json`, and a short terminal summary. An optional Claude-written overview and literature summary

@@ -36,7 +36,8 @@ star-report/
 
 - `.venv/bin/star-report "HD 209458"`: full report. Add `--no-llm`, `--no-plots`, `--refresh`, `-v`.
 - `.venv/bin/star-report --from-file targets.txt --no-open`: batch.
-- `.venv/bin/pytest -q`: offline suite (sockets blocked).
+- `.venv/bin/pytest -q`: offline suite (sockets blocked). GitHub Actions runs it on Python 3.11 and
+  3.13 for pushes to `main` and for pull requests (`.github/workflows/tests.yml`).
 - `.venv/bin/pytest -m live`: real services; slow; needs `ADS_DEV_KEY` and `ANTHROPIC_API_KEY`.
   Timeouts from Gaia, MAST or the VizieR mirror are transient: re-run first. When ESA's Gaia TAP is
   overloaded it rejects synchronous queries with HTTP 503 ("Server overloaded: synchronous job
