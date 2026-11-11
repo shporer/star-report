@@ -1,0 +1,30 @@
+{
+ "nss_acceleration_astro": [
+  {
+   "accel_dec": -4.182524868442677,
+   "accel_dec_error": 0.09728547930717468,
+   "accel_ra": 2.6579012343624506,
+   "accel_ra_error": 0.11816255003213882,
+   "deriv_accel_dec": null,
+   "deriv_accel_dec_error": null,
+   "deriv_accel_ra": null,
+   "deriv_accel_ra_error": null,
+   "nss_solution_type": "Acceleration7",
+   "significance": 50.77097702026367,
+   "source_id": 21296238855672832
+  }
+ ],
+ "nss_non_linear_spectro": [],
+ "nss_two_body_orbit": [
+  {
+   "eccentricity": 0.09095240161924631,
+   "inclination": null,
+   "mass_ratio": null,
+   "nss_solution_type": "SB1",
+   "period": 3.1642089635795987,
+   "period_error": 0.00019758263078983873,
+   "semi_amplitude_primary": 3.662262163006502,
+   "source_id": 21296238855672832
+  }
+ ]
+}

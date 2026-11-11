@@ -36,7 +36,11 @@ star-report/
 - `.venv/bin/star-report --from-file targets.txt --no-open`: batch.
 - `.venv/bin/pytest -q`: offline suite (sockets blocked).
 - `.venv/bin/pytest -m live`: real services; slow; needs `ADS_DEV_KEY` and `ANTHROPIC_API_KEY`.
-  Timeouts from Gaia, MAST or the VizieR mirror are transient: re-run first.
+  Timeouts from Gaia, MAST or the VizieR mirror are transient: re-run first. When ESA's Gaia TAP is
+  overloaded it rejects synchronous queries with HTTP 503 ("Server overloaded: synchronous job
+  rejected due to maximum number of synchronous queued jobs (150) reached"), and connections time
+  out or drop; single queries are hit too (2026-11-10, 17:07-17:50 UTC and 20:10-22:00). Our
+  User-Agent and our few concurrent queries were not the cause. Wait before re-running.
 - `python scripts/record_fixtures.py --source NAME [--star SLUG]` or `--lookups`: re-record fixtures.
   `--claude-code` records one `claude -p` writer reply.
 

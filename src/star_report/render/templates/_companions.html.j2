@@ -90,15 +90,42 @@
 {% if ruwe is not none %}<p>Gaia DR3 RUWE: {{ "%.2f"|format(ruwe) }}</p>{% endif %}
 {{ status_note("gaia_nss") }}
 {% call(data) rows("gaia_nss") %}
+{% set orbits = data | selectattr("kind", "equalto", "orbit") | list %}
+{% set accels = data | selectattr("kind", "equalto", "acceleration") | list %}
+{% set trends = data | selectattr("kind", "equalto", "trend") | list %}
+{% if orbits %}
 <h3>Gaia DR3 non-single-star orbits</h3>
 <table>
 <thead><tr><th>Type</th><th>Period (d)</th><th>Eccentricity</th><th>K1 (km/s)</th><th>Inclination (deg)</th><th>Mass ratio</th></tr></thead>
 <tbody>
-{% for r in data %}
-<tr><td>{{ r.type }}</td><td class="num">{{ "%.3f"|format(r.period_d) if r.period_d is not none else "" }}</td><td class="num">{{ "%.3f"|format(r.ecc) if r.ecc is not none else "" }}</td><td class="num">{{ "%.2f"|format(r.k1_kms) if r.k1_kms is not none else "" }}</td><td class="num">{{ "%.1f"|format(r.inclination) if r.inclination is not none else "" }}</td><td class="num">{{ "%.3f"|format(r.mass_ratio) if r.mass_ratio is not none else "" }}</td></tr>
+{% for r in orbits %}
+<tr><td>{{ r.type or "" }}</td><td class="num">{{ "%.3f"|format(r.period_d) if r.period_d is not none else "" }}</td><td class="num">{{ "%.3f"|format(r.ecc) if r.ecc is not none else "" }}</td><td class="num">{{ "%.2f"|format(r.k1_kms) if r.k1_kms is not none else "" }}</td><td class="num">{{ "%.1f"|format(r.inclination) if r.inclination is not none else "" }}</td><td class="num">{{ "%.3f"|format(r.mass_ratio) if r.mass_ratio is not none else "" }}</td></tr>
 {% endfor %}
 </tbody>
 </table>
+{% endif %}
+{% if accels %}
+<h3>Gaia DR3 astrometric accelerations</h3>
+<table>
+<thead><tr><th>Type</th><th>Accel. RA (mas/yr²)</th><th>Accel. Dec (mas/yr²)</th><th>d/dt accel. RA (mas/yr³)</th><th>d/dt accel. Dec (mas/yr³)</th><th>Significance</th></tr></thead>
+<tbody>
+{% for r in accels %}
+<tr><td>{{ r.type or "" }}</td><td class="num">{{ fmt_cell(r.accel_ra, r.accel_ra_err, 3) }}</td><td class="num">{{ fmt_cell(r.accel_dec, r.accel_dec_err, 3) }}</td><td class="num">{{ fmt_cell(r.deriv_accel_ra, r.deriv_accel_ra_err, 2) }}</td><td class="num">{{ fmt_cell(r.deriv_accel_dec, r.deriv_accel_dec_err, 2) }}</td><td class="num">{{ "%.1f"|format(r.significance) if r.significance is not none else "" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if trends %}
+<h3>Gaia DR3 RV trends</h3>
+<table>
+<thead><tr><th>Type</th><th>Mean RV (km/s)</th><th>dRV/dt (km/s/d)</th><th>d²RV/dt² (km/s/d²)</th></tr></thead>
+<tbody>
+{% for r in trends %}
+<tr><td>{{ r.type or "" }}</td><td class="num">{{ fmt_cell(r.mean_velocity, r.mean_velocity_err, 2) }}</td><td class="num">{{ fmt_cell(r.first_deriv_velocity, r.first_deriv_velocity_err, 4) }}</td><td class="num">{{ fmt_cell(r.second_deriv_velocity, r.second_deriv_velocity_err, 6) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
 {% endcall %}
 {{ status_note("wds") }}
 {% call(data) rows("wds") %}

@@ -177,8 +177,42 @@ def _dicts(value: Any) -> list[dict]:
     return [r for r in value if isinstance(r, dict)] if isinstance(value, list) else []
 
 
-_NSS_COLS = ["source_id", "nss_solution_type", "period", "period_error", "eccentricity",
-             "eccentricity_error", "semi_amplitude_primary", "inclination", "mass_ratio"]
+def _all_ok(outcomes: list[tuple[str, Any]]) -> list[Any]:
+    """parallel_map's results, or a raise, so nothing partial is cached.
+
+    A query's own error is raised in preference to a timeout, so the service's message (an HTTP 503,
+    say) is not hidden behind "timed out" when another query is still waiting.
+    """
+    for wanted in ("error", "timeout"):
+        for status, value in outcomes:
+            if status == wanted:
+                raise value
+    return [value for _, value in outcomes]
+
+
+# kind -> (Gaia DR3 table, {parsed key: column}); each row also keeps nss_solution_type as "type".
+# One source can have solutions in several tables (HD 18284: an SB1 orbit and an Acceleration7).
+_NSS = {
+    "orbit": ("nss_two_body_orbit", {
+        "period_d": "period", "period_err": "period_error", "ecc": "eccentricity",
+        "k1_kms": "semi_amplitude_primary", "inclination": "inclination",
+        "mass_ratio": "mass_ratio"}),
+    # mas/yr^2; the derivatives, in mas/yr^3, exist for Acceleration9 only
+    "acceleration": ("nss_acceleration_astro", {
+        "accel_ra": "accel_ra", "accel_ra_err": "accel_ra_error",
+        "accel_dec": "accel_dec", "accel_dec_err": "accel_dec_error",
+        "deriv_accel_ra": "deriv_accel_ra", "deriv_accel_ra_err": "deriv_accel_ra_error",
+        "deriv_accel_dec": "deriv_accel_dec", "deriv_accel_dec_err": "deriv_accel_dec_error",
+        "significance": "significance"}),
+    # km/s, km/s/d and km/s/d^2; the second derivative exists for SecondDegreeTrendSB1 only
+    "trend": ("nss_non_linear_spectro", {
+        "mean_velocity": "mean_velocity", "mean_velocity_err": "mean_velocity_error",
+        "first_deriv_velocity": "first_deriv_velocity",
+        "first_deriv_velocity_err": "first_deriv_velocity_error",
+        "second_deriv_velocity": "second_deriv_velocity",
+        "second_deriv_velocity_err": "second_deriv_velocity_error"}),
+}
+_NSS_TABLES = [table for table, _ in _NSS.values()]
 
 
 class GaiaNss(Source):
@@ -189,29 +223,30 @@ class GaiaNss(Source):
     needs = ("gaia_dr3_id",)
 
     def query(self, ctx: SourceContext) -> dict:
-        return {"source_id": ctx.identity.gaia_dr3_id}
+        # The table list is part of the cache key, so payloads cached before a table was added
+        # are not reused.
+        return {"source_id": ctx.identity.gaia_dr3_id, "tables": list(_NSS_TABLES)}
 
     def fetch(self, ctx: SourceContext) -> Any:
         sid = _safe_id(ctx.identity.gaia_dr3_id)
         if sid is None:
-            return []
-        adql = (f"SELECT {', '.join(_NSS_COLS)} FROM gaiadr3.nss_two_body_orbit "
-                f"WHERE source_id = {sid}")
-        return tap_rows(TAP_URL, adql, ctx.session)
+            return {}
+        adql = [f"SELECT source_id, nss_solution_type, {', '.join(cols.values())} "
+                f"FROM gaiadr3.{table} WHERE source_id = {sid}" for table, cols in _NSS.values()]
+        # The tables are queried concurrently in daemon threads.
+        rows = _all_ok(parallel_map(lambda q: tap_rows(TAP_URL, q, ctx.session), adql,
+                                    self.timeout_s(ctx.config), name="gaia_nss"))
+        return dict(zip(_NSS_TABLES, rows, strict=True))
 
     def parse(self, raw: Any, ctx: SourceContext) -> list[dict] | None:
+        if not isinstance(raw, dict):
+            return None
         out = []
-        for r in _dicts(raw):
-            sol = r.get("nss_solution_type")
-            out.append({
-                "type": sol if isinstance(sol, str) else None,
-                "period_d": _num(r.get("period")),
-                "period_err": _num(r.get("period_error")),
-                "ecc": _num(r.get("eccentricity")),
-                "k1_kms": _num(r.get("semi_amplitude_primary")),
-                "inclination": _num(r.get("inclination")),
-                "mass_ratio": _num(r.get("mass_ratio")),
-            })
+        for kind, (table, cols) in _NSS.items():
+            for r in _dicts(raw.get(table)):
+                sol = r.get("nss_solution_type")
+                out.append({"kind": kind, "type": sol if isinstance(sol, str) else None,
+                            **{key: _num(r.get(col)) for key, col in cols.items()}})
         return out or None
 
 
@@ -254,16 +289,10 @@ class GaiaVari(Source):
         flags = [f for f in _VARI_PERIODS if summary.get(f"in_vari_{f}") is True]
         period_adql = {f: f"SELECT {_VARI_PERIODS[f][1]} FROM gaiadr3.{_VARI_PERIODS[f][0]} "
                           f"WHERE source_id = {sid}" for f in flags}
-        # Independent queries run concurrently in daemon threads; any failure or timeout
-        # propagates (nothing partial is cached).
-        outcomes = parallel_map(lambda adql: tap_rows(TAP_URL, adql, ctx.session),
-                                [classifier_adql, *period_adql.values()],
-                                self.timeout_s(ctx.config), name="gaia_vari")
-        rows = []
-        for status, value in outcomes:
-            if status != "ok":
-                raise value
-            rows.append(value)
+        # Independent queries run concurrently in daemon threads.
+        rows = _all_ok(parallel_map(lambda adql: tap_rows(TAP_URL, adql, ctx.session),
+                                    [classifier_adql, *period_adql.values()],
+                                    self.timeout_s(ctx.config), name="gaia_vari"))
         return {"summary": summary, "classifier": rows[0],
                 "periods": dict(zip(period_adql, rows[1:], strict=True))}
 

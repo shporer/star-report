@@ -11,7 +11,8 @@ sit on top of the data.
 - Parameters from several catalogs side by side, with disagreements and quality flags (RUWE,
   contamination) highlighted.
 - Planets and TOIs: NASA Exoplanet Archive and ExoFOP.
-- Companions: Gaia neighbors, Gaia non-single-star solutions, WDS, SB9, VSX, and the El-Badry wide-binary catalog.
+- Companions: Gaia neighbors; Gaia DR3 non-single-star orbits, astrometric accelerations and RV
+  trends; WDS, SB9, VSX, and the El-Badry wide-binary catalog.
 - Observation inventory: MAST, TESS sector pointing, ESO, Keck KOA, HARPS RV bank, APOGEE, LAMOST.
 - Plots: color-magnitude diagram on a Gaia background, TESS light curve and periodogram, and a sky
   image with neighbors marked.

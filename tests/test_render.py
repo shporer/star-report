@@ -10,7 +10,8 @@ from star_report.config import load_config
 from star_report.models import Position, Report
 from star_report.render.html import link_citations, render_html, write_outputs
 from star_report.render.terminal import print_summary
-from conftest import make_report
+from star_report.sources.gaia import GaiaNss
+from conftest import load_fixture, make_ctx, make_report, ref_identity
 
 
 def _all_failed():
@@ -143,6 +144,90 @@ def _with(report, **updates):
     for k, v in updates.items():
         results[k] = results[k].model_copy(update=v)
     return report.model_copy(update={"results": results})
+
+
+_NSS_ORBIT = {"kind": "orbit", "type": "SB1", "period_d": 3.164209, "period_err": 0.000198,
+              "ecc": 0.090952, "k1_kms": 3.662262, "inclination": None, "mass_ratio": None}
+_NSS_ACCEL = {"kind": "acceleration", "type": "Acceleration9",
+              "accel_ra": 0.249932, "accel_ra_err": 0.068566,
+              "accel_dec": -0.834295, "accel_dec_err": 0.029093,
+              "deriv_accel_ra": -9.824574, "deriv_accel_ra_err": 0.290533,
+              "deriv_accel_dec": -0.642292, "deriv_accel_dec_err": 0.110981,
+              "significance": 34.090904}
+_NSS_TREND = {"kind": "trend", "type": "SecondDegreeTrendSB1",
+              "mean_velocity": -14.171673, "mean_velocity_err": 1.692782,
+              "first_deriv_velocity": 0.003772, "first_deriv_velocity_err": 0.006963,
+              "second_deriv_velocity": 3.2e-05, "second_deriv_velocity_err": 4.3e-05}
+
+
+def _binarity(rows, tmp_path):
+    report = _with(make_report(), gaia_nss={"status": "ok", "data": rows})
+    html = render_html(report, tmp_path)
+    return html[html.index('id="binarity"'):html.index('id="variability"')]
+
+
+def _tables(sec):
+    """{heading: [row, ...]} for each table in a section; each row is a {header: cell} dict."""
+    out = {}
+    for heading, table in re.findall(r"<h3>(.*?)</h3>\s*<table>(.*?)</table>", sec, flags=re.S):
+        head = re.findall(r"<th>(.*?)</th>", table)
+        body = table[table.index("<tbody>"):]
+        out[heading] = [dict(zip(head, re.findall(r"<td[^>]*>(.*?)</td>", tr), strict=True))
+                        for tr in re.findall(r"<tr>(.*?)</tr>", body, flags=re.S)]
+    return out
+
+
+_ACCEL_HEADERS = ["Type", "Accel. RA (mas/yr²)", "Accel. Dec (mas/yr²)",
+                  "d/dt accel. RA (mas/yr³)", "d/dt accel. Dec (mas/yr³)", "Significance"]
+
+
+def test_binarity_puts_each_nss_kind_in_its_own_table(tmp_path):
+    tables = _tables(_binarity([_NSS_ORBIT, _NSS_ACCEL, _NSS_TREND], tmp_path))
+    assert tables["Gaia DR3 non-single-star orbits"] == [{
+        "Type": "SB1", "Period (d)": "3.164", "Eccentricity": "0.091", "K1 (km/s)": "3.66",
+        "Inclination (deg)": "", "Mass ratio": ""}]
+    assert tables["Gaia DR3 astrometric accelerations"] == [dict(zip(_ACCEL_HEADERS, [
+        "Acceleration9", "0.250 ± 0.069", "-0.834 ± 0.029", "-9.82 ± 0.29", "-0.64 ± 0.11",
+        "34.1"]))]
+    assert tables["Gaia DR3 RV trends"] == [{
+        "Type": "SecondDegreeTrendSB1", "Mean RV (km/s)": "-14.17 ± 1.69",
+        "dRV/dt (km/s/d)": "0.0038 ± 0.0070", "d²RV/dt² (km/s/d²)": "0.000032 ± 0.000043"}]
+
+
+def test_binarity_renders_the_recorded_hd18284_solutions(tmp_path):
+    """The parser's output for the recorded star, whose acceleration derivatives are NULL."""
+    ctx = make_ctx(identity=ref_identity("HD_18284"))
+    rows = GaiaNss().parse(load_fixture("gaia_nss", "HD_18284"), ctx)
+    tables = _tables(_binarity(rows, tmp_path))
+    assert tables["Gaia DR3 non-single-star orbits"][0]["Period (d)"] == "3.164"
+    assert tables["Gaia DR3 astrometric accelerations"] == [dict(zip(_ACCEL_HEADERS, [
+        "Acceleration7", "2.658 ± 0.118", "-4.183 ± 0.097", "", "", "50.8"]))]
+    assert "Gaia DR3 RV trends" not in tables
+
+
+def test_binarity_renders_rows_without_values(tmp_path):
+    first_degree = {**_NSS_TREND, "type": "FirstDegreeTrendSB1", "second_deriv_velocity": None,
+                    "second_deriv_velocity_err": None}
+    bare = {k: None for k in _NSS_ACCEL} | {"kind": "acceleration"}
+    tables = _tables(_binarity([bare, first_degree], tmp_path))
+    assert tables["Gaia DR3 astrometric accelerations"] == [dict.fromkeys(_ACCEL_HEADERS, "")]
+    assert tables["Gaia DR3 RV trends"] == [{
+        "Type": "FirstDegreeTrendSB1", "Mean RV (km/s)": "-14.17 ± 1.69",
+        "dRV/dt (km/s/d)": "0.0038 ± 0.0070", "d²RV/dt² (km/s/d²)": ""}]
+
+
+def test_binarity_leaves_a_missing_solution_type_blank(tmp_path):
+    for row in (_NSS_ORBIT, _NSS_ACCEL, _NSS_TREND):
+        sec = _binarity([{**row, "type": None}], tmp_path)
+        assert "<td>None</td>" not in sec and "<tr><td></td>" in sec
+
+
+def test_binarity_omits_empty_nss_tables(tmp_path):
+    sec = _binarity([_NSS_ORBIT], tmp_path)
+    assert "non-single-star orbits" in sec
+    assert "astrometric accelerations" not in sec and "RV trends" not in sec
+    sec = _binarity([_NSS_ACCEL], tmp_path)
+    assert "non-single-star orbits" not in sec and "astrometric accelerations" in sec
 
 
 def test_toi_rule_archive_ok_but_empty(tmp_path):
