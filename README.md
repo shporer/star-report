@@ -24,25 +24,45 @@ sit on top of the data.
 Python 3.11 or newer.
 
 ```
+git clone https://github.com/shporer/star-report.git
 cd star-report
-python3.13 -m venv .venv
+python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 ```
 
 The `star-report` command is then at `.venv/bin/star-report`.
 
+## Getting started
+
+The catalogs and archives are public, so a report needs no account:
+
+```
+.venv/bin/star-report "HD 209458" --no-llm
+```
+
+Two optional pieces add the rest:
+
+1. **Literature section:** a free NASA ADS API token, from
+   [ADS settings](https://ui.adsabs.harvard.edu/user/settings/token), in the environment as
+   `ADS_DEV_KEY`.
+2. **Claude-written overview and literature summary:** your own Claude access, one of:
+   - an Anthropic API key in `ANTHROPIC_API_KEY` (the default). Each report costs about
+     $0.10-0.25, billed to your API account;
+   - your own Claude Code login, with `llm.backend: claude-code` in a local `config.yaml` (see
+     "Claude Code backend" below). No API key; the requests count against your Claude plan.
+
+Without them the report still renders and states why those sections are missing.
+
 ## Credentials
 
-Keys live in the environment only.
+Keys live in the environment only, never in files.
 
-- `ADS_DEV_KEY`: needed for the literature section (the same variable arxiv-agent uses).
+- `ADS_DEV_KEY`: needed for the literature section.
 - The LLM sections need one of:
   - `ANTHROPIC_API_KEY`, or a profile from `ant auth login` (the default, `llm.backend: api`),
     billed to an Anthropic API organization;
   - a logged-in Claude Code with `llm.backend: claude-code`: no API key, and the requests count
     against your Claude plan's usage. See "Claude Code backend" below.
-
-  Without them the report still renders and states why those sections are missing.
 
 ## Usage
 
@@ -174,11 +194,10 @@ plan's usage instead. The model and effort are under `llm:` in the config (defau
 `claude-opus-5-5`, `high`). For the API backend only, so are the token limit, the server-side
 refusal fallback (on), the client's per-request timeout `llm.timeout_s` (300 s) and its retry count
 `llm.max_retries` (1). The output is cached and never expires, so re-rendering is free;
-`--refresh` regenerates it. The Claude Code backend has been run live; the API backend has not
-(no API credit was available), so its first real run is also its first live test. Structured
-outputs (`output_config.format`) are sent without a beta header. If that first API call fails with a
-`BadRequestError` about the output format (the report shows it where the overview would be), please
-report it.
+`--refresh` regenerates it. The Claude Code backend has been run live; the API backend has not yet
+been tested against the live API. Structured outputs (`output_config.format`) are sent without a
+beta header. If your first API call fails with a `BadRequestError` about the output format (the
+report shows it where the overview would be), please open an issue.
 
 ## Tests
 
@@ -202,3 +221,8 @@ python scripts/record_fixtures.py --source NAME [--star SLUG]
 python scripts/record_fixtures.py --lookups [--star SLUG]
 python scripts/record_fixtures.py --claude-code   # one writer reply via your Claude Code login
 ```
+
+## License
+
+MIT; see [LICENSE](LICENSE). The data in each report come from the public services listed above;
+cite them as their providers ask when you use the data.

@@ -127,7 +127,7 @@ keys and is deep-merged over the defaults.
   the HTML printed literally). Prompt v4 adds plain-text, length and source-naming rules; HD 209458
   then came out at 5 sentences and 3 paragraphs, every claim backed by its abstract. The model
   groups citations as `[A, B]` or `[A; B]`: `models.CITATION_RE` covers those in the citation check
-  and the links. The API path has still never run live (no API credit). Claude Code needs 2.1.280
+  and the links. The API path has not been run live yet. Claude Code needs 2.1.280
   or newer for `claude-opus-5-5`. LLM output is cached forever; `--refresh` regenerates.
 - Cost is about $0.10-0.25 per report with the default model and effort.
 - The CMD background (50k Gaia stars) is cached indefinitely.
