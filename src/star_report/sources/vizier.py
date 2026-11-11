@@ -41,7 +41,12 @@ class VizierSpec:
 
 def vizier_client(cfg: Config, columns: Sequence[str], row_limit: int = 200,
                   timeout: float | None = None) -> Vizier:
-    """A client on the first VizieR host that answers its probe. The catalog goes to each query call."""
+    """A client on the first VizieR host that answers its probe. The catalog goes to each query call.
+
+    Every query passes cache=False: star-report caches answers itself, and astroquery's own cache
+    (on by default, kept 7 days) would replay an old answer on --refresh or when an empty result
+    is rechecked.
+    """
     servers = cfg.servers
     host = pick_server(servers.vizier, servers.probes.vizier, servers.probe_timeout_s)
     return Vizier(vizier_server=host, columns=list(columns),
@@ -118,7 +123,7 @@ class VizierSource(Source):
         out: dict[str, list[dict]] = {}
         for column in self.spec.gaia_columns:
             # Constraint values are bare: a leading "=" matches nothing.
-            result = client.query_constraints(catalog=catalog, **{column: gaia_id})
+            result = client.query_constraints(catalog=catalog, cache=False, **{column: gaia_id})
             out[column] = [row for rows in _to_records(result).values() for row in rows]
         return out
 
@@ -129,7 +134,7 @@ class VizierSource(Source):
         target = f"{catalog}/{self.spec.table}" if self.spec.table else catalog
         result = client.query_region(
             SkyCoord(float(ra) * u.deg, float(dec) * u.deg, frame="icrs"),
-            radius=self._radius(ctx) * u.arcsec, catalog=target)
+            radius=self._radius(ctx) * u.arcsec, catalog=target, cache=False)
         tables = _to_records(result)
         if self.spec.followup and any(tables.values()):
             tables.update(self.spec.followup(ctx, catalog, tables))
@@ -206,7 +211,7 @@ def sb9_orbits(ctx: SourceContext, catalog: str, tables: dict) -> dict:
     client = vizier_client(ctx.config, CONSTRAINT_COLUMNS)
     rows: list[dict] = []
     for seq in seqs:
-        result = client.query_constraints(catalog=f"{catalog}/orbits", Seq=seq)
+        result = client.query_constraints(catalog=f"{catalog}/orbits", Seq=seq, cache=False)
         rows.extend(r for rs in _to_records(result).values() for r in rs)
     return {f"{catalog}/orbits": rows}
 
@@ -278,7 +283,7 @@ def harps_rvs(ctx: SourceContext, catalog: str, tables: dict) -> dict:
     client = vizier_client(ctx.config, ["BJD"], row_limit=-1)
     rows: list[dict] = []
     for name in names:
-        result = client.query_constraints(catalog=f"{catalog}/rvbank", Name=name)
+        result = client.query_constraints(catalog=f"{catalog}/rvbank", Name=name, cache=False)
         rows.extend(r for rs in _to_records(result).values() for r in rs)
     return {f"{catalog}/rvbank": rows}
 

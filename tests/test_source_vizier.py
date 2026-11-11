@@ -7,7 +7,8 @@ from star_report.coords import propagate, separation_arcsec
 from star_report.sources import vizier
 from star_report.sources.base import run_source
 from star_report.sources.registry import build_sources
-from star_report.sources.vizier import SB9, VSX, WDS, WIDE_BINARIES, VizierSource, VizierSpec
+from star_report.sources.vizier import (
+    HARPS_RVBANK, SB9, VSX, WDS, WIDE_BINARIES, VizierSource, VizierSpec)
 
 GAIA_ID = "4472832130942575872"
 
@@ -19,13 +20,16 @@ class FakeVizier:
         self.region, self.constraints = region or [], constraints or []
         self.calls = []
         self.column_requests = []
+        self.cache_flags = []  # astroquery's `cache` argument of each call; its default is True
 
-    def query_region(self, coordinates, radius=None, catalog=None):
+    def query_region(self, coordinates, radius=None, catalog=None, cache=True):
         self.calls.append(("region", {"catalog": catalog, "radius": radius}))
+        self.cache_flags.append(cache)
         return self.region
 
-    def query_constraints(self, catalog=None, **constraints):
+    def query_constraints(self, catalog=None, cache=True, **constraints):
         self.calls.append(("constraints", {"catalog": catalog, **constraints}))
+        self.cache_flags.append(cache)
         return self.constraints.pop(0) if self.constraints else []
 
 
@@ -145,6 +149,20 @@ def test_sb9_two_step(fake):
     out = SB9.parse(raw, ctx)
     assert out == [{"name": "HD 1", "period_d": 3.52, "ecc": 0.01, "k1_kms": 80.0, "k2_kms": None,
                     "grade": 5.0}]
+
+
+def test_queries_bypass_astroquerys_own_cache(fake):
+    """star-report caches VizieR answers itself. astroquery's cache (on by default, 7 days) would
+    replay an old answer on --refresh and on the one-day recheck of an empty result."""
+    main = {"B/sb9/main": _table("B/sb9/main", Seq=[42], Name=["HD 1"],
+                                 _RAJ2000=[330.795], _DEJ2000=[18.884])}
+    client = fake(region=main)
+    SB9.fetch(make_ctx())  # a cone, then a constraint follow-up
+    HARPS_RVBANK.fetch(make_ctx())  # a cone, then a constraint follow-up per star
+    WIDE_BINARIES.fetch(_gaia_ctx())  # constraint queries by Gaia ID
+    kinds = [kind for kind, _ in client.calls]
+    assert kinds.count("region") == 2 and kinds.count("constraints") == 4
+    assert client.cache_flags == [False] * len(client.calls)
 
 
 def test_constraint_queries_use_default_columns(fake):
