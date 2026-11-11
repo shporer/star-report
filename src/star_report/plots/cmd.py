@@ -1,15 +1,22 @@
-"""Color-magnitude diagram: a Gaia DR3 background sample with the target marked."""
+"""Color-magnitude diagram: a Gaia DR3 background sample with the target marked.
+
+The background ships with the package (data/cmd_background.csv.gz), so the CMD needs no network.
+scripts/make_cmd_background.py rebuilds that file from the Gaia archive with BACKGROUND_ADQL.
+"""
 
 from __future__ import annotations
 
+import csv
+import functools
+import gzip
+import io
 import math
+from importlib import resources
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pyvo
 
-from star_report.cache import Cache
-from star_report.config import Config
 from star_report.models import SourceResult
 from star_report.sources import gaia
 from star_report.sources.base import records
@@ -20,6 +27,7 @@ BACKGROUND_ADQL = (
     "AND ruwe < 1.4 AND phot_bp_mean_flux_over_error > 20 "
     "AND phot_rp_mean_flux_over_error > 20 ORDER BY random_index"
 )
+BACKGROUND_FILE = "cmd_background.csv.gz"  # in the package's data/ folder
 
 
 def _run_async(session, adql: str) -> list[dict]:
@@ -27,15 +35,35 @@ def _run_async(session, adql: str) -> list[dict]:
     return records(result.to_table())
 
 
-def fetch_background(cache: Cache, cfg: Config, session) -> list[list[float]]:
-    n = int(cfg.plots.cmd_background_rows)
+def query_background(session, n: int) -> list[list[float]]:
+    """[BP-RP, M_G] for n Gaia DR3 stars within 100 pc, from the archive (BACKGROUND_ADQL)."""
+    rows = _run_async(session, BACKGROUND_ADQL.format(n=int(n)))
+    return [[r["bp_rp"], r["abs_g"]] for r in rows
+            if r.get("bp_rp") is not None and r.get("abs_g") is not None]
 
-    def produce() -> list[list[float]]:
-        rows = _run_async(session, BACKGROUND_ADQL.format(n=n))
-        return [[r["bp_rp"], r["abs_g"]] for r in rows
-                if r.get("bp_rp") is not None and r.get("abs_g") is not None]
 
-    return cache.fetch("cmd_background", "background", {"rows": n, "v": 1}, produce).payload
+def save_background(rows: list[list[float]], path: Path) -> None:
+    """Write [BP-RP, M_G] pairs as gzipped CSV, to 1 mmag; byte-identical for the same rows."""
+    text = io.StringIO()
+    writer = csv.writer(text, lineterminator="\n")
+    writer.writerow(["bp_rp", "abs_g"])
+    writer.writerows([f"{x:.3f}", f"{y:.3f}"] for x, y in rows)
+    with open(path, "wb") as f, gzip.GzipFile(fileobj=f, mode="wb", mtime=0) as gz:
+        gz.write(text.getvalue().encode("ascii"))
+
+
+def load_background(path: Path | None = None) -> list[list[float]]:
+    """The [BP-RP, M_G] pairs in a background file; by default the one in the package."""
+    if path is None:
+        return [list(p) for p in _bundled_background()]
+    with gzip.open(path, "rt", encoding="ascii", newline="") as f:
+        return [[float(x), float(y)] for x, y in csv.reader(f) if x != "bp_rp"]
+
+
+@functools.cache
+def _bundled_background() -> tuple[tuple[float, float], ...]:
+    with resources.as_file(resources.files("star_report") / "data" / BACKGROUND_FILE) as path:
+        return tuple((x, y) for x, y in load_background(path))
 
 
 def _num(value) -> float | None:

@@ -29,7 +29,6 @@ cache:
     eso: 7
     koa: 7
     ads: 7
-    cmd_background: null
     llm: null
 sources:
   max_workers: 8
@@ -69,8 +68,10 @@ plots:
   sky_fallback_survey: poss2ukstu_red   # STScI DSS cutout service, used when CDS is unreachable
   neighbor_max_delta_g: 6
   tess_pixel_arcsec: 21
+  # The CMD background ships with the package; these two are used only by
+  # scripts/make_cmd_background.py, which rebuilds it from the Gaia archive.
   cmd_background_rows: 50000
-  cmd_background_timeout_s: 120   # Gaia query for the CMD background; on timeout the CMD is skipped with a note
+  cmd_background_timeout_s: 120
   periodogram_min_period_d: 0.1
   periodogram_max_period_d: 30
   period_merge_tolerance: 0.01   # relative; known periods closer than this share one line

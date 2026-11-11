@@ -154,8 +154,10 @@ invalid value is a configuration error (exit code 2).
   star; `sources.timeout_overrides` raises it per source.
   MAST is 90 s because its observation query can take about 45 s for stars in TESS's continuous
   viewing zone. Light-curve downloads use `plots.lightcurve_timeout_s` (120 s).
-- The CMD background (50k Gaia stars) is fetched once and cached indefinitely. Its download is limited
-  to `plots.cmd_background_timeout_s` (120 s); on a timeout the report leaves out the CMD with a note.
+- The CMD background (50,000 Gaia DR3 stars within 100 pc) ships with the package in
+  `src/star_report/data/cmd_background.csv.gz` (230 kB), so the diagram needs no network.
+  `python scripts/make_cmd_background.py` rebuilds it from the Gaia archive; Gaia DR3 is a fixed
+  release and the query is deterministic, so this is needed only if the query changes.
 
 ## Claude Code backend (no API key)
 
@@ -220,6 +222,12 @@ Re-record fixtures from the live services:
 python scripts/record_fixtures.py --source NAME [--star SLUG]
 python scripts/record_fixtures.py --lookups [--star SLUG]
 python scripts/record_fixtures.py --claude-code   # one writer reply via your Claude Code login
+```
+
+Rebuild the bundled CMD background (rarely needed; see "Mirrors and known service issues"):
+
+```
+python scripts/make_cmd_background.py [--timeout SECONDS]
 ```
 
 ## License

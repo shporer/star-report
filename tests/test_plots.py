@@ -53,10 +53,7 @@ def test_background_adql_is_verbatim():
     assert "ORDER BY random_index" in cmd.BACKGROUND_ADQL
 
 
-def test_fetch_background_caches_and_drops_none(tmp_path, monkeypatch):
-    cfg = load_config(cwd=tmp_path)
-    cfg.plots.cmd_background_rows = 3
-    cache = Cache(tmp_path / "cache", cfg.cache.expiry_days, cfg.cache.empty_expiry_days)
+def test_query_background_drops_incomplete_rows(monkeypatch):
     calls = []
 
     def fake_async(session, adql):
@@ -65,13 +62,26 @@ def test_fetch_background_caches_and_drops_none(tmp_path, monkeypatch):
                 {"bp_rp": 1.0, "abs_g": None}, {"bp_rp": 1.5, "abs_g": 7.0}]
 
     monkeypatch.setattr(cmd, "_run_async", fake_async)
-    assert cmd.fetch_background(cache, cfg, object()) == [[0.5, 4.0], [1.5, 7.0]]
-    assert cmd.fetch_background(cache, cfg, object()) == [[0.5, 4.0], [1.5, 7.0]]
+    assert cmd.query_background(object(), 3) == [[0.5, 4.0], [1.5, 7.0]]
     assert len(calls) == 1 and "TOP 3" in calls[0]
 
 
-def test_cmd_plotter_draws_background_and_target(tmp_path, monkeypatch):
-    monkeypatch.setattr(cmd, "fetch_background", lambda cache, cfg, session: BACKGROUND)
+def test_background_file_round_trip(tmp_path):
+    path = tmp_path / "bg.csv.gz"
+    cmd.save_background([[0.51234, 4.0], [1.5, -1.23456]], path)
+    assert cmd.load_background(path) == [[0.512, 4.0], [1.5, -1.235]]  # 1 mmag is plenty
+
+
+def test_bundled_background_ships_with_the_package():
+    bg = cmd.load_background()
+    assert len(bg) == 50_000
+    assert all(len(p) == 2 and -1 < p[0] < 6 and -5 < p[1] < 20 for p in bg)
+    main_sequence = [p for p in bg if 0.5 < p[0] < 1.5]
+    assert 4 < sorted(q[1] for q in main_sequence)[len(main_sequence) // 2] < 9
+
+
+def test_cmd_plotter_needs_no_network_or_cache(tmp_path):
+    """The background is bundled: a first run draws the CMD while sockets are blocked."""
     path, note = plots._plot_cmd(make_report(), tmp_path / "cmd.png", load_config(cwd=tmp_path),
                                  None, None)
     assert path.read_bytes().startswith(PNG) and note is None
@@ -104,7 +114,7 @@ def test_tic_point_none_without_tic():
 def _cmd_calls(monkeypatch, report, tmp_path):
     """Run the CMD plotter; return (the plot_cmd call, the note)."""
     calls = []
-    monkeypatch.setattr(cmd, "fetch_background", lambda cache, cfg, session: BACKGROUND)
+    monkeypatch.setattr(cmd, "load_background", lambda: BACKGROUND)
     monkeypatch.setattr(cmd, "plot_cmd", lambda *a, **kw: calls.append((a, kw)) or a[3])
     _, note = plots._plot_cmd(report, tmp_path / "cmd.png", load_config(cwd=tmp_path), None, None)
     (call,) = calls
@@ -154,36 +164,6 @@ def test_plot_cmd_variants_write_png(tmp_path, kw):
     target = (2.39, 9.60) if kw.get("from_tic") else None
     path = cmd.plot_cmd(BACKGROUND, target, "TOI-700", tmp_path / "cmd.png", **kw)
     assert path.read_bytes().startswith(PNG)
-
-
-def test_cmd_plotter_background_error_propagates(tmp_path, monkeypatch):
-    def boom(cache, cfg, session):
-        raise RuntimeError("gaia down")
-
-    monkeypatch.setattr(cmd, "fetch_background", boom)
-    with pytest.raises(RuntimeError, match="gaia down"):
-        plots._plot_cmd(make_report(), tmp_path / "cmd.png", load_config(cwd=tmp_path), None, None)
-
-
-def test_cmd_background_timeout_note(tmp_path, monkeypatch):
-    import threading
-    import time
-
-    release = threading.Event()
-    monkeypatch.setattr(cmd, "fetch_background", lambda cache, cfg, session: release.wait(5))
-    monkeypatch.setitem(plots.PLOTTERS, "lightcurve", lambda *a: (None, None))
-    monkeypatch.setitem(plots.PLOTTERS, "sky", lambda *a: (None, None))
-    cfg = load_config(cwd=tmp_path)
-    cfg.plots.cmd_background_timeout_s = 1.0
-    start = time.monotonic()
-    try:
-        paths, notes = plots.make_plots(make_report(), tmp_path / "plots", cfg, None)
-        assert time.monotonic() - start < 1.8
-    finally:
-        release.set()
-    assert paths == {}
-    assert notes == {"cmd": "Gaia CMD background download timed out after 1 s."}
-    assert not (tmp_path / "plots" / "cmd.png").exists()
 
 
 def test_make_plots_isolates_failures(tmp_path, monkeypatch):
