@@ -47,6 +47,15 @@ def test_fact_sheet_basics():
     assert "None" not in json.dumps(facts)
 
 
+def test_fact_sheet_leaves_out_an_unconfirmed_gaia_id():
+    """The writer could state the ID without its caveat; the warnings tell it what happened."""
+    report = make_report()
+    assert build_fact_sheet(report)["identifiers"]["Gaia DR3"] == "1779546757669063552"
+    ident = report.identity.model_copy(update={"gaia_dr3_unconfirmed": True})
+    facts = build_fact_sheet(report.model_copy(update={"identity": ident}))
+    assert "Gaia DR3" not in facts["identifiers"]
+
+
 def test_fact_sheet_kois_read_the_parsed_keys():
     report = make_report("Kepler-10")
     assert build_fact_sheet(report)["kois"] == ["Kepler-10 b (CONFIRMED)", "Kepler-10 c (CONFIRMED)"]

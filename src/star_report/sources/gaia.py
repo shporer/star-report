@@ -6,6 +6,7 @@ from typing import Any
 
 import requests
 
+from star_report.coords import at_gaia_epoch
 from star_report.sources.base import Source, SourceContext, parallel_map, tap_rows
 
 TAP_URL = "https://gea.esac.esa.int/tap-server/tap"
@@ -132,12 +133,14 @@ class GaiaNeighbors(Source):
         return ctx.config.sources.radius_arcsec["gaia_neighbors"]
 
     def query(self, ctx: SourceContext) -> dict:
-        pos = ctx.identity.position
-        return {"ra": pos.ra, "dec": pos.dec, "radius_arcsec": self._radius(ctx)}
+        # Centred at Gaia's epoch: during a Gaia outage the identity's position is SIMBAD's
+        # J2000 one, which for a high-proper-motion star lies far from its Gaia source.
+        ra, dec = at_gaia_epoch(ctx.identity.position)
+        return {"ra": ra, "dec": dec, "radius_arcsec": self._radius(ctx)}
 
     def fetch(self, ctx: SourceContext) -> Any:
-        pos = ctx.identity.position
-        return tap_rows(TAP_URL, cone_adql(pos.ra, pos.dec, self._radius(ctx)), ctx.session)
+        q = self.query(ctx)
+        return tap_rows(TAP_URL, cone_adql(q["ra"], q["dec"], q["radius_arcsec"]), ctx.session)
 
     def parse(self, raw: Any, ctx: SourceContext) -> list[dict] | None:
         if not raw:

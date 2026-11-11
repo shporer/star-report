@@ -211,7 +211,7 @@ def build_fact_sheet(report: Report) -> dict:
     identifiers: dict[str, Any] = {"main_name": ident.main_name}
     if ident.tic_id is not None:
         identifiers["TIC"] = ident.tic_id
-    if ident.gaia_dr3_id:
+    if ident.gaia_dr3_id and not ident.gaia_dr3_unconfirmed:  # the warnings explain an unconfirmed ID
         identifiers["Gaia DR3"] = ident.gaia_dr3_id
     identifiers.update({k: v for k, v in sorted(ident.other_ids.items()) if v})
 

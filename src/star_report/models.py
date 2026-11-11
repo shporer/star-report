@@ -35,6 +35,9 @@ class StarIdentity(BaseModel):
     simbad_id: str | None = None
     tic_id: int | None = None
     gaia_dr3_id: str | None = None
+    # True when gaia_dr3_id is the ID SIMBAD lists, kept because the Gaia archive could not be
+    # asked to confirm it; the position is then SIMBAD's or the TIC's, not Gaia's.
+    gaia_dr3_unconfirmed: bool = False
     gaia_dr2_id: str | None = None
     position: Position
     other_ids: dict[str, str] = {}  # "HD", "HIP", "2MASS", "KIC", "EPIC", "TOI", ...

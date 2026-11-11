@@ -9,7 +9,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from star_report.derive import display_name, header_line, toi_entries, toi_source
+from star_report.derive import display_name, gaia_dr3_label, header_line, toi_entries, toi_source
 from star_report.models import Report
 from star_report.render.html import STATUS_LABELS
 
@@ -72,8 +72,8 @@ def print_summary(report: Report, report_path: Path | None, console: Console) ->
     ids = []
     if ident.tic_id is not None:
         ids.append(f"TIC {ident.tic_id}")
-    if ident.gaia_dr3_id:
-        ids.append(f"Gaia DR3 {ident.gaia_dr3_id}")
+    if label := gaia_dr3_label(ident):
+        ids.append(label)
     for key in ("HD", "HIP"):
         if key in ident.other_ids:
             ids.append(ident.other_ids[key] if ident.other_ids[key].startswith(key)

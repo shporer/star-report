@@ -216,6 +216,22 @@ def test_binarity_renders_rows_without_values(tmp_path):
         "dRV/dt (km/s/d)": "0.0038 ± 0.0070", "d²RV/dt² (km/s/d²)": ""}]
 
 
+def _unconfirmed(report):
+    pos = report.identity.position.model_copy(update={"source": "simbad", "epoch": 2000.0})
+    ident = report.identity.model_copy(update={"gaia_dr3_unconfirmed": True, "position": pos})
+    return report.model_copy(update={"identity": ident})
+
+
+def test_header_and_terminal_mark_an_unconfirmed_gaia_id(tmp_path):
+    report = _unconfirmed(make_report())
+    marked = "Gaia DR3 1779546757669063552 (from SIMBAD, unconfirmed)"
+    assert marked in render_html(report, tmp_path)
+    console = Console(record=True, width=200)
+    print_summary(report, tmp_path / "r.html", console)
+    assert marked in console.export_text()
+    assert "(from SIMBAD, unconfirmed)" not in render_html(make_report(), tmp_path)
+
+
 def test_binarity_leaves_a_missing_solution_type_blank(tmp_path):
     for row in (_NSS_ORBIT, _NSS_ACCEL, _NSS_TREND):
         sec = _binarity([{**row, "type": None}], tmp_path)

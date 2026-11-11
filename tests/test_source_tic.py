@@ -5,9 +5,10 @@ import pytest
 from astroquery import mast
 from astropy.table import Table
 
-from conftest import load_fixture
+from conftest import load_fixture, make_ctx
 
 from star_report.sources import tic
+from star_report.sources.base import run_source
 from star_report.sources.tic import Tic
 
 
@@ -104,6 +105,34 @@ def test_cone_sorted_by_distance(fake):
     kind, coord, kw = fake.instances[0].calls[0]
     assert kind == "region" and kw["catalog"] == "TIC" and kw["radius"].to("arcsec").value == 30
     assert fake.instances[0].TIMEOUT == 7
+
+
+_DR2_ROW = {"ID": [150428135], "GAIAmag": [12.0665], "gaiabp": [13.3503], "gaiarp": [10.9599],
+            "plx": [32.098], "e_plx": [0.0211], "PARflag": ["gaia2"]}
+
+
+def test_tic_keeps_the_gaia_dr2_parallax_and_colors(fake, ctx):
+    fake.table = Table(_DR2_ROW)
+    r = Tic().parse(Tic().fetch(ctx), ctx)
+    assert (r["gaiabp"], r["gaiarp"], r["plx"], r["e_plx"]) == (13.3503, 10.9599, 32.098, 0.0211)
+    assert r["PARflag"] == "gaia2"
+
+
+def test_tic_ignores_payloads_cached_before_the_new_columns(fake, tmp_path):
+    ctx = make_ctx(cache_dir=tmp_path / "cache")
+    old_query = {"catalog": "TIC", "ID": ctx.identity.tic_id}
+    ctx.cache.fetch("tic", "tic", old_query, lambda: [{"ID": ctx.identity.tic_id, "Teff": 6000.0}])
+    fake.table = Table(_DR2_ROW)
+    result = run_source(Tic(), ctx)
+    assert result.provenance.from_cache is False and result.data["plx"] == 32.098
+
+
+def test_recorded_toi700_carries_the_gaia_dr2_values(ctx):
+    r = Tic().parse(load_fixture("tic", "TOI-700"), ctx)
+    assert r["PARflag"] == "gaia2"
+    assert r["plx"] == pytest.approx(32.098, abs=1e-3)
+    assert r["gaiabp"] == pytest.approx(13.3503, abs=1e-4)
+    assert r["gaiarp"] == pytest.approx(10.9599, abs=1e-4)
 
 
 def test_fetch_uses_config_timeout(fake, ctx):

@@ -55,6 +55,16 @@ def propagate(pos: Position, epoch: float) -> tuple[float, float]:
     return float(moved.ra.deg), float(moved.dec.deg)
 
 
+GAIA_EPOCH = 2016.0  # Gaia DR3 reference epoch
+
+
+def at_gaia_epoch(pos: Position) -> tuple[float, float]:
+    """(ra, dec) at Gaia DR3's epoch: a Gaia position as it is, any other one propagated."""
+    if pos.source == "gaia_dr3":
+        return pos.ra, pos.dec  # exactly, so position-keyed cache entries keep their keys
+    return propagate(pos, GAIA_EPOCH)
+
+
 def separation_arcsec(ra1: float, dec1: float, ra2: float, dec2: float) -> float:
     a = SkyCoord(ra1 * u.deg, dec1 * u.deg)
     b = SkyCoord(ra2 * u.deg, dec2 * u.deg)

@@ -363,15 +363,59 @@ def test_w6_simbad_unavailable(rcfg):
         "SIMBAD unavailable (TimeoutError: t); identifiers may be incomplete."]
 
 
-def test_w6_service_is_not_asked_again(rcfg):
+_NOT_CHECKED = ("Not checked: whether the TIC and SIMBAD point to the same Gaia source; whether "
+                "another Gaia DR3 source lies within 2″ with ΔG < 3.")
+
+
+def test_gaia_outage_keeps_the_dr3_id_simbad_lists(rcfg):
     sky = foo_sky()
     sky.errors["gaia_by_id"] = OSError("x")
     ident = resolve(parse_target("Foo"), sky, rcfg)
-    assert ident.warnings == ["Gaia DR3 unavailable (OSError: x); identifiers may be incomplete."]
-    assert sky.calls.count("gaia_by_id") == 1
+    assert ident.gaia_dr3_id == "11" and ident.gaia_dr3_unconfirmed
+    assert ident.warnings == [
+        "Gaia archive unavailable. Gaia DR3 11 is taken from SIMBAD and was not confirmed by the "
+        "archive. Position and proper motion are from SIMBAD (J2000). " + _NOT_CHECKED
+        + " Run again later to complete the report. Archive error: OSError: x"]
+    assert sky.calls.count("gaia_by_id") == 1  # a failed service is not asked again
     assert not {"gaia_cone", "gaia_dr3_from_dr2", "gaia_dr2_from_dr3"} & set(sky.calls)
-    assert ident.gaia_dr3_id is None and ident.position.source == "simbad"
+    assert ident.position.source == "simbad" and ident.position.epoch == 2000.0
     assert (ident.tic_id, ident.gaia_dr2_id) == (1, "10")
+
+
+def test_gaia_answering_no_such_source_drops_the_id(rcfg):
+    sky = foo_sky()
+    sky.gaia_rows = {}  # the archive answers, without a row for SIMBAD's ID
+    ident = resolve(parse_target("Foo"), sky, rcfg)
+    assert ident.gaia_dr3_id is None and not ident.gaia_dr3_unconfirmed
+    assert not any(w.startswith("Gaia archive") for w in ident.warnings)
+
+
+def test_gaia_outage_without_an_id_to_keep(rcfg):
+    sky = foo_sky()
+    sky.simbad_objects = [simbad_obj("Foo", ids=["TIC 1"])]  # no Gaia identifiers in SIMBAD
+    sky.errors["gaia_cone"] = OSError("x")  # the positional match fails
+    ident = resolve(parse_target("Foo"), sky, rcfg)
+    assert ident.gaia_dr3_id is None and not ident.gaia_dr3_unconfirmed
+    assert ident.warnings == [
+        "Gaia archive unavailable. No Gaia DR3 match could be made. Position and proper motion are "
+        "from SIMBAD (J2000). Not checked: whether another Gaia DR3 source lies within 2″ with "
+        "ΔG < 3. Run again later to complete the report. Archive error: OSError: x"]
+
+
+def test_gaia_failing_after_the_match_names_the_checks_not_run(rcfg):
+    sky = foo_sky()
+    sky.errors["gaia_dr3_from_dr2"] = OSError("y")  # the TIC/SIMBAD check fails, the match held
+    ident = resolve(parse_target("Foo"), sky, rcfg)
+    assert ident.gaia_dr3_id == "11" and not ident.gaia_dr3_unconfirmed
+    assert ident.position.source == "gaia_dr3"
+    assert ident.warnings == [
+        "Gaia archive unavailable. " + _NOT_CHECKED
+        + " Run again later to complete the report. Archive error: OSError: y"]
+
+
+def test_a_confirmed_match_is_not_marked_unconfirmed(rcfg):
+    ident = resolve(parse_target("Foo"), foo_sky(), rcfg)
+    assert ident.gaia_dr3_id == "11" and not ident.gaia_dr3_unconfirmed and ident.warnings == []
 
 
 def test_w7_planet(rcfg):
@@ -452,6 +496,35 @@ def test_live_lookup_goes_through_the_cache(method, kwargs, module, function, gr
     stand_ins = {"SESSION": session, "CFG": cfg, "TIMEOUT": cfg.sources.timeout_s}
     assert calls == [tuple(stand_ins.get(a, a) if isinstance(a, str) else a for a in expected)]
     assert len(list((tmp_path / group).glob("*.json"))) == 1
+
+
+def test_live_lookup_gives_up_at_the_source_deadline(monkeypatch, tmp_path, cfg):
+    """A service that accepts the connection and never answers must not hang the run (rule 8)."""
+    import threading
+    import time
+
+    release = threading.Event()
+    daemon = []
+
+    def hang(*args):
+        daemon.append(threading.current_thread().daemon)
+        release.wait(5)
+        return {"ID": 1}
+
+    monkeypatch.setattr(tic, "by_id", hang)
+    cfg = cfg.model_copy(deep=True)
+    cfg.sources.timeout_s = 0.3
+    live = LiveLookup(Cache(tmp_path, cfg.cache.expiry_days, cfg.cache.empty_expiry_days),
+                      object(), cfg)
+    t0 = time.monotonic()
+    try:
+        with pytest.raises(TimeoutError, match=r"timed out after 0\.3 s"):
+            live.tic_by_id(tic=1)
+        assert time.monotonic() - t0 < 1.5
+    finally:
+        release.set()
+    assert daemon == [True]
+    assert not list(tmp_path.rglob("*.json"))  # nothing cached
 
 
 # ---- NASA Exoplanet Archive host lookups ----

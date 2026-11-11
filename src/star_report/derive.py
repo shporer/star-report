@@ -22,6 +22,14 @@ def display_name(main_id: str) -> str:
     return " ".join(name.split())
 
 
+def gaia_dr3_label(identity: StarIdentity) -> str | None:
+    """'Gaia DR3 <id>', marked when the ID is SIMBAD's and the Gaia archive did not confirm it."""
+    if not identity.gaia_dr3_id:
+        return None
+    label = f"Gaia DR3 {identity.gaia_dr3_id}"
+    return f"{label} (from SIMBAD, unconfirmed)" if identity.gaia_dr3_unconfirmed else label
+
+
 def slugify(name: str) -> str:
     slug = re.sub(r"\s+", "_", name)
     slug = re.sub(r"[^A-Za-z0-9+._-]", "", slug)

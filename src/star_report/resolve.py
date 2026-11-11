@@ -26,6 +26,7 @@ from star_report.sources import exoplanet_archive
 from star_report.sources import gaia as gaia_source
 from star_report.sources import simbad as simbad_source
 from star_report.sources import tic as tic_source
+from star_report.sources.base import call_with_timeout
 
 IdKind = Literal["tic", "gaia_dr3", "gaia_dr2", "toi", "koi", "kic", "epic", "hd", "hip",
                  "hr", "gj", "2mass", "coords", "name"]
@@ -151,6 +152,7 @@ _GROUP = {
 }
 _SERVICE = {"simbad": "SIMBAD", "gaia": "Gaia DR3", "tic": "TIC v8.2 (MAST)",
             "exoplanet_archive": "NASA Exoplanet Archive"}
+_GAIA = _SERVICE["gaia"]
 _SINGLE_RECORD = frozenset({"gaia_by_id", "tic_by_id", "toi_host", "koi_host"})
 
 
@@ -214,7 +216,18 @@ class LiveLookup(_RoutedLookup):
         self.cfg = cfg
 
     def _call(self, method: str, args: dict[str, Any]) -> Any:
-        produce = self._queries(args)[method]
+        query = self._queries(args)[method]
+        deadline = self.cfg.sources.timeout_s
+
+        def produce() -> Any:
+            # In a daemon thread with a deadline: some clients (astroquery's MAST catalogs) set
+            # no socket timeout, so a server that never answers would otherwise hang the run.
+            # Nothing is cached when it raises.
+            status, value = call_with_timeout(query, deadline, name=f"lookup-{method}")
+            if status != "ok":
+                raise value
+            return value
+
         return self.cache.fetch(_GROUP[method], f"lookup.{method}", args, produce).payload
 
     def _queries(self, a: dict[str, Any]) -> dict[str, Callable[[], Any]]:
@@ -377,6 +390,10 @@ class _Resolution:
         self.gaia: dict | None = None
         self.tic: dict | None = None
         self.dr2: str | None = None
+        # Gaia archive outages get one warning of their own, built at the end of run().
+        self.gaia_error: str | None = None
+        self.unconfirmed_dr3: str | None = None  # SIMBAD's Gaia DR3 ID, kept when the lookup failed
+        self.unchecked: list[str] = []  # identity checks the Gaia outage prevented
 
     def run(self) -> StarIdentity:
         p = self.parsed
@@ -395,12 +412,15 @@ class _Resolution:
         self._check_close_pair()
         self._check_tic_flag()
         self._check_multiple_system()
+        if self.gaia_error is not None:
+            self.warnings.insert(0, self._gaia_outage_warning(position))
         return StarIdentity(
             input=p.raw,
             main_name=self._main_name(),
             simbad_id=self.simbad["main_id"] if self.simbad else None,
             tic_id=self._tic_id,
-            gaia_dr3_id=self._dr3_id,
+            gaia_dr3_id=self._dr3_id or self.unconfirmed_dr3,
+            gaia_dr3_unconfirmed=self.gaia is None and self.unconfirmed_dr3 is not None,
             gaia_dr2_id=self.dr2,
             position=position,
             other_ids=self._other_ids(),
@@ -438,8 +458,9 @@ class _Resolution:
     def _ask(self, method: str, **args: Any) -> Any:
         """Ask a cross-match service.
 
-        A failure becomes a warning (W6), and that service is not asked again during this
-        resolution, so one outage costs one timeout.
+        A failure becomes a warning (W6; for the Gaia archive, the outage warning built at the
+        end of run()), and that service is not asked again during this resolution, so one outage
+        costs one timeout.
         """
         service = _SERVICE[_GROUP[method]]
         if service in self.down:
@@ -448,9 +469,31 @@ class _Resolution:
             return getattr(self.lookup, method)(**args)
         except Exception as exc:  # noqa: BLE001 - cross-matching is best effort
             self.down.add(service)
-            self.warnings.append(
-                f"{service} unavailable ({_describe(exc)}); identifiers may be incomplete.")
+            if service == _GAIA:
+                self.gaia_error = _describe(exc)
+            else:
+                self.warnings.append(
+                    f"{service} unavailable ({_describe(exc)}); identifiers may be incomplete.")
             return _nothing(method)
+
+    @property
+    def _gaia_down(self) -> bool:
+        return _GAIA in self.down
+
+    def _gaia_outage_warning(self, position: Position) -> str:
+        """One warning for a Gaia archive outage: what was kept, what was not checked, what to do."""
+        parts = ["Gaia archive unavailable."]
+        if self.gaia is None:
+            parts.append(f"Gaia DR3 {self.unconfirmed_dr3} is taken from SIMBAD and was not "
+                         "confirmed by the archive." if self.unconfirmed_dr3
+                         else "No Gaia DR3 match could be made.")
+        if position.source != "gaia_dr3":
+            origin = "SIMBAD" if position.source == "simbad" else "the TIC"
+            parts.append(f"Position and proper motion are from {origin} (J{position.epoch:g}).")
+        if self.unchecked:
+            parts.append(f"Not checked: {'; '.join(self.unchecked)}.")
+        parts.append(f"Run again later to complete the report. Archive error: {self.gaia_error}")
+        return " ".join(parts)
 
     # -- 1. the catalog that owns the ID --
 
@@ -532,6 +575,10 @@ class _Resolution:
         dr3_id = _simbad_xid(self.simbad, "Gaia DR3")
         if dr3_id:
             self.gaia = self._ask("gaia_by_id", dr3_id=dr3_id)
+            if self.gaia is None and self._gaia_down:
+                # The lookup failed; it did not answer "no such source". Keep SIMBAD's ID.
+                self.unconfirmed_dr3 = dr3_id
+                return
         tic_dr2 = self.tic.get("GAIA") if self.tic else None
         if self.gaia is None and tic_dr2:
             best = _closest(self._ask("gaia_dr3_from_dr2", dr2_id=tic_dr2))
@@ -650,6 +697,9 @@ class _Resolution:
         if not (simbad_dr3 and tic_dr2):
             return
         best = _closest(self._ask("gaia_dr3_from_dr2", dr2_id=tic_dr2))
+        if self._gaia_down:
+            self.unchecked.append("whether the TIC and SIMBAD point to the same Gaia source")
+            return
         if best is not None and best["dr3_source_id"] != simbad_dr3:
             self.warnings.append(
                 f"TIC {self._tic_id} points to Gaia DR2 {tic_dr2}, which matches Gaia DR3 "
@@ -657,12 +707,20 @@ class _Resolution:
 
     def _check_close_pair(self) -> None:
         """W2: more Gaia DR3 sources of similar brightness close to the target."""
+        not_checked = (f"whether another Gaia DR3 source lies within "
+                       f"{self.cfg.pair_radius_arcsec:g}″ with ΔG < {self.cfg.pair_max_delta_g:g}")
         target_g = self.gaia.get("phot_g_mean_mag") if self.gaia else None
         if target_g is None:
+            if self.gaia is None and self._gaia_down:
+                self.unchecked.append(not_checked)
             return
         cone = _cone_args(self.gaia["ra"], self.gaia["dec"], self.cfg.pair_radius_arcsec)
+        rows = self._ask("gaia_cone", **cone)
+        if self._gaia_down:
+            self.unchecked.append(not_checked)
+            return
         count = 1 + sum(  # the target, plus every other source with |ΔG| below the limit
-            1 for row in self._ask("gaia_cone", **cone)
+            1 for row in rows
             if str(row["source_id"]) != self._dr3_id and row.get("phot_g_mean_mag") is not None
             and abs(row["phot_g_mean_mag"] - target_g) < self.cfg.pair_max_delta_g)
         if count > 1:

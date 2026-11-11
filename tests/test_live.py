@@ -118,6 +118,7 @@ def test_spellings_resolve(slug, spelling, lookup):
     ident = resolve(parse_target(spelling), live, cfg.resolve)
     assert ident.tic_id == star["tic"]
     assert ident.gaia_dr3_id == star["gaia_dr3"]
+    assert not ident.gaia_dr3_unconfirmed  # an ID kept during a Gaia outage does not pass
 
 
 @pytest.mark.parametrize("service", ["simbad", "vizier"])

@@ -12,6 +12,7 @@ matplotlib.use("Agg")
 
 from star_report.cache import Cache  # noqa: E402
 from star_report.config import Config  # noqa: E402
+from star_report.coords import at_gaia_epoch  # noqa: E402
 from star_report.models import Report  # noqa: E402
 from star_report.plots import cmd, lightcurve, sky  # noqa: E402
 from star_report.sources.base import call_with_timeout, make_session  # noqa: E402
@@ -31,10 +32,17 @@ def _plot_cmd(report, path, cfg, cache, session):
         return None, f"Gaia CMD background download timed out after {int(timeout)} s."
     if status == "error":
         raise background
-    target = cmd.target_point(report.results)
-    label = report.identity.main_name
-    note = None if target else "No Gaia parallax for the target; only the background is shown."
-    return cmd.plot_cmd(background, target, label, path), note
+    results, label = report.results, report.identity.main_name
+    target = cmd.target_point(results)
+    if target is not None:
+        return cmd.plot_cmd(background, target, label, path), None
+    if cmd.has_gaia_row(results):  # Gaia DR3 answered: it decides, even without a parallax
+        return cmd.plot_cmd(background, None, label, path), cmd.NO_PARALLAX_NOTE
+    target = cmd.tic_point(results)  # no Gaia DR3 data (an outage, or the star is not in DR3)
+    if target is not None:
+        return cmd.plot_cmd(background, target, label, path, from_tic=True), cmd.TIC_NOTE
+    return (cmd.plot_cmd(background, None, label, path, empty_title=cmd.NO_DATA_TITLE),
+            cmd.NO_DATA_NOTE)
 
 
 def _plot_lightcurve(report, path, cfg, cache, session):
@@ -42,8 +50,8 @@ def _plot_lightcurve(report, path, cfg, cache, session):
 
 
 def _plot_sky(report, path, cfg, cache, session):
-    pos = report.identity.position
-    target = (float(pos.ra), float(pos.dec))
+    ra, dec = at_gaia_epoch(report.identity.position)  # the epoch the neighbors are drawn at
+    target = (float(ra), float(dec))
     res = report.results.get("gaia_neighbors")
     note = None
     neighbors: list[dict] = []

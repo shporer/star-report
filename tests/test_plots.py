@@ -77,6 +77,85 @@ def test_cmd_plotter_draws_background_and_target(tmp_path, monkeypatch):
     assert path.read_bytes().startswith(PNG) and note is None
 
 
+def _tic(**data):
+    return {"tic": SourceResult(source="tic", status="ok", data=data)}
+
+
+_TOI700_TIC = {"GAIAmag": 12.0665, "gaiabp": 13.3503, "gaiarp": 10.9599, "plx": 32.098,
+               "PARflag": "gaia2"}
+
+
+def test_tic_point_from_gaia_dr2_values():
+    bp_rp, abs_g = cmd.tic_point(_tic(**_TOI700_TIC))
+    assert bp_rp == pytest.approx(2.3904, abs=1e-4) and abs_g == pytest.approx(9.5989, abs=1e-3)
+
+
+@pytest.mark.parametrize("change", [{"PARflag": "hip"}, {"PARflag": None}, {"plx": 0.0},
+                                    {"plx": -1.5}, {"gaiabp": None}, {"GAIAmag": "x"}])
+def test_tic_point_none_when_unusable(change):
+    assert cmd.tic_point(_tic(**{**_TOI700_TIC, **change})) is None
+
+
+def test_tic_point_none_without_tic():
+    assert cmd.tic_point({}) is None
+    assert cmd.tic_point({"tic": SourceResult(source="tic", status="error")}) is None
+
+
+def _cmd_calls(monkeypatch, report, tmp_path):
+    """Run the CMD plotter; return (the plot_cmd call, the note)."""
+    calls = []
+    monkeypatch.setattr(cmd, "fetch_background", lambda cache, cfg, session: BACKGROUND)
+    monkeypatch.setattr(cmd, "plot_cmd", lambda *a, **kw: calls.append((a, kw)) or a[3])
+    _, note = plots._plot_cmd(report, tmp_path / "cmd.png", load_config(cwd=tmp_path), None, None)
+    (call,) = calls
+    return call, note
+
+
+def _gaia_core(report, **update):
+    results = dict(report.results)
+    results["gaia_core"] = results["gaia_core"].model_copy(update=update)
+    return report.model_copy(update={"results": results})
+
+
+def test_cmd_plotter_places_the_star_from_the_tic_without_gaia_dr3(tmp_path, monkeypatch):
+    report = _gaia_core(make_report("TOI-700"), status="error", data=None)
+    (args, kw), note = _cmd_calls(monkeypatch, report, tmp_path)
+    assert args[1] == pytest.approx((2.3904, 9.5989), abs=1e-3) and kw.get("from_tic") is True
+    assert "TIC v8.2" in note and "Gaia DR2" in note
+
+
+def test_cmd_plotter_prefers_the_gaia_dr3_row(tmp_path, monkeypatch):
+    (args, kw), note = _cmd_calls(monkeypatch, make_report("TOI-700"), tmp_path)
+    assert args[1] is not None and not kw.get("from_tic") and note is None
+
+
+def test_cmd_plotter_does_not_override_a_gaia_dr3_row_without_parallax(tmp_path, monkeypatch):
+    base = make_report("TOI-700")
+    report = _gaia_core(base, data={**base.results["gaia_core"].data, "parallax": None})
+    (args, kw), note = _cmd_calls(monkeypatch, report, tmp_path)
+    assert args[1] is None and not kw.get("from_tic")
+    assert note == "No Gaia parallax for the target; only the background is shown."
+
+
+def test_cmd_plotter_says_why_when_nothing_places_the_star(tmp_path, monkeypatch):
+    report = _gaia_core(make_report("TOI-700"), status="error", data=None)
+    results = dict(report.results)
+    results["tic"] = results["tic"].model_copy(update={"status": "error", "data": None})
+    (args, kw), note = _cmd_calls(monkeypatch, report.model_copy(update={"results": results}),
+                                  tmp_path)
+    assert args[1] is None and "Gaia parallax" not in note
+    assert note == ("No Gaia DR3 data for the target in this report, and no Gaia DR2 values in "
+                    "the TIC to place it; only the background is shown.")
+    assert kw.get("empty_title") == "Target not placed: no Gaia DR3 or TIC values"
+
+
+@pytest.mark.parametrize("kw", [{"from_tic": True}, {"empty_title": "Target not placed"}])
+def test_plot_cmd_variants_write_png(tmp_path, kw):
+    target = (2.39, 9.60) if kw.get("from_tic") else None
+    path = cmd.plot_cmd(BACKGROUND, target, "TOI-700", tmp_path / "cmd.png", **kw)
+    assert path.read_bytes().startswith(PNG)
+
+
 def test_cmd_plotter_background_error_propagates(tmp_path, monkeypatch):
     def boom(cache, cfg, session):
         raise RuntimeError("gaia down")
@@ -382,6 +461,24 @@ def test_sky_plotter_draws_no_image_chart_when_cutout_fails(tmp_path, monkeypatc
     path, note = plots._plot_sky(make_report(), tmp_path / "sky.png", cfg, None, None)
     assert path.read_bytes().startswith(PNG)
     assert "STScI down" in note
+
+
+def test_sky_plotter_marks_a_j2000_target_at_gaia_epoch(tmp_path, monkeypatch):
+    """Neighbors are drawn at 2016.0, so the target is too, whatever epoch the identity has."""
+    from star_report.plots import sky
+    from star_report.coords import separation_arcsec
+    from test_source_gaia import barnard_at_j2000
+
+    ident, gaia_pos = barnard_at_j2000()
+    targets = []
+    monkeypatch.setattr(sky, "fetch_cutout", lambda *a: (_ for _ in ()).throw(ValueError("x")))
+    monkeypatch.setattr(sky, "plot_sky", lambda image, wcs, target, *rest: targets.append(target))
+    report = make_report("Barnards_star")
+    cfg = load_config(cwd=tmp_path)
+    plots._plot_sky(report.model_copy(update={"identity": ident}), tmp_path / "a.png", cfg, None, None)
+    plots._plot_sky(report, tmp_path / "b.png", cfg, None, None)
+    assert separation_arcsec(*targets[0], gaia_pos.ra, gaia_pos.dec) < 1.0  # was 166″ off
+    assert targets[1] == (gaia_pos.ra, gaia_pos.dec)
 
 
 def test_select_neighbors_by_target_id():

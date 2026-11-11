@@ -10,7 +10,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 from markupsafe import Markup, escape
 
-from star_report.derive import display_name, header_line, toi_source
+from star_report.derive import display_name, gaia_dr3_label, header_line, toi_source
 from star_report.models import BIBCODE_PART_RE, CITATION_RE, Report
 
 STATUS_LABELS = {
@@ -115,8 +115,8 @@ def render_html(report: Report, base_dir: Path) -> str:
     ids: list[tuple[str, str]] = []
     if ident.tic_id is not None:
         ids.append(("TIC", f"TIC {ident.tic_id}"))
-    if ident.gaia_dr3_id:
-        ids.append(("Gaia DR3", f"Gaia DR3 {ident.gaia_dr3_id}"))
+    if label := gaia_dr3_label(ident):
+        ids.append(("Gaia DR3", label))
     for key in ("HD", "HIP"):
         if key in ident.other_ids:
             ids.append((key, f"{key} {_strip_prefix(key, ident.other_ids[key])}"))

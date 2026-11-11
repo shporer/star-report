@@ -95,7 +95,20 @@ keys and is deep-merged over the defaults.
   sky image still checks alasky by TCP (`is_reachable`) and falls back from hips2fits to STScI DSS,
   then to a Gaia-only neighbor chart.
 - The Harvard VizieR mirror can silently return empty tables, and the wide-binary catalog depends on
-  row_limit. Empty results are rechecked after `cache.empty_expiry_days`.
+  row_limit. Empty results are rechecked after `cache.empty_expiry_days`. Every VizieR query passes
+  `cache=False`: astroquery caches by default for 7 days, which defeated that recheck and
+  `--refresh` until 2026-11-11 (TOI-700's VSX entry read "no data found").
+- Resolver lookups run through `call_with_timeout` (`sources.timeout_s`): astroquery's MAST catalog
+  client sets no socket timeout, so a silent server would otherwise hang identification.
+- Gaia archive outages. When `gaia_by_id` fails (not "no such source") for the DR3 ID SIMBAD lists,
+  the resolver keeps it with `StarIdentity.gaia_dr3_unconfirmed`, and one warning built by
+  `_gaia_outage_warning` replaces the generic W6 for Gaia (kept ID, position source, checks not
+  run, archive error). The ID is labelled "(from SIMBAD, unconfirmed)" by `derive.gaia_dr3_label`
+  and left out of the writer's identifiers. The neighbor cone and the sky-chart target use
+  `coords.at_gaia_epoch`, so a SIMBAD J2000 position is moved to 2016.0 (a Gaia one is used as is,
+  keeping cache keys). The CMD uses `cmd.tic_point` (TIC `gaiabp`, `gaiarp`, `GAIAmag`, `plx`,
+  only with `PARflag == "gaia2"`) when the report has no Gaia DR3 row; a DR3 row always decides.
+  The tic source's cache key includes a hash of `tic.COLUMNS`.
 - ADS search rejects `object:`. The name is translated via `/v1/objects/query` first, with an
   abstract-phrase fallback.
 - KOA goes through its TAP service with pyvo, not pykoa.

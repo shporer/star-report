@@ -1,9 +1,40 @@
 import re
 
-from conftest import load_fixture
+from conftest import load_fixture, make_ctx, ref_identity
 
+from star_report.coords import propagate, separation_arcsec
 from star_report.sources import gaia
 from star_report.sources.gaia import GaiaCore, GaiaNeighbors
+
+
+def barnard_at_j2000():
+    """Barnard's star (10.4″/yr) as SIMBAD gives it during a Gaia outage, and its Gaia position."""
+    ident = ref_identity("Barnards_star")
+    gaia_pos = ident.position  # Gaia DR3, epoch 2016.0
+    ra, dec = propagate(gaia_pos, 2000.0)
+    simbad_pos = gaia_pos.model_copy(update={"ra": ra, "dec": dec, "epoch": 2000.0,
+                                             "source": "simbad"})
+    assert separation_arcsec(ra, dec, gaia_pos.ra, gaia_pos.dec) > 100
+    return ident.model_copy(update={"position": simbad_pos}), gaia_pos
+
+
+def test_neighbor_cone_is_centred_at_gaia_epoch_for_a_j2000_position(monkeypatch):
+    ident, gaia_pos = barnard_at_j2000()
+    ctx = make_ctx(identity=ident)
+    q = GaiaNeighbors().query(ctx)
+    # under 1″, not 0: the J2000 position kept the 2016 proper motion (perspective acceleration)
+    assert separation_arcsec(q["ra"], q["dec"], gaia_pos.ra, gaia_pos.dec) < 1.0
+    sent = []
+    monkeypatch.setattr(gaia, "tap_rows", lambda url, adql, session: sent.append(adql) or [])
+    GaiaNeighbors().fetch(ctx)
+    assert sent == [gaia.cone_adql(q["ra"], q["dec"], q["radius_arcsec"])]
+
+
+def test_neighbor_cone_keeps_a_gaia_position_as_it_is():
+    ctx = make_ctx(identity=ref_identity("Barnards_star"))
+    pos = ctx.identity.position
+    q = GaiaNeighbors().query(ctx)
+    assert (q["ra"], q["dec"]) == (pos.ra, pos.dec)  # cache keys of healthy runs do not change
 
 
 def test_core_hd209458(ctx):

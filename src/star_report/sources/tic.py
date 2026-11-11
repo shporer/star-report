@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 import astropy.units as u
@@ -16,9 +17,14 @@ COLUMNS = (
     "rad", "e_rad", "mass", "e_mass", "lum", "e_lum", "d", "e_d", "Tmag", "e_Tmag",
     "Vmag", "e_Vmag", "GAIAmag", "contratio", "disposition", "duplicate_id", "objType",
     "GAIA", "HIP", "TWOMASS", "KIC", "version",
+    # Gaia DR2 BP and RP magnitudes and the parallax with its source (PARflag "gaia2" = Gaia DR2):
+    # they place the star on the CMD when a report has no Gaia DR3 row.
+    "gaiabp", "gaiarp", "plx", "e_plx", "PARflag",
 )
-_STR_COLS = ("GAIA", "HIP", "TWOMASS", "KIC", "version")
+_STR_COLS = ("GAIA", "HIP", "TWOMASS", "KIC", "version", "PARflag")
 _KEEP = COLUMNS + ("dstArcSec",)
+# Part of the tic source's cache key, so payloads stored with another column list are not reused.
+_COLUMNS_KEY = hashlib.sha256(",".join(COLUMNS).encode()).hexdigest()[:12]
 
 
 def _blank(value: Any) -> Any:
@@ -88,7 +94,7 @@ class Tic(Source):
     needs = ("tic_id",)
 
     def query(self, ctx: SourceContext) -> dict:
-        return {"catalog": "TIC", "ID": ctx.identity.tic_id}
+        return {"catalog": "TIC", "ID": ctx.identity.tic_id, "columns": _COLUMNS_KEY}
 
     def fetch(self, ctx: SourceContext) -> Any:
         table = _client(self.timeout_s(ctx.config)).query_criteria(

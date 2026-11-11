@@ -109,7 +109,17 @@ invalid value is a configuration error (exit code 2).
   cutout service. If both fail, the report shows a Gaia-only neighbor chart.
 - The Harvard VizieR mirror sometimes silently returns empty tables, and for the wide-binary catalog
   whether a row comes back can depend on the row limit. Empty results are rechecked after
-  `cache.empty_expiry_days` (1 day), whatever their group's expiry.
+  `cache.empty_expiry_days` (1 day), whatever their group's expiry. VizieR queries bypass
+  astroquery's own cache, so that recheck and `--refresh` really ask VizieR again.
+- ESA Gaia archive outages (on 2026-11-10 it rejected queries for hours with HTTP 503, "synchronous
+  job rejected"). If the archive cannot confirm the Gaia DR3 ID that SIMBAD lists, the report keeps
+  that ID, shows it as "Gaia DR3 … (from SIMBAD, unconfirmed)", and opens with one warning: what
+  was kept, that the position is SIMBAD's (J2000), which identity checks did not run, and the
+  archive's error. Sources keyed by the ID still run: the wide-binary catalog and APOGEE query
+  VizieR, and the Gaia sources try the archive once and use results already in the cache. Without
+  a Gaia DR3 row, the color-magnitude diagram places the star from the Gaia DR2 magnitudes and
+  parallax in the TIC, drawn as an open star and labelled as such. Run the star again once the
+  archive is back; `data.json` marks the ID with `identity.gaia_dr3_unconfirmed`.
 - ADS: the search API does not accept the `object:` field, so the name is first translated through
   ADS's `/v1/objects/query` endpoint and then searched with `doctype:(article OR eprint)`. If the
   translation fails, it searches for the exact phrase in abstracts. Each star gets two search
@@ -120,7 +130,8 @@ invalid value is a configuration error (exit code 2).
   and finds fewer. Those results stay cached for 7 days (`cache.expiry_days.ads`): after a CDS
   outage, rerun the affected stars with `--refresh`.
 - KOA is queried through its public TAP service with pyvo (not pykoa).
-- Timeouts: `sources.timeout_s` (30 s) by default; `sources.timeout_overrides` raises it per source.
+- Timeouts: `sources.timeout_s` (30 s) by default, also for each lookup made while identifying the
+  star; `sources.timeout_overrides` raises it per source.
   MAST is 90 s because its observation query can take about 45 s for stars in TESS's continuous
   viewing zone. Light-curve downloads use `plots.lightcurve_timeout_s` (120 s).
 - The CMD background (50k Gaia stars) is fetched once and cached indefinitely. Its download is limited
