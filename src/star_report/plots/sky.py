@@ -19,7 +19,7 @@ log = logging.getLogger("star_report.plots")
 
 CDS_HOST = "alasky.cds.unistra.fr"
 STSCI_URL = "https://archive.stsci.edu/cgi-bin/dss_search"
-CAPTION = ("Grid: TESS pixel scale (21″ cells centered on the target, aligned with RA/Dec); "
+CAPTION = ("Grid: TESS pixel scale (21″ cells centered on the target, aligned with RA/Dec);\n"
            "it does not show any sector's orientation. Neighbors at Gaia DR3 epoch 2016.0.")
 
 
@@ -176,8 +176,8 @@ def plot_sky(image: np.ndarray | None, wcs: WCS | None, target: tuple[float, flo
             ax.coords.grid(False)
             ax.set_xlim(-0.5, image.shape[1] - 0.5)  # overlays must not grow the frame
             ax.set_ylim(-0.5, image.shape[0] - 0.5)
-        fig.text(0.5, 0.01, CAPTION, ha="center", va="bottom", fontsize=7, wrap=True)
-        fig.tight_layout(rect=(0, 0.04, 1, 1))
+        fig.text(0.5, 0.01, CAPTION, ha="center", va="bottom", fontsize=10)
+        fig.tight_layout(rect=(0, 0.075, 1, 1))  # room for the caption's two lines
         fig.savefig(path, dpi=120)
     finally:
         if fig is not None:
