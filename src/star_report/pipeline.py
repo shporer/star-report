@@ -21,6 +21,7 @@ from star_report.derive import display_name, flags, parameter_rows, slugify
 from star_report.models import LLMBlock, Report
 from star_report.plots import make_plots
 from star_report.render.html import write_outputs
+from star_report.render.pdf import write_pdf
 from star_report.render.terminal import print_summary
 from star_report.resolve import CatalogLookup, LiveLookup, ResolutionError, parse_target, resolve
 from star_report.sources.base import Source, SourceContext, make_session, run_sources
@@ -46,6 +47,7 @@ class TargetOutcome:
     report_path: Path | None = None
     report: Report | None = None
     message: str | None = None
+    pdf_path: Path | None = None
 
 
 @dataclass
@@ -55,6 +57,7 @@ class PipelineDeps:
     plots: Callable[[Report, Path, Config, Cache],
                     tuple[dict[str, str], dict[str, str]]] = make_plots
     writer: Callable[[Report, Config, Cache], LLMBlock] = write_sections
+    pdf: Callable[[Report, Path, Config], tuple[Path | None, str | None]] = write_pdf
 
 
 def _fresh_plots_dir(out: Path, out_root: Path, slug: str) -> Path:
@@ -111,5 +114,12 @@ def run_target(target: str, cfg: Config, opts: RunOptions, cache: Cache, console
         report = report.model_copy(update=updates)
 
     report_path = write_outputs(report, out)
-    print_summary(report, report_path, console)
-    return TargetOutcome(target, "ok", report_path=report_path, report=report)
+    pdf = None
+    if cfg.output.pdf:
+        try:
+            pdf = deps.pdf(report, out, cfg)
+        except Exception as exc:  # noqa: BLE001 - the HTML is written; a PDF failure must not hide it
+            pdf = (None, f"{type(exc).__name__}: {exc}"[:200])
+    print_summary(report, report_path, console, pdf=pdf)
+    return TargetOutcome(target, "ok", report_path=report_path, report=report,
+                         pdf_path=pdf[0] if pdf else None)

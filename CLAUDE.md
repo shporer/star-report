@@ -24,7 +24,7 @@ star-report/
 │   ├── sources/          One module per service, plus base.py and registry.py.
 │   ├── plots/            cmd, lightcurve, sky.
 │   ├── data/             cmd_background.csv.gz (the bundled CMD background).
-│   └── render/           html.py, terminal.py, templates/ (Jinja partials).
+│   └── render/           html.py, pdf.py, terminal.py, templates/ (Jinja partials).
 ├── scripts/record_fixtures.py   Records live payloads into tests/fixtures/.
 ├── scripts/make_cmd_background.py   Rebuilds the bundled CMD background from Gaia.
 ├── tests/                Offline tests, fixtures/, reference_stars.yaml, test_live.py.
@@ -142,6 +142,12 @@ keys and is deep-merged over the defaults.
   and the links. The API path has not been run live yet. Claude Code needs 2.1.280
   or newer for `claude-opus-5-5`. LLM output is cached forever; `--refresh` regenerates.
 - Cost is about $0.10-0.25 per report with the default model and effort.
+- The PDF (`render/pdf.py`) is the HTML's print version (`render_html(for_print=True)`: sections
+  expanded, `@page` size from `output.pdf_paper`), printed by the first browser in
+  `output.pdf_browsers` with `--headless=new` and a throwaway `--user-data-dir`, in its own
+  process group so a timeout kills its helpers too. A failed print removes any older
+  report.pdf. Tests never start a real browser: a conftest fixture makes `find_browser` find
+  none unless a test is marked `pdf_browser` (tests/test_pdf.py uses a fake browser script).
 - The CMD background (50k Gaia stars) ships in `src/star_report/data/cmd_background.csv.gz`, so
   the CMD makes no network call. Until 2026-11-11 it was downloaded on first use, which timed out
   for new users while the Gaia archive was slow. Rebuild it with `scripts/make_cmd_background.py`

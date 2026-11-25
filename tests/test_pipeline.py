@@ -59,6 +59,31 @@ def test_run_target_writes_outputs(tmp_path, env):
     assert set(outcome.report.results) == {"fake_a", "fake_b"}
 
 
+def test_run_target_prints_the_pdf_after_the_html(tmp_path, env):
+    cfg, cache, opts, console = env
+    calls = []
+
+    def fake_pdf(report, out, cfg):
+        calls.append((out / "report.html").exists())  # the HTML is written first
+        return out / "report.pdf", None
+
+    deps = _deps()
+    deps.pdf = fake_pdf
+    outcome = run_target("HD 209458", cfg, opts, cache, console, deps)
+    assert calls == [True]
+    assert outcome.pdf_path == tmp_path / "reports" / "HD_209458" / "report.pdf"
+    assert "PDF: " in console.export_text()
+
+
+def test_run_target_skips_the_pdf_when_disabled(env):
+    cfg, cache, opts, console = env
+    cfg.output.pdf = False
+    deps = _deps()
+    deps.pdf = lambda *a: pytest.fail("PDF printed although output.pdf is false")
+    outcome = run_target("HD 209458", cfg, opts, cache, console, deps)
+    assert outcome.pdf_path is None and "PDF" not in console.export_text()
+
+
 def test_unresolved_target(env):
     cfg, cache, opts, console = env
     deps = PipelineDeps(lookup=lambda cache, session, cfg: FakeLookup(),

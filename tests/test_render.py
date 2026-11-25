@@ -78,6 +78,28 @@ def test_write_outputs(tmp_path):
     assert "HD 209458" in (out / "report.html").read_text()
 
 
+def test_header_shows_generation_date_and_version(tmp_path):
+    html = render_html(make_report(), tmp_path)  # generated 2026-11-09 12:00 UTC
+    header = html[html.index("<header>"):html.index("</header>")]
+    assert "Generated 2026-11-09 12:00 UTC · star-report 0.1.0" in header
+
+
+def test_print_version_expands_sources_and_sets_the_paper(tmp_path):
+    report = make_report()
+    screen = render_html(report, tmp_path)
+    assert '<details id="sources">' in screen and "@page" not in screen
+    printed = render_html(report, tmp_path, for_print=True, paper="a4")
+    assert '<details id="sources" open>' in printed and "@page { size: a4;" in printed
+
+
+def test_terminal_names_the_pdf_or_why_there_is_none(tmp_path):
+    for pdf, line in (((tmp_path / "report.pdf", None), f"PDF: {tmp_path / 'report.pdf'}"),
+                      ((None, "no Chrome found"), "PDF not written: no Chrome found")):
+        console = Console(record=True, width=200)
+        print_summary(make_report(), tmp_path / "report.html", console, pdf=pdf)
+        assert line in console.export_text()
+
+
 def test_terminal_summary(tmp_path):
     console = Console(record=True, width=110)
     print_summary(make_report(), tmp_path / "report.html", console)

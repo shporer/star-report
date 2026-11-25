@@ -52,5 +52,8 @@ packages = ["src/star_report"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["live: queries real services; run with -m live"]
+markers = [
+    "live: queries real services; run with -m live",
+    "pdf_browser: prints PDFs with the (fake) browser the test configures",
+]
 addopts = "-m 'not live' --disable-socket --allow-unix-socket"

@@ -18,6 +18,7 @@ def test_defaults(tmp_path):
     assert cfg.resolve.max_mag_mismatch == 3.0
     assert (cfg.plots.lightcurve_timeout_s, cfg.plots.cmd_background_timeout_s) == (120, 120)
     assert cfg.plots.lightcurve_exclude_quality_bits == [30]
+    assert (cfg.output.pdf, cfg.output.pdf_paper, cfg.output.pdf_timeout_s) == (True, "letter", 60)
     assert "~" not in str(cfg.cache.dir)
 
 
@@ -49,6 +50,8 @@ def test_unknown_key_is_config_error(tmp_path):
     ("sources: {timeout_s: .inf}", "sources.timeout_s"),
     ("sources: {timeout_overrides: {mast: -90}}", "sources.timeout_overrides.mast"),
     ("plots: {lightcurve_timeout_s: 0}", "plots.lightcurve_timeout_s"),
+    ("output: {pdf_timeout_s: 0}", "output.pdf_timeout_s"),
+    ("output: {pdf_paper: tabloid}", "output.pdf_paper"),
     ("plots: {cmd_background_timeout_s: -1}", "plots.cmd_background_timeout_s"),
     ("plots: {lightcurve_exclude_quality_bits: [32]}", "plots.lightcurve_exclude_quality_bits.0"),
     ("plots: {lightcurve_exclude_quality_bits: [-1]}", "plots.lightcurve_exclude_quality_bits.0"),

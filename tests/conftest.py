@@ -14,6 +14,15 @@ def _no_local_config(request, tmp_path_factory, monkeypatch):
         monkeypatch.chdir(tmp_path_factory.mktemp("cwd"))
 
 
+@pytest.fixture(autouse=True)
+def _no_real_browser(request, monkeypatch):
+    """No test prints a PDF with a real browser: none is found, unless the test is marked
+    pdf_browser and configures its own fake one."""
+    if not request.node.get_closest_marker("pdf_browser"):
+        from star_report.render import pdf
+        monkeypatch.setattr(pdf, "find_browser", lambda candidates: None)
+
+
 # ---- shared helpers for source tests and the fixture recorder ----
 import json  # noqa: E402
 import tempfile  # noqa: E402

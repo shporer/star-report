@@ -33,6 +33,10 @@ class _Section(BaseModel):
 class OutputConfig(_Section):
     dir: Path
     open_single: bool
+    pdf: bool
+    pdf_paper: Literal["letter", "a4"]
+    pdf_timeout_s: Seconds
+    pdf_browsers: list[str]
 
 
 # Hosts and probe paths go into https:// URLs as they are, so only plain names and paths are accepted.

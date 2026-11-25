@@ -66,7 +66,9 @@ def _data_line(report: Report) -> str:
             f"ESO {eso if isinstance(eso, int) else 0}, KOA {koa}, HARPS {harps if isinstance(harps, int) else 0}")
 
 
-def print_summary(report: Report, report_path: Path | None, console: Console) -> None:
+def print_summary(report: Report, report_path: Path | None, console: Console,
+                  pdf: tuple[Path | None, str | None] | None = None) -> None:
+    """pdf: (path, None) for a printed PDF, (None, reason) when it was not written."""
     ident = report.identity
     lines = [f"[bold]{escape(display_name(ident.main_name))}[/bold]"]
     ids = []
@@ -129,3 +131,7 @@ def print_summary(report: Report, report_path: Path | None, console: Console) ->
 
     if report_path is not None:
         console.print(f"Report: {report_path}", soft_wrap=True, highlight=False)
+    if pdf is not None:
+        path, reason = pdf
+        console.print(f"PDF: {path}" if path is not None else f"PDF not written: {reason}",
+                      soft_wrap=True, highlight=False, markup=False)

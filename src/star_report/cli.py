@@ -29,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", type=Path, metavar="DIR", help="output directory (default: config output.dir)")
     p.add_argument("--no-llm", action="store_true", help="skip the LLM-written sections")
     p.add_argument("--no-plots", action="store_true", help="skip plots")
+    p.add_argument("--no-pdf", action="store_true", help="skip the PDF copy of the report")
     p.add_argument("--refresh", action="store_true", help="ignore cached data and re-query")
     p.add_argument("--open", action=argparse.BooleanOptionalAction, default=None,
                    help="open the report in a browser (default: only for a single target)")
@@ -78,6 +79,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         cfg.llm.enabled = False
     if args.no_plots:
         cfg.plots.enabled = False
+    if args.no_pdf:
+        cfg.output.pdf = False
     if args.verbose:
         _setup_logging(console)
 

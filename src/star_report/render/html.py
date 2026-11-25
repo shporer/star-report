@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+from datetime import timezone
 from pathlib import Path
 
 from jinja2 import Environment, PackageLoader
@@ -110,7 +111,9 @@ def _strip_prefix(prefix: str, value: str) -> str:
     return re.sub(rf"^{re.escape(prefix)}\s*", "", value)
 
 
-def render_html(report: Report, base_dir: Path) -> str:
+def render_html(report: Report, base_dir: Path, for_print: bool = False,
+                paper: str = "letter") -> str:
+    """The report page. for_print: the version printed to PDF (sections expanded, @page size)."""
     ident = report.identity
     ids: list[tuple[str, str]] = []
     if ident.tic_id is not None:
@@ -133,6 +136,9 @@ def render_html(report: Report, base_dir: Path) -> str:
         epoch=_epoch_text(report),
         description=header_line(report.results, report.parameters),
         plot_images=_embed_plots(report, base_dir),
+        generated=report.generated.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        for_print=for_print,
+        paper=paper,
     )
 
 

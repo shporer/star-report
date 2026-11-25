@@ -83,6 +83,7 @@ star-report --from-file targets.txt --no-open
 | `--out DIR` | output directory (default: `output.dir`, `reports`) |
 | `--no-llm` | skip the LLM-written sections |
 | `--no-plots` | skip plots |
+| `--no-pdf` | skip the PDF copy of the report |
 | `--refresh` | ignore cached data and re-query (also regenerates the LLM text) |
 | `--open` / `--no-open` | open the report in a browser (default: only for a single target) |
 | `--config PATH` | config file to merge over the defaults |
@@ -97,9 +98,14 @@ depending on service latency.
 ```
 reports/<slug>/
   report.html    self-contained, open it directly
+  report.pdf     the same report, printed by a headless Chrome, Chromium or Edge
   data.json      everything gathered, machine-readable
   plots/*.png
 ```
+
+The PDF needs Chrome, Chromium or Edge; `output.pdf_browsers` lists where to look, and
+`output.pdf_paper` sets letter or A4. Without a browser the HTML is still written, and the
+terminal says why there is no PDF.
 
 Raw query results are cached in `~/.cache/star-report` (`cache.dir`), with a per-service expiry.
 

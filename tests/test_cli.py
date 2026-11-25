@@ -74,11 +74,13 @@ def test_flags_reach_config(monkeypatch, tmp_path):
     seen = {}
 
     def fake(target, cfg, opts, cache, console, deps=None):
-        seen.update(llm=cfg.llm.enabled, plots=cfg.plots.enabled, out=opts.out_dir,
+        seen.update(llm=cfg.llm.enabled, plots=cfg.plots.enabled, pdf=cfg.output.pdf,
+                    out=opts.out_dir,
                     refresh_opts=opts.refresh, refresh_cache=cache.refresh)
         return _ok(target, cfg, opts, cache, console)
 
     monkeypatch.setattr(pipeline, "run_target", fake)
-    cli.main(["a", "--no-llm", "--no-plots", "--refresh", "--out", str(tmp_path / "o"), "--no-open"])
-    assert seen == {"llm": False, "plots": False, "out": tmp_path / "o",
+    cli.main(["a", "--no-llm", "--no-plots", "--no-pdf", "--refresh", "--out", str(tmp_path / "o"),
+              "--no-open"])
+    assert seen == {"llm": False, "plots": False, "pdf": False, "out": tmp_path / "o",
                     "refresh_opts": True, "refresh_cache": True}

@@ -2,6 +2,18 @@
 output:
   dir: reports
   open_single: true            # open the HTML report when there is exactly one target
+  pdf: true                    # also print report.pdf with a headless Chromium browser (--no-pdf skips it)
+  pdf_paper: letter            # letter or a4
+  pdf_timeout_s: 60            # the browser is stopped at this deadline
+  pdf_browsers:                # the first that exists is used: a full path, or a command on PATH
+    - /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+    - /Applications/Chromium.app/Contents/MacOS/Chromium
+    - /Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge
+    - google-chrome
+    - google-chrome-stable
+    - chromium
+    - chromium-browser
+    - microsoft-edge
 servers:                       # the first host that answers its probe is used (checked once per run)
   simbad: [simbad.cds.unistra.fr, simbad.harvard.edu]
   vizier: [vizier.cds.unistra.fr, vizier.cfa.harvard.edu]
