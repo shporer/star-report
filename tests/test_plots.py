@@ -9,7 +9,7 @@ from star_report import plots
 from star_report.cache import Cache
 from star_report.config import load_config
 from star_report.models import Provenance, SourceResult
-from star_report.plots import cmd
+from star_report.plots import cmd, lightcurve
 from star_report.render.html import render_html
 
 PNG = b"\x89PNG"
@@ -316,6 +316,55 @@ def test_search_rows_tolerates_masked_values():
     rows = _search_rows(FakeSearch)
     assert rows[0]["sequence_number"] is None and rows[1]["exptime"] is None
     assert choose_products(rows, 10) == ([], None)
+
+
+def _fake_lightkurve(monkeypatch, rows):
+    """lightkurve.search_lightcurve returning `rows`; returns the (mission, mask) of each download."""
+    import lightkurve as lk
+    from astropy.table import Table
+
+    downloads = []
+
+    class Product:
+        def __init__(self, mission):
+            self.mission = mission
+
+        def download(self, quality_bitmask="default"):
+            downloads.append((self.mission, quality_bitmask))
+            return lk.LightCurve(time=np.arange(5.0), flux=np.ones(5), meta={"SECTOR": 81})
+
+    class FakeSearch:
+        table = Table({k: [r[k] for r in rows] for k in ("author", "exptime", "sequence_number",
+                                                          "mission")})
+
+        def __len__(self):
+            return len(rows)
+
+        def __getitem__(self, i):
+            return Product(rows[i]["mission"])
+
+    monkeypatch.setattr(lk, "search_lightcurve", lambda *a, **k: FakeSearch())
+    return downloads
+
+
+def test_tess_downloads_drop_qlp_flagged_cadences(tmp_path, monkeypatch):
+    """QLP sets bit 30 on cadences it excludes; lightkurve's default mask keeps them (spikes in
+    TIC 133788692 Sector 81 reached 2470 times the median flux)."""
+    from lightkurve.utils import TessQualityFlags
+
+    downloads = _fake_lightkurve(monkeypatch, [
+        {"author": "QLP", "exptime": 200.0, "sequence_number": 81, "mission": "TESS Sector 81"}])
+    curves, _ = lightcurve.fetch_lightcurves(make_report().identity, load_config(cwd=tmp_path))
+    assert len(curves) == 1
+    assert downloads == [("TESS Sector 81", TessQualityFlags.DEFAULT_BITMASK | 1 << 30)]
+
+
+def test_kepler_downloads_keep_lightkurves_default_mask(tmp_path, monkeypatch):
+    downloads = _fake_lightkurve(monkeypatch, [
+        {"author": "Kepler", "exptime": 1800.0, "sequence_number": 3, "mission": "Kepler Quarter 03"}])
+    ident = make_report("Kepler-10").identity.model_copy(update={"tic_id": None})
+    lightcurve.fetch_lightcurves(ident, load_config(cwd=tmp_path))
+    assert downloads == [("Kepler Quarter 03", "default")]
 
 
 def test_merge_marks_and_plot_draws_one_line(tmp_path, monkeypatch):

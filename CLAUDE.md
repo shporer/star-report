@@ -113,6 +113,14 @@ keys and is deep-merged over the defaults.
   keeping cache keys). The CMD uses `cmd.tic_point` (TIC `gaiabp`, `gaiarp`, `GAIAmag`, `plx`,
   only with `PARflag == "gaia2"`) when the report has no Gaia DR3 row; a DR3 row always decides.
   The tic source's cache key includes a hash of `tic.COLUMNS`.
+- TESS light curves are downloaded with lightkurve's default quality mask plus
+  `plots.lightcurve_exclude_quality_bits` (bit 30, QLP's own exclusion flag); Kepler and K2 keep
+  the default. lightkurve's default keeps QLP bit 30, which let stray-light spikes up to 2470x the
+  median through (TIC 133788692 Sector 81). No sigma clipping: it would cut transits and flares.
+  The plot uses QLP's raw `sap_flux`, so slow trends remain and dominate the periodogram.
+- On 2026-11-25 the Gaia archive was offline for DR4 preparation: every endpoint, TAP included,
+  answered HTTP 200 with an HTML maintenance page, which pyvo reports as "DALFormatError:
+  ValueError: 1:0: syntax error". Nothing is cached from such answers; rerun after the archive returns.
 - ADS search rejects `object:`. The name is translated via `/v1/objects/query` first, with an
   abstract-phrase fallback.
 - KOA goes through its TAP service with pyvo, not pykoa.

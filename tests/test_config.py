@@ -17,6 +17,7 @@ def test_defaults(tmp_path):
     assert cfg.servers.simbad == ["simbad.cds.unistra.fr", "simbad.harvard.edu"]
     assert cfg.resolve.max_mag_mismatch == 3.0
     assert (cfg.plots.lightcurve_timeout_s, cfg.plots.cmd_background_timeout_s) == (120, 120)
+    assert cfg.plots.lightcurve_exclude_quality_bits == [30]
     assert "~" not in str(cfg.cache.dir)
 
 
@@ -49,6 +50,8 @@ def test_unknown_key_is_config_error(tmp_path):
     ("sources: {timeout_overrides: {mast: -90}}", "sources.timeout_overrides.mast"),
     ("plots: {lightcurve_timeout_s: 0}", "plots.lightcurve_timeout_s"),
     ("plots: {cmd_background_timeout_s: -1}", "plots.cmd_background_timeout_s"),
+    ("plots: {lightcurve_exclude_quality_bits: [32]}", "plots.lightcurve_exclude_quality_bits.0"),
+    ("plots: {lightcurve_exclude_quality_bits: [-1]}", "plots.lightcurve_exclude_quality_bits.0"),
     ("llm: {timeout_s: -300}", "llm.timeout_s"),
     ("llm: {max_retries: -1}", "llm.max_retries"),
     ("llm: {claude_code: {timeout_s: 0}}", "llm.claude_code.timeout_s"),

@@ -63,6 +63,10 @@ plots:
   enabled: true
   max_sectors: 10
   lightcurve_timeout_s: 120
+  # TESS quality bits dropped on top of lightkurve's default mask. Bit 30 (value 2^30) is QLP's
+  # own exclusion flag: in TIC 133788692 Sector 81 it marks stray-light spikes up to 2470 times
+  # the median flux that the default mask kept. Kepler and K2 keep lightkurve's default mask.
+  lightcurve_exclude_quality_bits: [30]
   cutout_arcmin: 5
   sky_survey: CDS/P/DSS2/red   # hips2fits HiPS ID (CDS)
   sky_fallback_survey: poss2ukstu_red   # STScI DSS cutout service, used when CDS is unreachable

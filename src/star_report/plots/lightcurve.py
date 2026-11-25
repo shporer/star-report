@@ -93,6 +93,16 @@ def _kepler_id(identity: StarIdentity) -> tuple[str, int] | None:
     return None
 
 
+def tess_quality_bitmask(cfg: Config) -> int:
+    """lightkurve's default TESS quality mask plus plots.lightcurve_exclude_quality_bits."""
+    from lightkurve.utils import TessQualityFlags  # slow import; keep it out of module load
+
+    mask = int(TessQualityFlags.DEFAULT_BITMASK)
+    for bit in cfg.plots.lightcurve_exclude_quality_bits:
+        mask |= 1 << int(bit)
+    return mask
+
+
 def fetch_lightcurves(identity: StarIdentity, cfg: Config) -> tuple[list[SectorCurve], str | None]:
     import lightkurve as lk  # slow import; keep it out of module load
 
@@ -111,12 +121,16 @@ def fetch_lightcurves(identity: StarIdentity, cfg: Config) -> tuple[list[SectorC
         search = lk.search_lightcurve(f"{prefix} {num}", mission=mission)
         if not len(search):
             return [], "No TESS, Kepler or K2 light curves found."
-    idx, note = choose_products(_search_rows(search), cfg.plots.max_sectors)
+    rows = _search_rows(search)
+    idx, note = choose_products(rows, cfg.plots.max_sectors)
     if not idx:
         return [], "No suitable light curves found."
+    tess_mask = tess_quality_bitmask(cfg)
     curves = []
     for i in idx:
-        lc = search[i].download()
+        # Kepler and K2 quality bits mean other things: they keep lightkurve's default mask.
+        mask = tess_mask if rows[i]["mission"].startswith("TESS") else "default"
+        lc = search[i].download(quality_bitmask=mask)
         if lc is None:
             continue
         lc = lc.remove_nans().normalize()

@@ -103,6 +103,7 @@ class PlotsConfig(_Section):
     enabled: bool
     max_sectors: int
     lightcurve_timeout_s: Seconds
+    lightcurve_exclude_quality_bits: list[Annotated[int, Field(ge=0, le=31)]]
     cutout_arcmin: float
     sky_survey: str
     sky_fallback_survey: str
