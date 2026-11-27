@@ -79,6 +79,18 @@ plots:
   # own exclusion flag: in TIC 133788692 Sector 81 it marks stray-light spikes up to 2470 times
   # the median flux that the default mask kept. Kepler and K2 keep lightkurve's default mask.
   lightcurve_exclude_quality_bits: [30]
+  # Flux columns used instead of a product's default when present: QLP's detrended flux
+  # (kspsap_flux in older QLP files, det_flux in newer ones). SPOC products keep PDCSAP.
+  lightcurve_detrended_columns: [kspsap_flux, det_flux]
+  # Phase-folded light curve: drawn when the highest periodogram peak up to fold_max_period_d has a
+  # Baluev false-alarm probability below fold_fap_max in the combined data, and the same period
+  # (within fold_period_tolerance) is the top peak below fold_fap_max in at least
+  # fold_min_segments independent segments and in at least half of them. Segments are sectors,
+  # or a single sector's two orbits. Systematics rarely repeat at one period across sectors.
+  fold_max_period_d: 10
+  fold_fap_max: 0.001
+  fold_period_tolerance: 0.01
+  fold_min_segments: 2
   cutout_arcmin: 5
   sky_survey: CDS/P/DSS2/red   # hips2fits HiPS ID (CDS)
   sky_fallback_survey: poss2ukstu_red   # STScI DSS cutout service, used when CDS is unreachable

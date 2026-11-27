@@ -19,7 +19,8 @@ from star_report.sources.base import make_session  # noqa: E402
 
 log = logging.getLogger("star_report.plots")
 
-# A plotter writes its PNG to `path` and returns (path or None, note or None).
+# A plotter writes its PNG to `path` and returns (path or None, note or None), optionally with a
+# third item: further plots it drew, {name: (path or None, note or None)}, listed after its own.
 Plotter = Callable[[Report, Path, Config, Cache, object], tuple[Path | None, str | None]]
 
 
@@ -80,13 +81,20 @@ def make_plots(report: Report, plots_dir: Path, cfg: Config,
     notes: dict[str, str] = {}
     for name, plotter in PLOTTERS.items():
         try:
-            path, note = plotter(report, plots_dir / f"{name}.png", cfg, cache, session)
+            result = plotter(report, plots_dir / f"{name}.png", cfg, cache, session)
         except Exception as e:  # noqa: BLE001 - one plot must never sink the report
             log.warning("plot %s failed: %s: %s", name, type(e).__name__, e)
             notes[name] = f"{type(e).__name__}: {e}"
             continue
+        path, note = result[0], result[1]
+        extras = result[2] if len(result) > 2 else {}
         if path is not None:
             paths[name] = f"{plots_dir.name}/{name}.png"
         if note:
             notes[name] = note
+        for extra, (extra_path, extra_note) in extras.items():
+            if extra_path is not None:
+                paths[extra] = f"{plots_dir.name}/{Path(extra_path).name}"
+            if extra_note:
+                notes[extra] = extra_note
     return paths, notes

@@ -108,6 +108,11 @@ class PlotsConfig(_Section):
     max_sectors: int
     lightcurve_timeout_s: Seconds
     lightcurve_exclude_quality_bits: list[Annotated[int, Field(ge=0, le=31)]]
+    lightcurve_detrended_columns: list[str]
+    fold_max_period_d: Annotated[float, Field(gt=0)]
+    fold_fap_max: Annotated[float, Field(gt=0, lt=1)]
+    fold_period_tolerance: Annotated[float, Field(gt=0, lt=1)]
+    fold_min_segments: Annotated[int, Field(ge=1)]
     cutout_arcmin: float
     sky_survey: str
     sky_fallback_survey: str

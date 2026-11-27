@@ -117,7 +117,14 @@ keys and is deep-merged over the defaults.
   `plots.lightcurve_exclude_quality_bits` (bit 30, QLP's own exclusion flag); Kepler and K2 keep
   the default. lightkurve's default keeps QLP bit 30, which let stray-light spikes up to 2470x the
   median through (TIC 133788692 Sector 81). No sigma clipping: it would cut transits and flares.
-  The plot uses QLP's raw `sap_flux`, so slow trends remain and dominate the periodogram.
+  QLP light curves use QLP's detrended flux (`plots.lightcurve_detrended_columns`: `kspsap_flux`
+  or `det_flux`, by file version); SPOC keeps PDCSAP. The folded plot (`fold.png`, from
+  `lightcurve.detect_fold`) needs the top Lomb-Scargle peak below `plots.fold_max_period_d` to have
+  Baluev FAP < `fold_fap_max` in all data AND to be the top peak (same period within
+  `fold_period_tolerance`, FAP below the threshold) in at least `fold_min_segments` and half of the
+  segments (sectors, or a single sector's two orbits). The Baluev FAP alone passed for TIC 133788692's
+  systematics (FAP ~1e-27); the cross-sector test rejects them (1 of 2) and keeps TOI-1091 (6 of 6).
+  A plotter may return a third item, extra plots {name: (path, note)}, placed after its own.
 - On 2026-11-25 the Gaia archive was offline for DR4 preparation: every endpoint, TAP included,
   answered HTTP 200 with an HTML maintenance page, which pyvo reports as "DALFormatError:
   ValueError: 1:0: syntax error". Nothing is cached from such answers; rerun after the archive returns.

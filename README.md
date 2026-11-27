@@ -16,8 +16,9 @@ sit on top of the data.
 - Companions: Gaia neighbors; Gaia DR3 non-single-star orbits, astrometric accelerations and RV
   trends; WDS, SB9, VSX, and the El-Badry wide-binary catalog.
 - Observation inventory: MAST, TESS sector pointing, ESO, Keck KOA, HARPS RV bank, APOGEE, LAMOST.
-- Plots: color-magnitude diagram on a Gaia background, TESS light curve and periodogram, and a sky
-  image with neighbors marked.
+- Plots: color-magnitude diagram on a Gaia background, TESS light curve and periodogram, a
+  phase-folded light curve when a period is significant (false-alarm probability < 0.1%) and recurs
+  as the top peak in at least two sectors, and a sky image with neighbors marked.
 - Literature: ADS records, with the most cited and most recent papers listed.
 - Claude-written overview and literature summary (skipped with `--no-llm`).
 

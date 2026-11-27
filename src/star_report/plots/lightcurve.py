@@ -133,8 +133,13 @@ def fetch_lightcurves(identity: StarIdentity, cfg: Config) -> tuple[list[SectorC
         lc = search[i].download(quality_bitmask=mask)
         if lc is None:
             continue
+        label = _label(lc)
+        column = next((c for c in cfg.plots.lightcurve_detrended_columns if c in lc.columns), None)
+        if column is not None:  # QLP's detrended flux instead of its raw sap_flux
+            lc = lc.select_flux(column)
+            label = f"{label[:-1]}, {column})" if label.endswith(")") else f"{label} ({column})"
         lc = lc.remove_nans().normalize()
-        curves.append(SectorCurve(_label(lc), np.asarray(lc.time.value, dtype=float),
+        curves.append(SectorCurve(label, np.asarray(lc.time.value, dtype=float),
                                   np.asarray(lc.flux.value, dtype=float)))
     return curves, note
 
@@ -204,6 +209,115 @@ def plot_lightcurves(curves: list[SectorCurve], marks: list[tuple[str, float]],
     return path
 
 
+@dataclass
+class FoldResult:
+    ok: bool  # passes the test below, so the folded plot is drawn
+    period: float  # highest Lomb-Scargle peak in all data, days
+    fap: float  # its Baluev false-alarm probability (assumes white noise)
+    agree: int  # segments whose own top peak is the same period with FAP below the threshold
+    segments: int
+
+
+def _ls_peak(time: np.ndarray, flux: np.ndarray, min_period: float,
+             max_period: float) -> tuple[float, float]:
+    """(period of the highest Lomb-Scargle peak, its Baluev FAP), on 30-minute bins."""
+    t, f = _bin(time, flux, BIN_DAYS)
+    ls = LombScargle(t, f)
+    fmin, fmax = 1 / max_period, 1 / min_period
+    freq, power = ls.autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=10)
+    i = int(np.argmax(power))
+    fap = ls.false_alarm_probability(power[i], minimum_frequency=fmin, maximum_frequency=fmax,
+                                     method="baluev")
+    return float(1 / freq[i]), float(fap)
+
+
+def _segments(curves: list[SectorCurve]) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Independent stretches of data: the sectors, or a single sector split at its largest gap."""
+    if len(curves) != 1:
+        return [(c.time, c.flux) for c in curves]
+    t, f = curves[0].time, curves[0].flux
+    if t.size < 3:
+        return [(t, f)]
+    cut = int(np.argmax(np.diff(t))) + 1
+    return [(t[:cut], f[:cut]), (t[cut:], f[cut:])]
+
+
+def detect_fold(curves: list[SectorCurve], cfg: Config) -> FoldResult:
+    """Fold only on a period that is significant in all data AND recurs in independent segments.
+
+    The Baluev FAP alone passes for almost any TESS light curve with systematics; systematics
+    rarely put their top peak at the same period in different sectors.
+    """
+    p = cfg.plots
+    lo, hi = p.periodogram_min_period_d, p.fold_max_period_d
+    period, fap = _ls_peak(np.concatenate([c.time for c in curves]),
+                           np.concatenate([c.flux for c in curves]), lo, hi)
+    segments = _segments(curves)
+    agree = 0
+    for t, f in segments:
+        if t.size < 10:
+            continue
+        seg_period, seg_fap = _ls_peak(t, f, lo, hi)
+        if seg_fap < p.fold_fap_max and abs(seg_period / period - 1) <= p.fold_period_tolerance:
+            agree += 1
+    ok = (fap < p.fold_fap_max and agree >= p.fold_min_segments
+          and 2 * agree >= len(segments))
+    return FoldResult(ok, period, fap, agree, len(segments))
+
+
+def fold_note(found: FoldResult, marks: list[tuple[str, float]], cfg: Config) -> str:
+    p = cfg.plots
+    where = f"{found.agree} of {found.segments} sectors (or orbits, for a single sector)"
+    if not found.ok:
+        if found.fap >= p.fold_fap_max:
+            return (f"No folded light curve: no periodogram peak below {p.fold_max_period_d:g} d "
+                    f"has FAP < {p.fold_fap_max:g} (best: P = {found.period:.5g} d, "
+                    f"FAP = {found.fap:.1e}).")
+        return (f"No folded light curve: the strongest peak below {p.fold_max_period_d:g} d "
+                f"(P = {found.period:.5g} d, FAP = {found.fap:.1e} in all data) is the top peak "
+                f"in only {where}; a fold needs at least {p.fold_min_segments} and half of them.")
+    parts = [f"Folded on the Lomb-Scargle peak, P = {found.period:.5g} d (Baluev FAP "
+             f"{found.fap:.1e}, which assumes white noise; the top peak in {where}).",
+             "For transits and eclipses the peak often falls at half the true period."]
+    for name, period in marks:
+        if abs(period / (2 * found.period) - 1) <= p.fold_period_tolerance:
+            parts.append(f"{name} ({period:.5g} d) is twice the folded period.")
+        elif abs(period / found.period - 1) <= p.fold_period_tolerance:
+            parts.append(f"{name} ({period:.5g} d) matches the folded period.")
+    return " ".join(parts)
+
+
+def plot_fold(curves: list[SectorCurve], found: FoldResult, path: Path, bins: int = 100) -> Path:
+    """All data folded on found.period, phase 0 at the lowest binned median."""
+    t = np.concatenate([c.time for c in curves])
+    f = np.concatenate([c.flux for c in curves])
+    phase = np.mod(t / found.period, 1.0)
+    idx = np.minimum((phase * bins).astype(int), bins - 1)
+    med = np.array([np.median(f[idx == k]) if np.any(idx == k) else np.nan for k in range(bins)])
+    centers = (np.arange(bins) + 0.5) / bins
+    shift = centers[int(np.nanargmin(med))]
+    ph = np.mod(phase - shift + 0.5, 1.0) - 0.5
+    cph = np.mod(centers - shift + 0.5, 1.0) - 0.5
+    order = np.argsort(cph)
+    fig = None
+    try:
+        fig, ax = plt.subplots(figsize=(9, 4))
+        ax.plot(ph, f, ".", ms=1, color="0.6", rasterized=True)
+        ax.plot(cph[order], med[order], "-", color="C3", lw=1.5, label="median in phase bins")
+        ax.set_xlim(-0.5, 0.5)
+        ax.set_xlabel("phase")
+        ax.set_ylabel("normalized flux")
+        ax.set_title(f"Folded on P = {found.period:.5g} d (FAP {found.fap:.1e}; top peak in "
+                     f"{found.agree} of {found.segments} sectors or orbits)", fontsize=10)
+        ax.legend(fontsize=8, loc="lower right")
+        fig.tight_layout()
+        fig.savefig(path, dpi=120)
+    finally:
+        if fig is not None:
+            plt.close(fig)
+    return path
+
+
 def plot_stage(report, path: Path, cfg: Config) -> tuple[Path | None, str | None]:
     timeout = float(cfg.plots.lightcurve_timeout_s)
     # Daemon thread: a stuck download must not hold the interpreter open at exit.
@@ -217,4 +331,7 @@ def plot_stage(report, path: Path, cfg: Config) -> tuple[Path | None, str | None
     if not curves:
         return None, note
     marks = exoplanet_archive.known_periods(report.results)
-    return plot_lightcurves(curves, marks, cfg, path), note
+    lc_path = plot_lightcurves(curves, marks, cfg, path)
+    found = detect_fold(curves, cfg)
+    fold_path = plot_fold(curves, found, path.with_name("fold.png")) if found.ok else None
+    return lc_path, note, {"fold": (fold_path, fold_note(found, marks, cfg))}

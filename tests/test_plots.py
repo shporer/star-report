@@ -591,3 +591,97 @@ def test_fetch_cutout_both_fail_propagates_and_plotter_draws_fallback(tmp_path, 
         sky.fetch_cutout(10.0, 20.0, cfg, _Session(b"<html>"))
     path, note = plots._plot_sky(make_report(), tmp_path / "s.png", cfg, None, _Session(b"<html>"))
     assert path.read_bytes().startswith(PNG) and "Sky image unavailable" in note
+
+
+# ---- phase-folded light curve ----
+
+def _sector(seed, period=None, amp=0.01, start=0.0, label="Sector 1 (SPOC)"):
+    """A 27-day sector at 10-minute cadence with a 1-day gap; a sinusoid if period is given."""
+    rng = np.random.default_rng(seed)
+    t = np.arange(start, start + 27.0, 10 / 1440)
+    t = t[(t < start + 13.0) | (t > start + 14.0)]
+    flux = 1 + rng.normal(0, 0.002, t.size)
+    if period:
+        flux += amp * np.sin(2 * np.pi * t / period)
+    return SectorCurve(label, t, flux)
+
+
+def test_fold_detected_when_every_sector_shows_the_period(tmp_path):
+    from star_report.plots.lightcurve import detect_fold
+
+    curves = [_sector(1, 2.3), _sector(2, 2.3, start=60.0)]
+    found = detect_fold(curves, load_config(cwd=tmp_path))
+    assert found.ok and found.period == pytest.approx(2.3, rel=0.01)
+    assert found.fap < 1e-3 and (found.agree, found.segments) == (2, 2)
+
+
+def test_no_fold_for_noise(tmp_path):
+    from star_report.plots.lightcurve import detect_fold
+
+    found = detect_fold([_sector(3), _sector(4, start=60.0)], load_config(cwd=tmp_path))
+    assert not found.ok
+
+
+def test_no_fold_when_only_one_sector_shows_the_period(tmp_path):
+    from star_report.plots.lightcurve import detect_fold
+
+    found = detect_fold([_sector(5, 2.3), _sector(6, start=60.0)], load_config(cwd=tmp_path))
+    assert found.fap < 1e-3  # the combined data alone would pass
+    assert not found.ok and (found.agree, found.segments) == (1, 2)
+
+
+def test_a_single_sector_is_split_into_its_two_orbits(tmp_path):
+    from star_report.plots.lightcurve import detect_fold
+
+    found = detect_fold([_sector(7, 2.3)], load_config(cwd=tmp_path))
+    assert found.ok and (found.agree, found.segments) == (2, 2)
+
+
+def test_fold_note_names_a_known_period_twice_the_fold(tmp_path):
+    from star_report.plots.lightcurve import FoldResult, fold_note
+
+    found = FoldResult(ok=True, period=0.8629, fap=1e-30, agree=6, segments=6)
+    note = fold_note(found, [("TOI 1091.01", 1.725841)], load_config(cwd=tmp_path))
+    assert "TOI 1091.01 (1.7258 d) is twice the folded period" in note
+    assert "half the true period" in note
+
+
+def test_qlp_light_curves_use_the_detrended_flux(tmp_path, monkeypatch):
+    import lightkurve as lk
+    from astropy.table import Table
+
+    class Product:
+        def download(self, quality_bitmask="default"):
+            lc = lk.LightCurve(time=np.arange(5.0), flux=np.array([7.0, 7, 7, 7, 14]))
+            lc["kspsap_flux"] = np.full(5, 3.0)
+            lc.meta.update(SECTOR=54, AUTHOR="QLP")
+            return lc
+
+    class FakeSearch:
+        table = Table({"author": ["QLP"], "exptime": [600.0], "sequence_number": [54],
+                       "mission": ["TESS Sector 54"]})
+
+        def __len__(self):
+            return 1
+
+        def __getitem__(self, i):
+            return Product()
+
+    monkeypatch.setattr(lk, "search_lightcurve", lambda *a, **k: FakeSearch())
+    curves, _ = lightcurve.fetch_lightcurves(make_report().identity, load_config(cwd=tmp_path))
+    assert np.allclose(curves[0].flux, 1.0)  # flat kspsap_flux, not sap_flux (one point at 2x)
+    assert curves[0].label == "Sector 54 (QLP, kspsap_flux)"
+
+
+def test_make_plots_puts_the_fold_after_the_light_curve(tmp_path, monkeypatch):
+    def lc_stage(report, path, cfg, cache, session):
+        path.write_bytes(PNG)
+        fold = path.with_name("fold.png")
+        fold.write_bytes(PNG)
+        return path, None, {"fold": (fold, "folded note")}
+
+    monkeypatch.setitem(plots.PLOTTERS, "cmd", lambda r, p, *a: (p.write_bytes(PNG) and None) or (p, None))
+    monkeypatch.setitem(plots.PLOTTERS, "lightcurve", lc_stage)
+    monkeypatch.setitem(plots.PLOTTERS, "sky", lambda *a: (None, None))
+    paths, notes = plots.make_plots(make_report(), tmp_path / "plots", load_config(cwd=tmp_path), None)
+    assert list(paths) == ["cmd", "lightcurve", "fold"] and notes == {"fold": "folded note"}
