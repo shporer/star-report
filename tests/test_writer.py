@@ -635,3 +635,14 @@ def test_cc_backend_failures_not_cached_and_key_has_backend(tmp_path):
     assert second.status == "ok" and second.from_cache is False and len(calls()) == 2
     third = write_sections(report, cc_cfg(script), cache)
     assert third.from_cache is True and len(calls()) == 2
+
+
+def test_fact_sheet_lists_unchecked_keck_instruments_only_when_some_failed():
+    report = make_report()
+    assert "koa_not_checked" not in build_fact_sheet(report)["inventory"]["spectra"]
+    data = {"instruments": [], "no_frames": ["hires"],
+            "errors": [{"instrument": "nirc2", "error": "x"}, {"instrument": "mosfire", "error": "y"}]}
+    koa = report.results["koa"].model_copy(update={"status": "ok", "data": data})
+    partial = report.model_copy(update={"results": {**report.results, "koa": koa}})
+    spectra = build_fact_sheet(partial)["inventory"]["spectra"]
+    assert spectra["koa_not_checked"] == ["nirc2", "mosfire"]

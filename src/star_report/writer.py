@@ -156,9 +156,13 @@ def _inventory(report: Report) -> dict:
     if eso_inst := [{"instrument": i.get("instrument"), "n": i.get("n")}
                     for i in _dicts(eso.get("instruments")) if i.get("instrument")]:
         spectra["eso"] = {"total": eso.get("total"), "instruments": eso_inst}
+    koa_data = _data(report, "koa")
     if koa := [{"instrument": i.get("instrument"), "frames": i.get("frames")}
-               for i in _dicts(_data(report, "koa").get("instruments")) if i.get("instrument")]:
+               for i in _dicts(koa_data.get("instruments")) if i.get("instrument")]:
         spectra["koa"] = koa
+    if not_checked := [e["instrument"] for e in _dicts(koa_data.get("errors"))
+                       if isinstance(e.get("instrument"), str)]:
+        spectra["koa_not_checked"] = not_checked  # only when KOA failed for some instruments
     harps = _data(report, "harps_rvbank")
     if harps:
         spectra["harps_rvbank"] = _prune({"n_rv": harps.get("n_rv"),

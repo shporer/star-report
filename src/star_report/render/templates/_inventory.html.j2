@@ -99,7 +99,7 @@
 </tbody>
 </table>
 {% endif %}
-{% if koa and koa.errors|as_list %}<p class="muted status-error">Keck instruments unavailable: {% for e in koa.errors|as_list if e is mapping %}{{ e.instrument }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+{% if koa and koa.errors|as_list %}<p class="muted status-error">{% if koa.no_frames|as_list %}No object frames: {{ koa.no_frames|as_list|join(", ") }}. {% endif %}Not checked (Keck archive error, retried on the next run): {% for e in koa.errors|as_list if e is mapping %}{{ e.instrument }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
 {{ status_note("harps_rvbank") }}
 {% if harps %}
 <p>HARPS RV bank ({{ harps.name or "" }}): {{ harps.n_rv if harps.n_rv is number else "unknown number of" }} RVs{% if harps.span_yr is number %} over {{ "%.1f"|format(harps.span_yr) }} yr (BJD {{ "%.1f"|format(harps.first_bjd) }} to {{ "%.1f"|format(harps.last_bjd) }}){% endif %}.</p>

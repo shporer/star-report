@@ -59,11 +59,15 @@ def _data_line(report: Report) -> str:
     observed = [s for s in tp.get("observed") or [] if isinstance(s, int)]
     upcoming = [s for s in tp.get("upcoming") or [] if isinstance(s, dict)]
     eso = _data(report, "eso").get("total")
-    koa = sum(i.get("frames") or 0 for i in _data(report, "koa").get("instruments") or []
+    koa_data = _data(report, "koa")
+    koa = sum(i.get("frames") or 0 for i in koa_data.get("instruments") or []
               if isinstance(i, dict) and isinstance(i.get("frames"), int))
+    unchecked = [e["instrument"] for e in koa_data.get("errors") or []
+                 if isinstance(e, dict) and isinstance(e.get("instrument"), str)]
+    koa_text = f"KOA {koa}" + (f" ({', '.join(unchecked)} not checked)" if unchecked else "")
     harps = _data(report, "harps_rvbank").get("n_rv")
     return (f"Data: TESS sectors {len(observed)} observed, {len(upcoming)} upcoming; "
-            f"ESO {eso if isinstance(eso, int) else 0}, KOA {koa}, HARPS {harps if isinstance(harps, int) else 0}")
+            f"ESO {eso if isinstance(eso, int) else 0}, {koa_text}, HARPS {harps if isinstance(harps, int) else 0}")
 
 
 def print_summary(report: Report, report_path: Path | None, console: Console,
@@ -123,6 +127,9 @@ def print_summary(report: Report, report_path: Path | None, console: Console,
         label = STATUS_LABELS[res.status]
         if res.status in ("error", "timeout", "skipped") and res.error:
             label = f"{label}: {res.error}"
+        elif res.status == "ok" and res.error:  # answered, but part of it failed
+            mark, style = "!", "yellow"
+            label = f"{label} ({res.error})"
         origin = ""
         if res.provenance is not None and res.status in ("ok", "empty"):
             origin = "  (cache)" if res.provenance.from_cache else "  (live)"
