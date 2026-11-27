@@ -58,7 +58,7 @@ class SourceResult(BaseModel):
     status: Status
     data: Any = None
     provenance: Provenance | None = None
-    error: str | None = None
+    error: str | None = None  # why it failed; on an "ok" result, the part that failed (if any)
     elapsed_s: float = 0.0
 
 
