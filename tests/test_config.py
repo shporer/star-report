@@ -12,6 +12,7 @@ def test_defaults(tmp_path):
     assert (cfg.llm.timeout_s, cfg.llm.max_retries) == (300, 1)
     assert (cfg.sources.max_workers, cfg.sources.timeout_s) == (8, 30)
     assert cfg.sources.timeout_overrides == {"mast": 90}
+    assert cfg.sources.koa_instrument_timeout_fraction == 0.8
     assert cfg.cache.expiry_days["llm"] is None and cfg.cache.expiry_days["simbad"] == 30
     assert (cfg.literature.most_cited, cfg.literature.most_recent) == (15, 10)
     assert cfg.servers.simbad == ["simbad.cds.unistra.fr", "simbad.harvard.edu"]
@@ -49,6 +50,9 @@ def test_unknown_key_is_config_error(tmp_path):
     ("sources: {timeout_s: .nan}", "sources.timeout_s"),
     ("sources: {timeout_s: .inf}", "sources.timeout_s"),
     ("sources: {timeout_overrides: {mast: -90}}", "sources.timeout_overrides.mast"),
+    ("sources: {koa_instrument_timeout_fraction: 0}", "sources.koa_instrument_timeout_fraction"),
+    ("sources: {koa_instrument_timeout_fraction: 1}", "sources.koa_instrument_timeout_fraction"),
+    ("sources: {koa_instrument_timeout_fraction: .nan}", "sources.koa_instrument_timeout_fraction"),
     ("plots: {lightcurve_timeout_s: 0}", "plots.lightcurve_timeout_s"),
     ("output: {pdf_timeout_s: 0}", "output.pdf_timeout_s"),
     ("output: {pdf_paper: tabloid}", "output.pdf_paper"),

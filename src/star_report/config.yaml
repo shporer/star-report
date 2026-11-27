@@ -58,6 +58,9 @@ sources:
   # lamost = V/162/dr11sl (DR11 low-res stellar parameters). Columns used by parse_lamost: ObsID, Obs.Date,
   # snru/snrg/snrr/snri/snrz (S/N, the largest picks the best row), Teff, logg, [Fe/H]
   koa_instruments: [hires, kpf, nirspec, esi, nirc2, nires, mosfire]
+  # Share of KOA's source timeout the instrument queries may use. The rest lets KOA return the
+  # instruments that answered before the runner's own timeout, so a hung one is "not checked".
+  koa_instrument_timeout_fraction: 0.8
 resolve:
   match_radius_arcsec: 5       # coordinates or SIMBAD position -> nearest Gaia DR3 / TIC
   coord_search_arcsec: 200     # candidate cone for coordinate input (covers J2000 positions of high-PM stars)

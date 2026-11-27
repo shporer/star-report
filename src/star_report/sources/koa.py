@@ -71,6 +71,11 @@ class KeckKoa(Source):
         return {"ra": ra, "dec": dec, "radius": float(ctx.config.sources.radius_arcsec["koa"]),
                 "instruments": list(ctx.config.sources.koa_instruments)}
 
+    def _instrument_timeout(self, ctx: SourceContext) -> float:
+        """The instruments' wait: a share of the source timeout, so a hung instrument becomes
+        "not checked" while run_sources still accepts the partial answer."""
+        return self.timeout_s(ctx.config) * ctx.config.sources.koa_instrument_timeout_fraction
+
     def _query_instrument(self, ctx: SourceContext, inst: str) -> dict:
         ra, dec, r_deg = _params(ctx)
         rows = tap_rows(TAP_URL, ADQL.format(inst=inst, ra=ra, dec=dec, r_deg=r_deg), ctx.session)
@@ -83,7 +88,7 @@ class KeckKoa(Source):
             return []
         # One daemon thread per instrument; a failed or timed-out instrument must not sink the rest.
         outcomes = parallel_map(lambda inst: self._query_instrument(ctx, inst), instruments,
-                                self.timeout_s(ctx.config), name="koa")
+                                self._instrument_timeout(ctx), name="koa")
         return _combine(instruments, outcomes)
 
     def cached_fetch(self, ctx: SourceContext, query: dict) -> CacheEntry:
@@ -97,7 +102,7 @@ class KeckKoa(Source):
             return ctx.cache.fetch(self.group, self.name, {**shared, "instrument": inst},
                                    lambda: self._query_instrument(ctx, inst))
 
-        outcomes = parallel_map(one, instruments, self.timeout_s(ctx.config), name="koa")
+        outcomes = parallel_map(one, instruments, self._instrument_timeout(ctx), name="koa")
         payload = _combine(instruments, [(status, value.payload if status == "ok" else value)
                                          for status, value in outcomes])
         answered = [value for status, value in outcomes if status == "ok"]

@@ -128,7 +128,10 @@ keys and is deep-merged over the defaults.
   none, so the next run asks KOA only for that instrument. On 2026-11-27 nirc2 and mosfire failed
   for TOI-1091 with a Keck-side "ORA-00955: name is already used by an existing object", and the
   old single entry cached that partial answer for 7 days. The report, the source list, the
-  terminal data line and the overview's fact sheet name the instruments not checked.
+  terminal data line and the overview's fact sheet name the instruments not checked. The
+  instruments get `sources.koa_instrument_timeout_fraction` of KOA's timeout, so a hung one is
+  "not checked" instead of turning all of KOA into "timed out". If it answers later, that answer
+  is cached.
 - MAST needs a 90 s timeout for TESS continuous viewing zone stars (`sources.timeout_overrides`).
 - LLM backends: `llm.backend: api` (Anthropic SDK) or `claude-code` (`claude -p` on the user's
   Claude Code login, no API key). The claude-code path never passes `ANTHROPIC_API_KEY` or

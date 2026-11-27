@@ -12,7 +12,7 @@ from star_report.sources import eso as eso_src
 from star_report.sources import koa as koa_src
 from star_report.sources.eso import EsoSpectra, mjd_to_date
 from star_report.sources.koa import KeckKoa, summarize_koa
-from star_report.sources.base import run_source
+from star_report.sources.base import run_source, run_sources
 from star_report.sources.registry import build_sources
 
 
@@ -200,7 +200,7 @@ def test_koa_slow_instrument_times_out_without_sinking_the_rest(monkeypatch):
     finally:
         release.set()
     assert raw[0]["instrument"] == "hires" and raw[0]["frames"] == 1
-    assert raw[1] == {"instrument": "kpf", "error": "TimeoutError: timed out after 0.3 s"}
+    assert raw[1] == {"instrument": "kpf", "error": "TimeoutError: timed out after 0.24 s"}
     assert daemon == [True, True]
 
 
@@ -288,7 +288,7 @@ def test_koa_timed_out_instrument_is_not_checked(monkeypatch, tmp_path):
     finally:
         release.set()
     assert r.status == "ok" and r.error == "kpf not checked"
-    assert r.data["errors"] == [{"instrument": "kpf", "error": "TimeoutError: timed out after 0.3 s"}]
+    assert r.data["errors"] == [{"instrument": "kpf", "error": "TimeoutError: timed out after 0.24 s"}]
 
 
 def test_koa_unreadable_instrument_entry_is_queried_again(monkeypatch, tmp_path):
@@ -332,3 +332,19 @@ def test_koa_partial_error():
     assert koa.partial_error(None) is None
     errors = [{"instrument": "nirc2", "error": "a"}, {"instrument": "mosfire", "error": "b"}, "junk"]
     assert koa.partial_error({"instruments": [], "errors": errors}) == "nirc2, mosfire not checked"
+
+
+def test_koa_hanging_instrument_still_answers_within_the_source_timeout(monkeypatch, tmp_path):
+    # The instruments get a share of the source's timeout, so KOA returns its partial answer
+    # before run_sources' watchdog would mark the whole source "timed out".
+    release = threading.Event()
+    _koa_service(monkeypatch, set(), slow={"kpf"}, release=release)
+    ctx = _koa_ctx(tmp_path)
+    ctx.config.sources.timeout_s = 1.0
+    ctx.config.sources.koa_instrument_timeout_fraction = 0.5
+    try:
+        r = run_sources([KeckKoa()], ctx)["koa"]
+    finally:
+        release.set()
+    assert r.status == "ok" and r.error == "kpf not checked" and r.elapsed_s < 0.9
+    assert r.data["errors"] == [{"instrument": "kpf", "error": "TimeoutError: timed out after 0.5 s"}]

@@ -82,6 +82,8 @@ class SourcesConfig(_Section):
     radius_arcsec: dict[str, float]
     vizier_catalogs: dict[str, str]
     koa_instruments: list[str]
+    # Share of KOA's source timeout its instrument queries may use (0 < f < 1).
+    koa_instrument_timeout_fraction: Annotated[float, Field(gt=0, lt=1, allow_inf_nan=False)]
 
 
 class ResolveConfig(_Section):

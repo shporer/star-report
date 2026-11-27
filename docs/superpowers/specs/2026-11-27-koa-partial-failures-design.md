@@ -1,7 +1,8 @@
 # KOA partial failures: design
 
 - **Date:** 2026-11-27
-- **Status:** Approach A chosen in chat; this short design awaits approval.
+- **Status:** Approved 2026-11-27. The final review added the instruments' timeout share
+  (`sources.koa_instrument_timeout_fraction`) and corrected the wording on late answers.
 - **Owner:** Avi Shporer (MIT)
 
 ## Why
@@ -45,8 +46,12 @@ the five answered tables had no frames while the two failed ones were not checke
   today (`ctx.cache.fetch(group, name, query, fetch)`), and `run_source` calls it.
 - `KeckKoa.cached_fetch` runs one `ctx.cache.fetch` per instrument, concurrently through
   `parallel_map`. The keys are `{ra, dec, radius, instrument}` in the `koa` group. A query that
-  raises or times out writes nothing and becomes an `{"instrument", "error"}` entry in the combined
-  payload, as now. If every instrument fails, the source still raises.
+  raises writes nothing and becomes an `{"instrument", "error"}` entry in the combined payload, as
+  now. If every instrument fails, the source still raises.
+- The instruments may use `sources.koa_instrument_timeout_fraction` (0.8) of KOA's source timeout.
+  If they had the whole timeout, `run_sources` could mark all of KOA "timed out" while it was
+  returning the partial answer. An instrument still running at that point is reported as not
+  checked. Its thread keeps going, and if it answers later, the answer is complete and is cached.
 - The combined result keeps today's payload shape. Its `retrieved` is the oldest retrieval among
   the answered instruments, and `from_cache` is true only when every answered instrument came
   from the cache.
