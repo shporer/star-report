@@ -643,6 +643,7 @@ def test_fold_note_names_a_known_period_twice_the_fold(tmp_path):
     found = FoldResult(ok=True, period=0.8629, fap=1e-30, agree=6, segments=6)
     note = fold_note(found, [("TOI 1091.01", 1.725841)], load_config(cwd=tmp_path))
     assert "TOI 1091.01 (1.7258 d) is twice the folded period" in note
+    assert "2P = 1.7258 d" in note and "odd and even" in note
     assert "half the true period" in note
 
 
@@ -685,3 +686,17 @@ def test_make_plots_puts_the_fold_after_the_light_curve(tmp_path, monkeypatch):
     monkeypatch.setitem(plots.PLOTTERS, "sky", lambda *a: (None, None))
     paths, notes = plots.make_plots(make_report(), tmp_path / "plots", load_config(cwd=tmp_path), None)
     assert list(paths) == ["cmd", "lightcurve", "fold"] and notes == {"fold": "folded note"}
+
+
+def test_plot_fold_draws_p_and_2p(tmp_path, monkeypatch):
+    from star_report.plots.lightcurve import FoldResult, plot_fold
+
+    titles = []
+    real = plt.Figure.savefig
+    monkeypatch.setattr(plt.Figure, "savefig", lambda self, *a, **k: (
+        titles.extend(ax.get_title() for ax in self.axes), real(self, *a, **k))[1])
+    found = FoldResult(ok=True, period=2.3, fap=1e-20, agree=2, segments=2)
+    path = plot_fold([_sector(1, 2.3)], found, tmp_path / "fold.png")
+    assert path.read_bytes().startswith(PNG)
+    assert [t.split(" = ")[0] for t in titles] == ["Folded on P", "Folded on 2P"]
+    assert titles[1].startswith("Folded on 2P = 4.6 d")

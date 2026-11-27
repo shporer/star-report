@@ -276,8 +276,11 @@ def fold_note(found: FoldResult, marks: list[tuple[str, float]], cfg: Config) ->
         return (f"No folded light curve: the strongest peak below {p.fold_max_period_d:g} d "
                 f"(P = {found.period:.5g} d, FAP = {found.fap:.1e} in all data) is the top peak "
                 f"in only {where}; a fold needs at least {p.fold_min_segments} and half of them.")
-    parts = [f"Folded on the Lomb-Scargle peak, P = {found.period:.5g} d (Baluev FAP "
-             f"{found.fap:.1e}, which assumes white noise; the top peak in {where}).",
+    parts = [f"Folded on the Lomb-Scargle peak, P = {found.period:.5g} d (top; Baluev FAP "
+             f"{found.fap:.1e}, which assumes white noise; the top peak in {where}), and on "
+             f"2P = {2 * found.period:.5g} d (bottom), where the odd and even cycles fall at "
+             "phase 0 and 0.5: equal dips there mean the true period is P; unequal dips, or "
+             "a dip at only one of them, point to 2P.",
              "For transits and eclipses the peak often falls at half the true period."]
     for name, period in marks:
         if abs(period / (2 * found.period) - 1) <= p.fold_period_tolerance:
@@ -287,29 +290,38 @@ def fold_note(found: FoldResult, marks: list[tuple[str, float]], cfg: Config) ->
     return " ".join(parts)
 
 
-def plot_fold(curves: list[SectorCurve], found: FoldResult, path: Path, bins: int = 100) -> Path:
-    """All data folded on found.period, phase 0 at the lowest binned median."""
-    t = np.concatenate([c.time for c in curves])
-    f = np.concatenate([c.flux for c in curves])
-    phase = np.mod(t / found.period, 1.0)
+def _fold_panel(ax, t: np.ndarray, f: np.ndarray, period: float, bins: int, lo: float) -> None:
+    """Points and binned median folded on period, phase lo to lo + 1, phase 0 at the lowest median."""
+    phase = np.mod(t / period, 1.0)
     idx = np.minimum((phase * bins).astype(int), bins - 1)
     med = np.array([np.median(f[idx == k]) if np.any(idx == k) else np.nan for k in range(bins)])
     centers = (np.arange(bins) + 0.5) / bins
     shift = centers[int(np.nanargmin(med))]
-    ph = np.mod(phase - shift + 0.5, 1.0) - 0.5
-    cph = np.mod(centers - shift + 0.5, 1.0) - 0.5
+    ph = np.mod(phase - shift - lo, 1.0) + lo
+    cph = np.mod(centers - shift - lo, 1.0) + lo
     order = np.argsort(cph)
+    ax.plot(ph, f, ".", ms=1, color="0.6", rasterized=True)
+    ax.plot(cph[order], med[order], "-", color="C3", lw=1.5, label="median in phase bins")
+    ax.set_xlim(lo, lo + 1)
+    ax.set_ylabel("normalized flux")
+
+
+def plot_fold(curves: list[SectorCurve], found: FoldResult, path: Path, bins: int = 100) -> Path:
+    """All data folded on the peak period P (phase -0.5 to 0.5) and on 2P (phase -0.25 to 0.75,
+    so the odd and even cycles, at phase 0 and 0.5, are both whole)."""
+    t = np.concatenate([c.time for c in curves])
+    f = np.concatenate([c.flux for c in curves])
     fig = None
     try:
-        fig, ax = plt.subplots(figsize=(9, 4))
-        ax.plot(ph, f, ".", ms=1, color="0.6", rasterized=True)
-        ax.plot(cph[order], med[order], "-", color="C3", lw=1.5, label="median in phase bins")
-        ax.set_xlim(-0.5, 0.5)
-        ax.set_xlabel("phase")
-        ax.set_ylabel("normalized flux")
-        ax.set_title(f"Folded on P = {found.period:.5g} d (FAP {found.fap:.1e}; top peak in "
-                     f"{found.agree} of {found.segments} sectors or orbits)", fontsize=10)
-        ax.legend(fontsize=8, loc="lower right")
+        fig, (top, bottom) = plt.subplots(2, 1, figsize=(9, 7))
+        _fold_panel(top, t, f, found.period, bins, -0.5)
+        top.set_title(f"Folded on P = {found.period:.5g} d (FAP {found.fap:.1e}; top peak in "
+                      f"{found.agree} of {found.segments} sectors or orbits)", fontsize=10)
+        top.legend(fontsize=8, loc="lower right")
+        _fold_panel(bottom, t, f, 2 * found.period, 2 * bins, -0.25)
+        bottom.set_title(f"Folded on 2P = {2 * found.period:.5g} d (odd and even cycles at "
+                         "phase 0 and 0.5)", fontsize=10)
+        bottom.set_xlabel("phase")
         fig.tight_layout()
         fig.savefig(path, dpi=120)
     finally:
