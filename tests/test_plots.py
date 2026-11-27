@@ -691,12 +691,17 @@ def test_make_plots_puts_the_fold_after_the_light_curve(tmp_path, monkeypatch):
 def test_plot_fold_draws_p_and_2p(tmp_path, monkeypatch):
     from star_report.plots.lightcurve import FoldResult, plot_fold
 
-    titles = []
+    titles, styles = [], []
     real = plt.Figure.savefig
     monkeypatch.setattr(plt.Figure, "savefig", lambda self, *a, **k: (
-        titles.extend(ax.get_title() for ax in self.axes), real(self, *a, **k))[1])
+        titles.extend(ax.get_title() for ax in self.axes),
+        styles.extend((ln.get_marker(), ln.get_linestyle(), ln.get_color())
+                      for ax in self.axes for ln in ax.get_lines()),
+        real(self, *a, **k))[2])
     found = FoldResult(ok=True, period=2.3, fap=1e-20, agree=2, segments=2)
     path = plot_fold([_sector(1, 2.3)], found, tmp_path / "fold.png")
     assert path.read_bytes().startswith(PNG)
     assert [t.split(" = ")[0] for t in titles] == ["Folded on P", "Folded on 2P"]
     assert titles[1].startswith("Folded on 2P = 4.6 d")
+    assert not any(ls == "-" for _, ls, _ in styles)  # no line: binned points instead
+    assert ("o", "None", "black") in styles and (".", "None", "0.8") in styles

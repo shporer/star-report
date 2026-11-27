@@ -300,8 +300,12 @@ def _fold_panel(ax, t: np.ndarray, f: np.ndarray, period: float, bins: int, lo: 
     ph = np.mod(phase - shift - lo, 1.0) + lo
     cph = np.mod(centers - shift - lo, 1.0) + lo
     order = np.argsort(cph)
-    ax.plot(ph, f, ".", ms=1, color="0.6", rasterized=True)
-    ax.plot(cph[order], med[order], "-", color="C3", lw=1.5, label="median in phase bins")
+    counts = np.bincount(idx, minlength=bins)
+    err = np.array([np.std(f[idx == k]) / np.sqrt(counts[k]) if counts[k] > 1 else np.nan
+                    for k in range(bins)])
+    ax.plot(ph, f, ".", ms=1, color="0.8", rasterized=True)
+    ax.errorbar(cph[order], med[order], yerr=err[order], fmt="o", ms=3, color="black",
+                elinewidth=0.8, capsize=0, label="binned (median ± σ/√n)")
     ax.set_xlim(lo, lo + 1)
     ax.set_ylabel("normalized flux")
 
