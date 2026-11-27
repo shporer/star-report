@@ -123,7 +123,12 @@ keys and is deep-merged over the defaults.
   ValueError: 1:0: syntax error". Nothing is cached from such answers; rerun after the archive returns.
 - ADS search rejects `object:`. The name is translated via `/v1/objects/query` first, with an
   abstract-phrase fallback.
-- KOA goes through its TAP service with pyvo, not pykoa.
+- KOA goes through its TAP service with pyvo, not pykoa. Each instrument is its own cache entry
+  (`KeckKoa.cached_fetch`, keyed `{ra, dec, radius, instrument}`), and a failed instrument writes
+  none, so the next run asks KOA only for that instrument. On 2026-11-27 nirc2 and mosfire failed
+  for TOI-1091 with a Keck-side "ORA-00955: name is already used by an existing object", and the
+  old single entry cached that partial answer for 7 days. The report, the source list, the
+  terminal data line and the overview's fact sheet name the instruments not checked.
 - MAST needs a 90 s timeout for TESS continuous viewing zone stars (`sources.timeout_overrides`).
 - LLM backends: `llm.backend: api` (Anthropic SDK) or `claude-code` (`claude -p` on the user's
   Claude Code login, no API key). The claude-code path never passes `ANTHROPIC_API_KEY` or
