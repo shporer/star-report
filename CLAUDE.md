@@ -125,6 +125,15 @@ keys and is deep-merged over the defaults.
   segments (sectors, or a single sector's two orbits). The Baluev FAP alone passed for TIC 133788692's
   systematics (FAP ~1e-27); the cross-sector test rejects them (1 of 2) and keeps TOI-1091 (6 of 6).
   A plotter may return a third item, extra plots {name: (path, note)}, placed after its own.
+  The light-curve and folded plots fit their y-axis without isolated outliers
+  (`lightcurve.isolated_outliers`: one point apart from both neighbors, same side, by more than
+  `plots.isolated_outlier_sigma` robust sigmas of the point-to-point differences); runs of two or
+  more points always count, and a note gives the number outside. TIC 385180287 Sector 40 has
+  points at 0.25 and 0.42 that squashed its fold. The data themselves are never clipped.
+- CTOIs come only from ExoFOP (`derive.ctoi_entries`): a flag after the TOIs, the terminal
+  "Planets" line, and `ctois` in the writer's fact sheet. That key is added only when a star has
+  CTOIs, so other stars' fact sheets, and their cached LLM text, are unchanged. Before 2026-11-27
+  the overview of CTOI TIC 410355638.01 said "no planets, TOIs or KOIs".
 - On 2026-11-25 the Gaia archive was offline for DR4 preparation: every endpoint, TAP included,
   answered HTTP 200 with an HTML maintenance page, which pyvo reports as "DALFormatError:
   ValueError: 1:0: syntax error". Nothing is cached from such answers; rerun after the archive returns.

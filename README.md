@@ -12,13 +12,16 @@ sit on top of the data.
 - Identity: the resolved Gaia DR3, TIC and SIMBAD identifiers and the cross-match used.
 - Parameters from several catalogs side by side, with disagreements and quality flags (RUWE,
   contamination) highlighted.
-- Planets and TOIs: NASA Exoplanet Archive and ExoFOP.
+- Planets, TOIs and community TOIs (CTOIs): NASA Exoplanet Archive and ExoFOP.
 - Companions: Gaia neighbors; Gaia DR3 non-single-star orbits, astrometric accelerations and RV
   trends; WDS, SB9, VSX, and the El-Badry wide-binary catalog.
 - Observation inventory: MAST, TESS sector pointing, ESO, Keck KOA, HARPS RV bank, APOGEE, LAMOST.
 - Plots: color-magnitude diagram on a Gaia background, TESS light curve and periodogram, a
   phase-folded light curve when a period is significant (false-alarm probability < 0.1%) and recurs
-  as the top peak in at least two sectors, and a sky image with neighbors marked.
+  as the top peak in at least two sectors, and a sky image with neighbors marked. The light-curve
+  and folded plots fit their y-axis without isolated single-point outliers
+  (`plots.isolated_outlier_sigma`) and say how many points fall outside; transits and eclipses
+  always count.
 - Literature: ADS records, with the most cited and most recent papers listed.
 - Claude-written overview and literature summary (skipped with `--no-llm`).
 
