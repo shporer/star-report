@@ -137,6 +137,13 @@ keys and is deep-merged over the defaults.
 - On 2026-11-25 the Gaia archive was offline for DR4 preparation: every endpoint, TAP included,
   answered HTTP 200 with an HTML maintenance page, which pyvo reports as "DALFormatError:
   ValueError: 1:0: syntax error". Nothing is cached from such answers; rerun after the archive returns.
+- QLP time stamps in Sectors 14, 15 and 80 carry errors from QLP's barycentric correction (wrong
+  observer position; minutes). `plots/qlp_time.py` is a port of AutoTTV's `qlp_time_fix.error_s`
+  (identical to 0.0 s on 100 random stars and times); `fetch_lightcurves` applies it to QLP
+  products of the sectors in `plots.qlp_time_corrections` and appends ", time corrected" to the
+  label. QLP's v02 files for Sectors 74-79 are already fixed and MAST serves v02 (checked
+  2026-11-27); Sector 80 is v01. AutoTTV's per-star row (TIC 272829240, Sector 85 orbit 2) is not
+  ported.
 - ADS search rejects `object:`. The name is translated via `/v1/objects/query` first, with an
   abstract-phrase fallback.
 - KOA goes through its TAP service with pyvo, not pykoa. Each instrument is its own cache entry
