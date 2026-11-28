@@ -153,6 +153,49 @@ def _bin(time: np.ndarray, flux: np.ndarray, width: float) -> tuple[np.ndarray, 
     return t, f
 
 
+def isolated_outliers(flux: np.ndarray, nsigma: float) -> np.ndarray:
+    """True where a point (in time order) stands apart from both of its neighbors, on the same
+    side, by more than nsigma robust standard deviations of the point-to-point differences.
+
+    Runs of two or more deviant points, such as transits and eclipses, are never flagged, nor are
+    the two end points. Only the plots' y-ranges use this; no data are dropped.
+    """
+    f = np.asarray(flux, dtype=float)
+    out = np.zeros(f.size, dtype=bool)
+    d = np.diff(f)
+    if f.size < 3 or not np.isfinite(d).any():
+        return out
+    sigma = 1.4826 * np.nanmedian(np.abs(d - np.nanmedian(d)))
+    prev, nxt = f[1:-1] - f[:-2], f[1:-1] - f[2:]
+    with np.errstate(invalid="ignore"):  # NaN neighbors compare False
+        out[1:-1] = (np.sign(prev) == np.sign(nxt)) & (np.fmin(np.abs(prev), np.abs(nxt))
+                                                       > nsigma * sigma)
+    return out
+
+
+def _fit_y_range(ax, flux: np.ndarray, outliers: np.ndarray, extra: np.ndarray | None = None) -> None:
+    """Fit the y-axis to the points that are not isolated outliers (and to `extra` values), and
+    note how many points fall outside. Without isolated outliers the axis is left as drawn."""
+    flux = np.asarray(flux, dtype=float)
+    if not outliers.any():
+        return
+    vals = flux[~outliers]
+    if extra is not None:
+        vals = np.concatenate([vals, np.ravel(extra)])
+    vals = vals[np.isfinite(vals)]
+    if vals.size == 0:
+        return
+    lo, hi = float(vals.min()), float(vals.max())
+    pad = 0.05 * (hi - lo) if hi > lo else 0.01 * max(abs(hi), 1e-12)
+    lo, hi = lo - pad, hi + pad
+    ax.set_ylim(lo, hi)
+    with np.errstate(invalid="ignore"):
+        n = int(np.sum((flux < lo) | (flux > hi)))
+    if n:
+        ax.text(0.99, 0.95, f"{n} point{'s' if n != 1 else ''} outside the plotted range",
+                transform=ax.transAxes, ha="right", va="top", fontsize=7, color="0.35")
+
+
 def periodogram(curves: list[SectorCurve], min_period: float,
                 max_period: float) -> tuple[np.ndarray, np.ndarray]:
     time = np.concatenate([c.time for c in curves])
@@ -186,6 +229,7 @@ def plot_lightcurves(curves: list[SectorCurve], marks: list[tuple[str, float]],
                                  gridspec_kw={"height_ratios": [1] * n + [2]})
         for ax, c in zip(axes[:n, 0], curves, strict=True):
             ax.plot(c.time, c.flux, ".", ms=1, color="0.25", rasterized=True)
+            _fit_y_range(ax, c.flux, isolated_outliers(c.flux, cfg.plots.isolated_outlier_sigma))
             ax.set_ylabel("flux", fontsize=8)
             ax.text(0.01, 0.9, c.label, transform=ax.transAxes, fontsize=8, va="top")
         axes[n - 1, 0].set_xlabel("time (BTJD / BKJD, days)")
@@ -290,8 +334,10 @@ def fold_note(found: FoldResult, marks: list[tuple[str, float]], cfg: Config) ->
     return " ".join(parts)
 
 
-def _fold_panel(ax, t: np.ndarray, f: np.ndarray, period: float, bins: int, lo: float) -> None:
-    """Points and binned median folded on period, phase lo to lo + 1, phase 0 at the lowest median."""
+def _fold_panel(ax, t: np.ndarray, f: np.ndarray, period: float, bins: int, lo: float,
+                outliers: np.ndarray | None = None) -> None:
+    """Points and binned median folded on period, phase lo to lo + 1, phase 0 at the lowest median.
+    With `outliers`, the y-axis leaves out those isolated points (see isolated_outliers)."""
     phase = np.mod(t / period, 1.0)
     idx = np.minimum((phase * bins).astype(int), bins - 1)
     med = np.array([np.median(f[idx == k]) if np.any(idx == k) else np.nan for k in range(bins)])
@@ -308,21 +354,27 @@ def _fold_panel(ax, t: np.ndarray, f: np.ndarray, period: float, bins: int, lo: 
                 elinewidth=0.8, capsize=0, label="binned (median ± σ/√n)")
     ax.set_xlim(lo, lo + 1)
     ax.set_ylabel("normalized flux")
+    if outliers is not None:
+        _fit_y_range(ax, f, outliers, extra=med)  # not ±err: an outlier inflates its bin's σ
 
 
-def plot_fold(curves: list[SectorCurve], found: FoldResult, path: Path, bins: int = 100) -> Path:
+def plot_fold(curves: list[SectorCurve], found: FoldResult, path: Path, bins: int = 100,
+              outlier_sigma: float | None = None) -> Path:
     """All data folded on the peak period P (phase -0.5 to 0.5) and on 2P (phase -0.25 to 0.75,
-    so the odd and even cycles, at phase 0 and 0.5, are both whole)."""
+    so the odd and even cycles, at phase 0 and 0.5, are both whole). With outlier_sigma, the
+    y-axes leave out isolated outliers, found in each sector's time series."""
     t = np.concatenate([c.time for c in curves])
     f = np.concatenate([c.flux for c in curves])
+    outliers = (np.concatenate([isolated_outliers(c.flux, outlier_sigma) for c in curves])
+                if outlier_sigma is not None else None)
     fig = None
     try:
         fig, (top, bottom) = plt.subplots(2, 1, figsize=(9, 7))
-        _fold_panel(top, t, f, found.period, bins, -0.5)
+        _fold_panel(top, t, f, found.period, bins, -0.5, outliers)
         top.set_title(f"Folded on P = {found.period:.5g} d (FAP {found.fap:.1e}; top peak in "
                       f"{found.agree} of {found.segments} sectors or orbits)", fontsize=10)
         top.legend(fontsize=8, loc="lower right")
-        _fold_panel(bottom, t, f, 2 * found.period, 2 * bins, -0.25)
+        _fold_panel(bottom, t, f, 2 * found.period, 2 * bins, -0.25, outliers)
         bottom.set_title(f"Folded on 2P = {2 * found.period:.5g} d (odd and even cycles at "
                          "phase 0 and 0.5)", fontsize=10)
         bottom.set_xlabel("phase")
@@ -349,5 +401,6 @@ def plot_stage(report, path: Path, cfg: Config) -> tuple[Path | None, str | None
     marks = exoplanet_archive.known_periods(report.results)
     lc_path = plot_lightcurves(curves, marks, cfg, path)
     found = detect_fold(curves, cfg)
-    fold_path = plot_fold(curves, found, path.with_name("fold.png")) if found.ok else None
+    fold_path = (plot_fold(curves, found, path.with_name("fold.png"),
+                           outlier_sigma=cfg.plots.isolated_outlier_sigma) if found.ok else None)
     return lc_path, note, {"fold": (fold_path, fold_note(found, marks, cfg))}

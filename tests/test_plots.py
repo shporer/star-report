@@ -705,3 +705,85 @@ def test_plot_fold_draws_p_and_2p(tmp_path, monkeypatch):
     assert titles[1].startswith("Folded on 2P = 4.6 d")
     assert not any(ls == "-" for _, ls, _ in styles)  # no line: binned points instead
     assert ("o", "None", "black") in styles and (".", "None", "0.8") in styles
+
+
+# ---- y-axis ranges: isolated outliers ----
+
+def _capture_ranges(monkeypatch):
+    """Record each saved figure's y-limits and axis texts, per axes."""
+    seen = []
+    real = plt.Figure.savefig
+    monkeypatch.setattr(plt.Figure, "savefig", lambda self, *a, **k: (
+        seen.extend((ax.get_ylim(), [t.get_text() for t in ax.texts]) for ax in self.axes),
+        real(self, *a, **k))[1])
+    return seen
+
+
+def test_isolated_outliers_flags_single_points_and_keeps_runs():
+    from star_report.plots.lightcurve import isolated_outliers
+
+    f = 1 + np.random.default_rng(0).normal(0, 0.002, 300)
+    f[50] = 0.25        # one low point
+    f[120] = 1.5        # one high point
+    f[80:82] = 0.95     # a two-point dip: a short transit at long cadence
+    f[200:206] = 0.97   # a longer transit
+    f[0] = 0.2          # an end point has one neighbor and is never flagged
+    assert np.flatnonzero(isolated_outliers(f, 5.0)).tolist() == [50, 120]
+
+
+def test_isolated_outliers_tolerate_short_and_nan_input():
+    from star_report.plots.lightcurve import isolated_outliers
+
+    assert isolated_outliers(np.array([1.0, 0.2]), 5.0).tolist() == [False, False]
+    f = np.array([1.0, 1.001, np.nan, 0.999, 1.0, 0.3, 1.0, 1.002])
+    assert np.flatnonzero(isolated_outliers(f, 5.0)).tolist() == [5]
+
+
+def test_light_curve_y_range_leaves_out_isolated_outliers_but_keeps_a_transit(tmp_path, monkeypatch):
+    cfg = load_config(cwd=tmp_path)
+    curve = _sector(1)
+    f = curve.flux.copy()
+    f[500], f[1500] = 0.25, 0.42       # two stray points, as in TIC 385180287 Sector 40
+    f[1000:1003] = 0.95                 # a three-point transit
+    seen = _capture_ranges(monkeypatch)
+    plot_lightcurves([SectorCurve("Sector 40 (QLP)", curve.time, f)], [], cfg, tmp_path / "lc.png")
+    (lo, hi), texts = seen[0]
+    assert 0.9 < lo < 0.95 and 1.005 < hi < 1.02
+    assert "2 points outside the plotted range" in texts
+
+
+def test_light_curve_y_range_unchanged_without_outliers(tmp_path, monkeypatch):
+    cfg = load_config(cwd=tmp_path)
+    seen = _capture_ranges(monkeypatch)
+    plot_lightcurves([_sector(1)], [], cfg, tmp_path / "lc.png")
+    (lo, hi), texts = seen[0]
+    assert 0.98 < lo < 1.0 < hi < 1.02
+    assert not any("outside" in t for t in texts)
+
+
+def test_fold_y_range_leaves_out_isolated_outliers(tmp_path, monkeypatch):
+    from star_report.plots.lightcurve import FoldResult, plot_fold
+
+    curve = _sector(1, 2.3)
+    f = curve.flux.copy()
+    f[700], f[2100] = 0.25, 0.42
+    seen = _capture_ranges(monkeypatch)
+    found = FoldResult(ok=True, period=2.3, fap=1e-20, agree=2, segments=2)
+    plot_fold([SectorCurve(curve.label, curve.time, f)], found, tmp_path / "fold.png",
+              outlier_sigma=load_config(cwd=tmp_path).plots.isolated_outlier_sigma)
+    assert len(seen) == 2
+    for (lo, hi), texts in seen:
+        assert 0.97 < lo < 0.99 and 1.01 < hi < 1.03
+        assert "2 points outside the plotted range" in texts
+
+
+def test_plot_stage_passes_the_outlier_threshold_to_the_fold(tmp_path, monkeypatch):
+    from star_report.plots import lightcurve
+
+    got = {}
+    monkeypatch.setattr(lightcurve, "fetch_lightcurves", lambda ident, cfg: ([_sector(1, 2.3)], None))
+    monkeypatch.setattr(lightcurve, "plot_fold",
+                        lambda curves, found, path, **kw: (got.update(kw), path.write_bytes(PNG), path)[2])
+    cfg = load_config(cwd=tmp_path)
+    lightcurve.plot_stage(make_report(), tmp_path / "lightcurve.png", cfg)
+    assert got == {"outlier_sigma": cfg.plots.isolated_outlier_sigma}

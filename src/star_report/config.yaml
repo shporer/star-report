@@ -94,6 +94,12 @@ plots:
   fold_fap_max: 0.001
   fold_period_tolerance: 0.01
   fold_min_segments: 2
+  # The light-curve and folded plots fit their y-axis to the data without isolated outliers: single
+  # points that differ from both neighbors, on the same side, by more than this many robust
+  # standard deviations of the point-to-point differences. Runs of two or more points (transits,
+  # eclipses) always count. Nothing is removed from the data, and a note gives how many points fall
+  # outside the plotted range. TIC 385180287 Sector 40 has two such points, at 0.25 and 0.42.
+  isolated_outlier_sigma: 5
   cutout_arcmin: 5
   sky_survey: CDS/P/DSS2/red   # hips2fits HiPS ID (CDS)
   sky_fallback_survey: poss2ukstu_red   # STScI DSS cutout service, used when CDS is unreachable

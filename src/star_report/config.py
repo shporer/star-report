@@ -115,6 +115,7 @@ class PlotsConfig(_Section):
     fold_fap_max: Annotated[float, Field(gt=0, lt=1)]
     fold_period_tolerance: Annotated[float, Field(gt=0, lt=1)]
     fold_min_segments: Annotated[int, Field(ge=1)]
+    isolated_outlier_sigma: Annotated[float, Field(gt=0, allow_inf_nan=False)]
     cutout_arcmin: float
     sky_survey: str
     sky_fallback_survey: str
