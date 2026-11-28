@@ -637,6 +637,16 @@ def test_cc_backend_failures_not_cached_and_key_has_backend(tmp_path):
     assert third.from_cache is True and len(calls()) == 2
 
 
+def test_fact_sheet_lists_ctois_only_when_there_are_some():
+    report = make_report()
+    assert "ctois" not in build_fact_sheet(report)  # unchanged facts keep cached text valid
+    data = {"tois": [], "ctois": [{"ctoi": "TIC 1.01", "disposition": None},
+                                  {"ctoi": "TIC 1.02", "disposition": "PC"}, {"notes": "x"}]}
+    exofop = report.results["exofop"].model_copy(update={"status": "ok", "data": data})
+    facts = build_fact_sheet(report.model_copy(update={"results": {**report.results, "exofop": exofop}}))
+    assert facts["ctois"] == ["TIC 1.01", "TIC 1.02 (PC)"]
+
+
 def test_fact_sheet_lists_unchecked_keck_instruments_only_when_some_failed():
     report = make_report()
     assert "koa_not_checked" not in build_fact_sheet(report)["inventory"]["spectra"]

@@ -161,6 +161,16 @@ def test_terminal_planets_line(tmp_path):
     assert "Planets:" in console.export_text()
 
 
+def test_terminal_planets_line_lists_ctois(tmp_path):
+    report = make_report("TOI-700")
+    exofop = report.results["exofop"]
+    data = {**exofop.data, "ctois": [{"ctoi": "TIC 150428135.05", "disposition": None, "notes": None}]}
+    results = {**report.results, "exofop": exofop.model_copy(update={"status": "ok", "data": data})}
+    console = Console(record=True, width=110, file=io.StringIO())
+    print_summary(report.model_copy(update={"results": results}), tmp_path / "r.html", console)
+    assert "CTOIs: TIC 150428135.05" in console.export_text()
+
+
 def _with(report, **updates):
     results = dict(report.results)
     for k, v in updates.items():

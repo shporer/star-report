@@ -9,7 +9,14 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from star_report.derive import display_name, gaia_dr3_label, header_line, toi_entries, toi_source
+from star_report.derive import (
+    ctoi_entries,
+    display_name,
+    gaia_dr3_label,
+    header_line,
+    toi_entries,
+    toi_source,
+)
 from star_report.models import Report
 from star_report.render.html import STATUS_LABELS
 
@@ -45,6 +52,9 @@ def _planets_line(report: Report) -> str:
     text = f"Planets: {_planet_count(report)}"
     if tois:
         text += f"; TOIs: {', '.join(tois)}"
+    ctois = [str(c) for c, _ in ctoi_entries(report.results) if c]
+    if ctois:
+        text += f"; CTOIs: {', '.join(ctois)}"
     return text
 
 

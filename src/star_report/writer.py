@@ -21,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from star_report.cache import Cache
 from star_report.config import Config, LLMConfig
-from star_report.derive import description_line, display_name, toi_entries
+from star_report.derive import ctoi_entries, description_line, display_name, tagged, toi_entries
 from star_report.models import BIBCODE_PART_RE, CITATION_RE, LLMBlock, Paper, ParamCell, Report
 
 PROMPT_VERSION = 4
@@ -226,7 +226,7 @@ def build_fact_sheet(report: Report) -> dict:
             parameters.append({"quantity": row.label, "unit": row.unit, "values": values,
                                "sources_disagree": row.disagree})
 
-    return {
+    facts = {
         "name": display_name(ident.main_name),
         "identifiers": identifiers,
         "position": _prune({
@@ -239,11 +239,14 @@ def build_fact_sheet(report: Report) -> dict:
         "flags": list(report.flags),
         "warnings": list(ident.warnings),
         "planets": _planets(report),
-        "tois": [f"{t} ({d})" if d else str(t) for t, d in toi_entries(report.results) if t],
+        "tois": tagged(toi_entries(report.results)),
         "kois": _kois(report),
         "inventory": _inventory(report),
         "literature": _literature(report),
     }
+    if ctois := tagged(ctoi_entries(report.results)):
+        facts["ctois"] = ctois  # only when present, so other stars' cached text stays valid
+    return facts
 
 
 # ---- user message and citations ----

@@ -228,6 +228,30 @@ def test_toi_flag_fallback_and_singular():
     assert _flags_for(one) == ["1 confirmed planet"]
 
 
+def test_ctoi_flag_from_exofop_after_tois():
+    results = {
+        "exoplanet_archive": ok("exoplanet_archive", {
+            "planets": [], "tois": [{"toi": "700.01", "disposition": None}],
+            "kois": [{"koi": "K00001.01", "disposition": None}], "k2": []}),
+        "exofop": ok("exofop", {"tois": [], "ctois": [
+            {"ctoi": "TIC 410355638.01", "disposition": None, "notes": None},
+            {"ctoi": "TIC 410355638.02", "disposition": "PC"},
+            {"notes": "no identifier"}, "junk"]}),
+    }
+    assert _flags_for(results) == ["TOIs: 700.01", "CTOIs: TIC 410355638.01, TIC 410355638.02 (PC)",
+                                   "KOIs: K00001.01"]
+
+
+@pytest.mark.parametrize("exofop", [
+    failed("exofop"),
+    ok("exofop", {"tois": [], "ctois": None}),
+    ok("exofop", {"tois": [], "ctois": "TIC 1.01"}),
+    ok("exofop", ["not", "a", "dict"]),
+])
+def test_no_ctoi_flag_without_usable_exofop_ctois(exofop):
+    assert _flags_for({"exofop": exofop}) == []
+
+
 def test_companion_flags_tolerate_missing_fields():
     results = {"wide_binaries": ok("wide_binaries", [{"companion": "1", "sep_arcsec": 3.0,
                                                       "sep_au": None, "R_chance": None}])}

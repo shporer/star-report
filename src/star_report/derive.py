@@ -201,6 +201,17 @@ def toi_entries(results: Mapping[str, SourceResult]) -> list[tuple[Any, Any]]:
     return [(t.get("toi"), t.get(key)) for t in _dict_rows(data.get("tois"))]
 
 
+def ctoi_entries(results: Mapping[str, SourceResult]) -> list[tuple[Any, Any]]:
+    """(ctoi, disposition) pairs from ExoFOP, the only source of CTOIs; [] when it failed."""
+    data = _ok_data(results, "exofop") or {}
+    return [(c.get("ctoi"), c.get("disposition")) for c in _dict_rows(data.get("ctois"))]
+
+
+def tagged(items: list[tuple[Any, Any]]) -> list[str]:
+    """'ID (disposition)', or 'ID' without one; rows without an ID are left out."""
+    return _tagged(items)
+
+
 def _companion_flags(results: Mapping[str, SourceResult]) -> list[str]:
     out: list[str] = []
     archive = _ok_data(results, "exoplanet_archive")
@@ -213,6 +224,9 @@ def _companion_flags(results: Mapping[str, SourceResult]) -> list[str]:
     tois = _tagged(toi_entries(results))
     if tois:
         out.append("TOIs: " + ", ".join(tois))
+    ctois = _tagged(ctoi_entries(results))
+    if ctois:
+        out.append("CTOIs: " + ", ".join(ctois))
     kois = _tagged([(k.get("koi"), k.get("disposition"))
                     for k in _dict_rows(archive.get("kois"))]) if archive else []
     if kois:
