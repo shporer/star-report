@@ -111,6 +111,7 @@ class PlotsConfig(_Section):
     lightcurve_timeout_s: Seconds
     lightcurve_exclude_quality_bits: list[Annotated[int, Field(ge=0, le=31)]]
     lightcurve_detrended_columns: list[str]
+    qlp_time_corrections: dict[Annotated[int, Field(ge=1)], Literal["s1415", "s7479"] | None]
     fold_max_period_d: Annotated[float, Field(gt=0)]
     fold_fap_max: Annotated[float, Field(gt=0, lt=1)]
     fold_period_tolerance: Annotated[float, Field(gt=0, lt=1)]

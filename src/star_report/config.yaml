@@ -85,6 +85,13 @@ plots:
   # Flux columns used instead of a product's default when present: QLP's detrended flux
   # (kspsap_flux in older QLP files, det_flux in newer ones). SPOC products keep PDCSAP.
   lightcurve_detrended_columns: [kspsap_flux, det_flux]
+  # Known QLP time-stamp errors, removed from QLP light curves of these sectors (sector: model),
+  # as the AutoTTV project does (see plots/qlp_time.py). s1415: Sectors 14 and 15, wrong observer
+  # position in QLP's barycentric correction. s7479: the ecliptic-frame ephemeris used as
+  # equatorial; QLP fixed Sectors 74-79 in its v02 files (which MAST serves), but Sector 80 (v01)
+  # still has it. The shifts are minutes (7-8 min for TIC 385180287 in Sector 14). Set a sector to
+  # null to turn its correction off. SPOC and TESS-SPOC products are never changed.
+  qlp_time_corrections: {14: s1415, 15: s1415, 80: s7479}
   # Phase-folded light curve: drawn when the highest periodogram peak up to fold_max_period_d has a
   # Baluev false-alarm probability below fold_fap_max in the combined data, and the same period
   # (within fold_period_tolerance) is the top peak below fold_fap_max in at least

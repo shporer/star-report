@@ -159,6 +159,12 @@ invalid value is a configuration error (exit code 2).
   and finds fewer. Those results stay cached for 7 days (`cache.expiry_days.ads`): after a CDS
   outage, rerun the affected stars with `--refresh`.
 - KOA is queried through its public TAP service with pyvo (not pykoa).
+- QLP time stamps: QLP's barycentric correction used a wrong observer position in Sectors 14, 15
+  and 80, so those light curves are off by minutes (7-8 min for TIC 385180287 in Sector 14).
+  star-report removes the error with the model from the AutoTTV project
+  (`plots.qlp_time_corrections`; set a sector to `null` to leave it as delivered), labels the panel
+  "time corrected" and says by how much in the plot note. QLP fixed the same kind of error for
+  Sectors 74-79 in its v02 files, which MAST serves. SPOC and TESS-SPOC products are never changed.
 - Timeouts: `sources.timeout_s` (30 s) by default, also for each lookup made while identifying the
   star; `sources.timeout_overrides` raises it per source.
   MAST is 90 s because its observation query can take about 45 s for stars in TESS's continuous

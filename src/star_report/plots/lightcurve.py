@@ -12,6 +12,7 @@ from astropy.timeseries import LombScargle
 
 from star_report.config import Config
 from star_report.models import StarIdentity
+from star_report.plots import qlp_time
 from star_report.sources import exoplanet_archive
 from star_report.sources.base import call_with_timeout
 
@@ -127,6 +128,7 @@ def fetch_lightcurves(identity: StarIdentity, cfg: Config) -> tuple[list[SectorC
         return [], "No suitable light curves found."
     tess_mask = tess_quality_bitmask(cfg)
     curves = []
+    fixed = []  # "Sector N by +a to +b min" for each QLP sector whose time stamps were corrected
     for i in idx:
         # Kepler and K2 quality bits mean other things: they keep lightkurve's default mask.
         mask = tess_mask if rows[i]["mission"].startswith("TESS") else "default"
@@ -139,8 +141,21 @@ def fetch_lightcurves(identity: StarIdentity, cfg: Config) -> tuple[list[SectorC
             lc = lc.select_flux(column)
             label = f"{label[:-1]}, {column})" if label.endswith(")") else f"{label} ({column})"
         lc = lc.remove_nans().normalize()
-        curves.append(SectorCurve(label, np.asarray(lc.time.value, dtype=float),
-                                  np.asarray(lc.flux.value, dtype=float)))
+        time = np.asarray(lc.time.value, dtype=float)
+        sector = rows[i]["sequence_number"]
+        model = (cfg.plots.qlp_time_corrections.get(sector)
+                 if rows[i]["author"] == "QLP" and rows[i]["mission"].startswith("TESS") else None)
+        if model is not None and time.size:
+            pos = identity.position
+            shift = qlp_time.corrected_time(time, model, pos.ra, pos.dec) - time
+            time = time + shift
+            label = f"{label[:-1]}, time corrected)" if label.endswith(")") else f"{label} (time corrected)"
+            fixed.append(f"Sector {sector} by {shift.min() * 1440:+.1f} to {shift.max() * 1440:+.1f} min")
+        curves.append(SectorCurve(label, time, np.asarray(lc.flux.value, dtype=float)))
+    if fixed:
+        fix_note = ("QLP time stamps corrected for known errors in QLP's barycentric correction "
+                    "(as in AutoTTV): " + "; ".join(fixed) + ".")
+        note = f"{note} {fix_note}" if note else fix_note
     return curves, note
 
 
