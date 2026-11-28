@@ -141,3 +141,46 @@ def test_inventory_upcoming_sector_with_date(tmp_path):
     results["tess_pointing"] = results["tess_pointing"].model_copy(update={"data": tp})
     html = render_html(base.model_copy(update={"results": results}), tmp_path)
     assert "<li>Upcoming: sector 99 (2027-01-05)</li>" in html
+
+
+# ---- a KOA answer with some instruments not checked ----
+
+def _koa_partial(report, instruments, no_frames, errors):
+    data = {"instruments": instruments, "no_frames": no_frames,
+            "errors": [{"instrument": e, "error": "DALQueryError: ORA-00955"} for e in errors]}
+    koa = report.results["koa"].model_copy(update={"status": "ok", "data": data,
+                                                    "error": ", ".join(errors) + " not checked"})
+    return report.model_copy(update={"results": {**report.results, "koa": koa}})
+
+
+_HIRES = {"instrument": "hires", "frames": 5, "nights": 2, "first": "2010-01-02",
+          "last": "2010-01-05", "programs": ["P1"]}
+
+
+def test_inventory_koa_partial_names_checked_and_unchecked(tmp_path):
+    report = _koa_partial(make_report("HD_209458"), [], ["hires", "kpf"], ["nirc2", "mosfire"])
+    html = render_html(report, tmp_path)
+    sec = html[html.index('id="inventory"'):]
+    assert "No object frames: hires, kpf." in sec
+    assert "Not checked (Keck archive error, retried on the next run): nirc2, mosfire." in sec
+    assert "Keck instruments unavailable" not in sec
+    assert "ok (nirc2, mosfire not checked)" in html[html.index('id="sources"'):]
+
+
+def test_inventory_koa_partial_with_frames(tmp_path):
+    report = _koa_partial(make_report("HD_209458"), [_HIRES], [], ["nirc2"])
+    html = render_html(report, tmp_path)
+    sec = html[html.index('id="inventory"'):]
+    assert '<tr><td>hires</td><td class="num">5</td>' in sec
+    assert "Not checked (Keck archive error, retried on the next run): nirc2." in sec
+    assert "No object frames" not in sec
+
+
+def test_terminal_marks_a_partial_koa_answer():
+    report = _koa_partial(make_report("HD_209458"), [_HIRES], [], ["nirc2", "mosfire"])
+    console = Console(record=True, width=160)
+    print_summary(report, None, console)
+    lines = console.export_text().splitlines()
+    data = next(ln for ln in lines if ln.startswith("Data:"))
+    assert "KOA 5 (nirc2, mosfire not checked)" in data
+    assert any(ln.startswith("! koa  ok (nirc2, mosfire not checked)") for ln in lines)

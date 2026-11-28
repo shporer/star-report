@@ -22,7 +22,7 @@ from astropy.table import Table
 from requests.adapters import HTTPAdapter
 
 from star_report import __version__
-from star_report.cache import Cache
+from star_report.cache import Cache, CacheEntry
 from star_report.config import Config, ServerProbe
 from star_report.models import Provenance, SourceResult, StarIdentity
 
@@ -220,6 +220,18 @@ class Source(ABC):
     def parse(self, raw: Any, ctx: SourceContext) -> Any:
         """Pure; returns None or an empty container when there is no data."""
 
+    def cached_fetch(self, ctx: SourceContext, query: dict) -> CacheEntry:
+        """fetch() through the cache, as one entry under `query`.
+
+        A source whose parts fail independently overrides this to cache each part on its own, so
+        a failed part is asked again on the next run while the parts that answered stay cached.
+        """
+        return ctx.cache.fetch(self.group, self.name, query, lambda: self.fetch(ctx))
+
+    def partial_error(self, data: Any) -> str | None:
+        """For a parsed result that has data: which part of it failed, else None."""
+        return None
+
     def skip_reason(self, ctx: SourceContext) -> str | None:
         for field_name in self.needs:
             if getattr(ctx.identity, field_name) is None:
@@ -240,7 +252,7 @@ def run_source(src: Source, ctx: SourceContext) -> SourceResult:
     provenance: Provenance | None = None
     try:
         query = src.query(ctx)
-        entry = ctx.cache.fetch(src.group, src.name, query, lambda: src.fetch(ctx))
+        entry = src.cached_fetch(ctx, query)
         provenance = Provenance(
             service=src.service,
             query=json.dumps(query, sort_keys=True),
@@ -251,6 +263,7 @@ def run_source(src: Source, ctx: SourceContext) -> SourceResult:
         data = src.parse(entry.payload, ctx)
         status = "ok" if data else "empty"
         return SourceResult(source=src.name, status=status, data=data, provenance=provenance,
+                            error=src.partial_error(data) if status == "ok" else None,
                             elapsed_s=time.monotonic() - t0)
     except Exception as e:  # noqa: BLE001 - a source must never take down the run
         return SourceResult(source=src.name, status="error", provenance=provenance,

@@ -10,7 +10,7 @@ import pytest
 import requests
 from astropy.table import MaskedColumn, Table
 
-from star_report.cache import Cache
+from star_report.cache import Cache, CacheEntry
 from star_report.config import load_config
 from star_report.models import Position, StarIdentity
 from star_report.sources import base
@@ -22,6 +22,7 @@ from star_report.sources.base import (
     make_session,
     parallel_map,
     records,
+    run_source,
     run_sources,
     tap_rows,
 )
@@ -85,6 +86,26 @@ def test_statuses(ctx):
     res = run_sources([Fake("a", payload={"x": 1}), Fake("b", payload=[]), Fake("c", exc=RuntimeError("boom"))], ctx)
     assert [r.status for r in res.values()] == ["ok", "empty", "error"]
     assert res["c"].error == "RuntimeError: boom" and res["a"].provenance.service == "fake service"
+    assert res["a"].error is None
+
+
+class Hooked(Fake):
+    def cached_fetch(self, ctx, query):
+        return CacheEntry(self.payload, datetime(2026, 1, 2, tzinfo=timezone.utc), True)
+
+    def partial_error(self, data):
+        return "part not checked"
+
+
+def test_run_source_uses_cached_fetch_and_partial_error(ctx):
+    r = run_source(Hooked("h", payload={"x": 1}), ctx)
+    assert (r.status, r.data, r.error) == ("ok", {"x": 1}, "part not checked")
+    assert r.provenance.from_cache and r.provenance.retrieved == datetime(2026, 1, 2, tzinfo=timezone.utc)
+
+
+def test_partial_error_only_on_ok_results(ctx):
+    r = run_source(Hooked("h", payload=[]), ctx)
+    assert r.status == "empty" and r.error is None
 
 
 def test_timeout_does_not_block(ctx):

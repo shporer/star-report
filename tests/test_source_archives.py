@@ -1,3 +1,8 @@
+import json
+import re
+import threading
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from conftest import load_fixture, make_ctx, ref_identity
@@ -7,6 +12,7 @@ from star_report.sources import eso as eso_src
 from star_report.sources import koa as koa_src
 from star_report.sources.eso import EsoSpectra, mjd_to_date
 from star_report.sources.koa import KeckKoa, summarize_koa
+from star_report.sources.base import run_source, run_sources
 from star_report.sources.registry import build_sources
 
 
@@ -89,6 +95,8 @@ def test_koa_parse_keeps_frames_and_errors():
     out = KeckKoa().parse(raw, make_ctx())
     assert [i["instrument"] for i in out["instruments"]] == ["hires"]
     assert out["errors"] == [{"instrument": "esi", "error": "boom"}]
+    assert out["no_frames"] == ["kpf"]
+    assert "no_frames" not in KeckKoa().parse(raw[:2], make_ctx())
     assert KeckKoa().parse([raw[1]], make_ctx()) == {}
     assert KeckKoa().parse([], make_ctx()) == {}
 
@@ -192,7 +200,7 @@ def test_koa_slow_instrument_times_out_without_sinking_the_rest(monkeypatch):
     finally:
         release.set()
     assert raw[0]["instrument"] == "hires" and raw[0]["frames"] == 1
-    assert raw[1] == {"instrument": "kpf", "error": "TimeoutError: timed out after 0.3 s"}
+    assert raw[1] == {"instrument": "kpf", "error": "TimeoutError: timed out after 0.24 s"}
     assert daemon == [True, True]
 
 
@@ -201,3 +209,142 @@ def test_koa_no_valid_instruments_returns_empty(monkeypatch):
     ctx = make_ctx()
     ctx.config.sources.koa_instruments[:] = ["Bad Name"]
     assert KeckKoa().fetch(ctx) == []
+
+
+# ---- per-instrument cache: a failed instrument is never cached and is asked again next run ----
+
+def _koa_service(monkeypatch, failing, slow=(), release=None):
+    calls = []
+
+    def fake(url, adql, session):
+        inst = re.search(r"FROM koa_(\w+)", adql).group(1)
+        calls.append(inst)
+        if inst in slow:
+            release.wait(5)
+        if inst in failing:
+            raise RuntimeError("ORA-00955")
+        return [obj("2010-01-02 00:00:00")] if inst == "hires" else []
+
+    monkeypatch.setattr(koa_src, "tap_rows", fake)
+    return calls
+
+
+def _koa_ctx(tmp_path, now=None):
+    ctx = make_ctx(cache_dir=tmp_path / "c", now=now)
+    ctx.config.sources.koa_instruments[:] = ["hires", "kpf", "nirc2"]
+    return ctx
+
+
+def test_koa_failed_instrument_is_retried_alone_on_the_next_run(monkeypatch, tmp_path):
+    failing = {"nirc2"}
+    calls = _koa_service(monkeypatch, failing)
+    ctx = _koa_ctx(tmp_path)
+    r1 = run_source(KeckKoa(), ctx)
+    assert r1.status == "ok" and r1.error == "nirc2 not checked"
+    assert r1.data["no_frames"] == ["kpf"] and r1.data["errors"][0]["instrument"] == "nirc2"
+    assert sorted(calls) == ["hires", "kpf", "nirc2"]
+
+    failing.clear()
+    calls.clear()
+    r2 = run_source(KeckKoa(), ctx)
+    assert calls == ["nirc2"]
+    assert r2.error is None and "errors" not in r2.data and not r2.provenance.from_cache
+    assert [i["instrument"] for i in r2.data["instruments"]] == ["hires"]
+
+    calls.clear()
+    r3 = run_source(KeckKoa(), ctx)
+    assert calls == [] and r3.provenance.from_cache and r3.data == r2.data
+
+
+def test_koa_retrieved_is_the_oldest_answer(monkeypatch, tmp_path):
+    t0 = datetime(2026, 11, 27, 12, 0, tzinfo=timezone.utc)
+    failing = {"nirc2"}
+    _koa_service(monkeypatch, failing)
+    run_source(KeckKoa(), _koa_ctx(tmp_path, now=t0))
+    failing.clear()
+    r = run_source(KeckKoa(), _koa_ctx(tmp_path, now=t0 + timedelta(days=1)))
+    assert r.provenance.retrieved == t0 and not r.provenance.from_cache
+
+
+def test_koa_all_failing_caches_nothing(monkeypatch, tmp_path):
+    failing = {"hires", "kpf", "nirc2"}
+    calls = _koa_service(monkeypatch, failing)
+    ctx = _koa_ctx(tmp_path)
+    r = run_source(KeckKoa(), ctx)
+    assert r.status == "error" and "all KOA instrument queries failed" in r.error
+    failing.clear()
+    calls.clear()
+    assert run_source(KeckKoa(), ctx).status == "ok"
+    assert sorted(calls) == ["hires", "kpf", "nirc2"]
+
+
+def test_koa_timed_out_instrument_is_not_checked(monkeypatch, tmp_path):
+    release = threading.Event()
+    _koa_service(monkeypatch, set(), slow={"kpf"}, release=release)
+    ctx = _koa_ctx(tmp_path)
+    ctx.config.sources.timeout_s = 0.3
+    try:
+        r = run_source(KeckKoa(), ctx)
+    finally:
+        release.set()
+    assert r.status == "ok" and r.error == "kpf not checked"
+    assert r.data["errors"] == [{"instrument": "kpf", "error": "TimeoutError: timed out after 0.24 s"}]
+
+
+def test_koa_unreadable_instrument_entry_is_queried_again(monkeypatch, tmp_path):
+    calls = _koa_service(monkeypatch, set())
+    ctx = _koa_ctx(tmp_path)
+    run_source(KeckKoa(), ctx)
+    files = sorted((tmp_path / "c" / "koa").glob("*.json"))
+    assert len(files) == 3
+    kpf = next(f for f in files if json.loads(f.read_text())["query"]["instrument"] == "kpf")
+    kpf.write_text("{")
+    calls.clear()
+    assert run_source(KeckKoa(), ctx).status == "ok"
+    assert calls == ["kpf"]
+
+
+def test_koa_ignores_the_old_whole_list_entry(monkeypatch, tmp_path):
+    calls = _koa_service(monkeypatch, set())
+    ctx = _koa_ctx(tmp_path)
+    ctx.cache.fetch("koa", "koa", KeckKoa().query(ctx),
+                    lambda: [{"instrument": "nirc2", "error": "old"}])
+    r = run_source(KeckKoa(), ctx)
+    assert sorted(calls) == ["hires", "kpf", "nirc2"] and "errors" not in r.data
+
+
+def test_koa_refresh_queries_each_instrument_once_per_run(monkeypatch, tmp_path):
+    calls = _koa_service(monkeypatch, set())
+    run_source(KeckKoa(), _koa_ctx(tmp_path))
+    ctx = _koa_ctx(tmp_path)  # a new run, with --refresh, over the same cache directory
+    ctx.cache.refresh = True
+    calls.clear()
+    run_source(KeckKoa(), ctx)
+    run_source(KeckKoa(), ctx)
+    assert sorted(calls) == ["hires", "kpf", "nirc2"]
+
+
+def test_koa_partial_error():
+    koa = KeckKoa()
+    assert koa.partial_error({}) is None
+    assert koa.partial_error({"instruments": []}) is None
+    assert koa.partial_error({"errors": "x"}) is None
+    assert koa.partial_error(None) is None
+    errors = [{"instrument": "nirc2", "error": "a"}, {"instrument": "mosfire", "error": "b"}, "junk"]
+    assert koa.partial_error({"instruments": [], "errors": errors}) == "nirc2, mosfire not checked"
+
+
+def test_koa_hanging_instrument_still_answers_within_the_source_timeout(monkeypatch, tmp_path):
+    # The instruments get a share of the source's timeout, so KOA returns its partial answer
+    # before run_sources' watchdog would mark the whole source "timed out".
+    release = threading.Event()
+    _koa_service(monkeypatch, set(), slow={"kpf"}, release=release)
+    ctx = _koa_ctx(tmp_path)
+    ctx.config.sources.timeout_s = 1.0
+    ctx.config.sources.koa_instrument_timeout_fraction = 0.5
+    try:
+        r = run_sources([KeckKoa()], ctx)["koa"]
+    finally:
+        release.set()
+    assert r.status == "ok" and r.error == "kpf not checked" and r.elapsed_s < 0.9
+    assert r.data["errors"] == [{"instrument": "kpf", "error": "TimeoutError: timed out after 0.5 s"}]
